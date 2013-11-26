@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<title>Smoothie Example for require() functionality</title>
+	
+	<link rel="stylesheet" href="../example.css" type="text/css" charset="utf-8">
+
+	<script type="text/javascript">
+		var Smoothie = {
+			'main':null
+		};
+	</script>
+	<script type="text/javascript" src="../../smoothie.js"></script>
+</head>
+
+<body>
+	<h1>Smoothie Example for require() functionality</h1>
+	<div class="Box Red">
+		<h2>Module paths</h2>
+		<pre><script type="text/javascript">
+		Smoothie.paths = ['/evil/hack/path/'];
+		document.writeln(require.paths);
+		require.paths.push('/yet/another/evil/hack/');
+		document.writeln(require.paths+' (must be the same as above)');
+		</script></pre>
+	</div>
+	<div class="Box Red">
+		<h2>Identifier => Module</h2>
+		<pre><script type="text/javascript">
+		mname = 'module';
+		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+		mname = './module';
+		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+		mname = '../module';
+		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+
+		mname = 'module.js';
+		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
+		var mname = '/module.js';
+		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+		mname = './module.js';
+		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
+		mname = '../module.js';
+		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+
+		mname = '../foo/bar/./././baz///moo/maa/../../../mee/gee';
+		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+		mname = 'foo/bar//baz///moo////maa/mee';
+		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+		mname = '/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
+		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+		mname = '1:/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
+		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+		</script></pre>
+	</div>
+	<div class="Box Green">
+		<h2>Module (asynchronous)</h2>
+		<pre id="asyncModulePre1"><script type="text/javascript">
+		require('./async.js', function(mod) {
+			var node = document.getElementById('asyncModulePre1');
+			node.innerHTML += mod.greet()+'\n';
+		});
+		</script></pre>
+	</div>
+	<div class="Box Green">
+		<h2>Module (asynchronous, cached)</h2>
+		<pre id="asyncModulePre2"><script type="text/javascript">
+		require('./module.js', function(mod) {
+			var node = document.getElementById('asyncModulePre2');
+			node.innerHTML += mod.greet()+'\n';
+		});
+		</script></pre>
+	</div>
+	<div class="Box Green">
+		<h2>Module (synchronous)</h2>
+		<pre><script type="text/javascript">
+		var mod = require('module');
+		document.writeln(mod.greet());
+		mod.greetstr = 'HELLO WORLD';
+		document.write(mod.greet());
+		</script></pre>
+	</div>
+	<div class="Box Green">
+		<h2>Module (synchronous, replaced exports)</h2>
+		<pre><script type="text/javascript">
+		var mod = require('replaced');
+		document.writeln(mod.greet());
+		</script></pre>
+	</div>
+	<div class="Box Green">
+		<h2>Module (synchronous, cached)</h2>
+		<pre><script type="text/javascript">
+		var mod = require('module');
+		document.writeln(mod.greet());
+		</script></pre>
+	</div>
+	<div class="Box Green">
+		<h2>Module (synchronous, relative)</h2>
+		<pre><script type="text/javascript">
+		var main = require('./relative/main');
+		document.writeln(main.greet());
+		</script></pre>
+	</div>
+	<div class="Box Blue">
+		<h2>Bundle (asynchronous)</h2>
+		<pre id="asyncBundlePre"><script type="text/javascript">
+		require('bundle');
+		require('module1', function(mod) {
+			var node = document.getElementById('asyncBundlePre');
+			node.innerHTML += mod.greet()+'\n';
+		});
+		require('module2', function(mod) {
+			var node = document.getElementById('asyncBundlePre');
+			node.innerHTML += mod.greet()+'\n';
+		});
+		</script></pre>
+	</div>
+	<div class="Box Blue">
+		<h2>Bundle (synchronous)</h2>
+		<pre><script type="text/javascript">
+		var mod1 = require('module1');
+		document.writeln(mod1.greet());
+		mod1.hellostr = 'HELLO';
+		document.writeln(mod1.greet());
+		var mod2 = require('module2');
+		document.writeln(mod2.greet());
+		mod2.worldstr = 'WORLD';
+		document.writeln(mod2.greet());
+		</script></pre>
+	</div>
+	<div class="Box Blue">
+		<h2>Bundle (cached)</h2>
+		<pre><script type="text/javascript">
+		var mod1 = require('module1');
+		document.writeln(mod1.greet());
+		var mod2 = require('module2');
+		document.writeln(mod2.greet());
+		</script></pre>
+	</div>
+	<div class="Box Blue">
+		<h2>Bundle (synchronous, relative)</h2>
+		<pre><script type="text/javascript">
+		require('relative/water');
+		var fish = require('fish');
+		document.writeln(fish.greet());
+		var shark = require('relative/shark');
+		document.writeln(shark.greet());
+		var whale = require('whale');
+		document.writeln(whale.greet());
+		var dolphin = require('ocean/dolphin');
+		document.writeln(dolphin.greet());
+		</script></pre>
+	</div>
+</body>
+
+</html>
+
