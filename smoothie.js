@@ -1,7 +1,7 @@
 //
 // This file is part of Smoothie.
 //
-// Copyright (C) 2013 Torben Haase, Flowy Apps (torben@flowyapps.com)
+// Copyright (C) 2013,14 Torben Haase, Flowy Apps (torben@flowyapps.com)
 //
 // Smoothie is free software: you can redistribute it and/or modify it under the
 // terms of the GNU Lesser General Public License as published by the Free
@@ -20,6 +20,12 @@
 //      environment for each module and runs its code. Scroll down to the end of
 //      the file to see the function definition.
 (function(load) { 'use strict';
+
+var SmoothieError = function(message, fileName, lineNumber) {
+	this.name = "SmoothieError";
+	this.message = message;
+}
+SmoothieError.prototype = Object.create(Error.prototype);
 
 // INFO Smoothie options
 //      The values can be set by defining a object called Smoothie, which
@@ -92,7 +98,7 @@ function require(identifier, callback) {
 		if (request.readyState != 4)
 			return;
 		if (request.status != 200)
-			throw 'Smoothie require exception: '+descriptor.uri+': '+request.statusText+' ('+request.status+')';
+			throw new SmoothieError('unable to load '+descriptor.id+" ("+request.status+" "+request.statusText+")");
 		if (!cache[cacheid])
 			load(descriptor, cache, pwd, 'function(){\n'+request.responseText+'\n}');
 		callback && callback(cache[cacheid]);
@@ -159,19 +165,19 @@ function boot(module) {
 						module.complete && module.complete(document.body);
 						break;
 					default:
-						throw 'Smoothie boot exception: unknown readyState: '+document.readyState;
+						throw new SmoothieError('unknown readyState '+document.readyState);
 				}
 			};
 			break;
 		default:
-			throw 'Smoothie boot exception: unknown readyState: '+document.readyState;
+			throw new SmoothieError('unknown readyState '+document.readyState);
 	}
 }
 
 // INFO Bootstrapping 1: Exporting require to global scope
 
 if (window.require !== undefined)
-	throw 'Smoothie require exception: \'require\' already defined in global scope';
+	throw new SmoothieError('\'require\' already defined in global scope');
 
 try {
 	Object.defineProperty(window, 'require', {'value':require});
@@ -191,12 +197,7 @@ catch (e) {
 
 // INFO Bootstrapping 2: Loading the main module
 
-try {
-	main && require(main, boot);
-}
-catch (e) {
-	console && console.log("Smoothie boot warning: error while loading main: "+e);
-}
+main && require(main, boot);
 
 })(
 
@@ -223,7 +224,10 @@ function /*load*/(module/*, cache, pwd, source*/) {
 				arguments[1]['$'+require.resolve(id).id] = module[id].toString();
 	}
 	catch (e) {
-		throw 'Smoothie require exception: error loading \''+module.uri+'\': '+e;	
+		if (e.name == 'SyntaxError')
+			throw new SyntaxError(e.message+" in "+module.uri, module.uri);
+		else
+			throw e;
 	}
 	finally {
 		arguments[2].shift();

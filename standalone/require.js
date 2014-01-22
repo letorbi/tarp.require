@@ -1,7 +1,7 @@
 //
 // This file is part of Smoothie.
 //
-// Copyright (C) 2013 Torben Haase, Flowy Apps (torben@flowyapps.com)
+// Copyright (C) 2013,14 Torben Haase, Flowy Apps (torben@flowyapps.com)
 //
 // Smoothie is free software: you can redistribute it and/or modify it under the
 // terms of the GNU Lesser General Public License as published by the Free
@@ -27,6 +27,12 @@
 //      environment for each module and runs its code. Scroll down to the end of
 //      the file to see the function definition.
 (function(load) { 'use strict';
+
+var SmoothieError = function(message, fileName, lineNumber) {
+	this.name = "SmoothieError";
+	this.message = message;
+}
+SmoothieError.prototype = Object.create(Error.prototype);
 
 // INFO Smoothie options
 //      The values can be set by defining a object called Smoothie, which
@@ -85,10 +91,17 @@ function require(identifier, callback) {
 	}
 
 	var request = new XMLHttpRequest();
-	
-	request.onload = function() {
+
+	// NOTE IE8 doesn't support the onload event, therefore we use
+	//      onreadystatechange as a fallback here. However, onreadystatechange
+	//      shouldn't be used for all browsers, since at least mobile Safari
+	//      seems to have an issue where onreadystatechange is called twice for
+	//      readyState 4.
+	request[request.onload===null?'onload':'onreadystatechange'] = function() {
+		if (request.readyState != 4)
+			return;
 		if (request.status != 200)
-			throw 'Smoothie require exception: '+descriptor.uri+': '+request.statusText+' ('+request.status+')';
+			throw new SmoothieError('unable to load '+descriptor.id+" ("+request.status+" "+request.statusText+")");
 		if (!cache[cacheid])
 			load(descriptor, cache, pwd, 'function(){\n'+request.responseText+'\n}');
 		callback && callback(cache[cacheid]);
@@ -110,19 +123,17 @@ function resolve(identifier) {
 	// NOTE Matches [1]:[/path/to]
 	var p = pwd[0].match(/^(?:([^:\/]+):)?(.*)/);
 
-    // NOTE The cache is a HTMLAnchorElement, so we can use it as a URL parser.
-	cache.href = '/'+((m[2]?p[2]+m[2]+'/':'')+m[3])+(m[4]?m[4]:'index');
-	var res = {
-		'id': (parseInt(p[1])>0?p[1]+':':parseInt(m[1])>0?m[1]+':':'')+cache.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/g, ''),
-		'uri': paths[p[1]?parseInt(p[1]):m[1]?parseInt(m[1]):0]+cache.href.replace(/^[^:]*:\/\/[^\/]*\//, '')+(m[5]?m[5]:'.js')
+	parser.href = '/'+((m[2]?p[2]+m[2]+'/':'')+m[3])+(m[4]?m[4]:'index');
+	return {
+		'id': (parseInt(p[1])>0?p[1]+':':parseInt(m[1])>0?m[1]+':':'')+parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/g, ''),
+		'uri': paths[p[1]?parseInt(p[1]):m[1]?parseInt(m[1]):0]+parser.href.replace(/^[^:]*:\/\/[^\/]*\//, '')+(m[5]?m[5]:'.js')
 	};
-	return res;
 }
 
 // INFO Exporting require to global scope
 
 if (window.require !== undefined)
-	throw 'Smoothie require exception: \'require\' already defined in global scope';
+	throw new SmoothieError('\'require\' already defined in global scope');
 
 try {
 	Object.defineProperty(window, 'require', {'value':require});
@@ -135,6 +146,9 @@ catch (e) {
 	window.require = require;
 	window.require.resolve = resolve;
 	window.require.paths = paths.slice(0);
+	// NOTE We definetly need a getter for the cache, so we make the the cache a
+	//      DOM-object in IE8.
+	cache = document.createElement('DIV');
 }
 
 })(
@@ -162,7 +176,10 @@ function /*load*/(module/*, cache, pwd, source*/) {
 				arguments[1]['$'+require.resolve(id).id] = module[id].toString();
 	}
 	catch (e) {
-		throw 'Smoothie require exception: error loading \''+module.uri+'\': '+e;	
+		if (e.name == 'SyntaxError')
+			throw new SyntaxError(e.message+" in "+module.uri, module.uri);
+		else
+			throw e;
 	}
 	finally {
 		arguments[2].shift();
