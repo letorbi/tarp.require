@@ -41,16 +41,19 @@ SmoothieError.prototype = Object.create(Error.prototype);
 //      and changing the values in the Smoothie object will have no effect
 //      afterwards!
 
-// NOTE Module paths
+// NOTE Global module paths
 var paths = window.Smoothie&&window.Smoothie.paths!==undefined?window.Smoothie.paths.slice(0):['./'];
 
-// INFO Current paths
+// INFO Current module paths
 //      path[0] contains the path of the currently loaded module, path[1]
 //      contains the path its parent module and so on.
 
 var pwd = Array('');
 
 // INFO Path parser
+//      A HTMLAnchorElement parses its href property automatically, so we use
+//      this functionality to parse our module paths instead of implemnting our
+//      own.
 
 var parser = document.createElement('A');
 
@@ -61,11 +64,11 @@ var parser = document.createElement('A');
 //      As long as a module has not been loaded the getter is either undefined
 //      or contains the module code as a function (in case the module has been
 //      pre-laoded in a bundle).
-// NOTE Since IE8 only allows to define getters on DOM-objects, we use the
-//      parser DOM-object is that case;
+// NOTE For IE8 the cache will be replaced by a HTMLDivElement-object later on,
+//      since defineProperty is only supported for DOM objects there.
 
-console.log(Object.defineProperty);
-var cache = Object.defineProperty ? new Object() : parser;
+var cache = new Object();
+var locks = new Object();
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
