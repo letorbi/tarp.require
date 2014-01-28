@@ -11,7 +11,8 @@
 
 	<script type="text/javascript">
 		var Smoothie = {
-			'main':null
+			'main':null,
+			'paths': ['./',"/alternative/module/root/"]
 		};
 	</script>
 	<script type="text/javascript" src="../../smoothie.js"></script>
@@ -109,11 +110,11 @@
 		<h2>Bundle (asynchronous)</h2>
 		<pre id="asyncBundlePre"><script type="text/javascript">
 		require('bundle');
-		require('module1', function(mod) {
+		require('moduleA', function(mod) {
 			var node = document.getElementById('asyncBundlePre');
 			node.innerHTML += mod.greet()+'\n';
 		});
-		require('module2', function(mod) {
+		require('moduleB', function(mod) {
 			var node = document.getElementById('asyncBundlePre');
 			node.innerHTML += mod.greet()+'\n';
 		});
@@ -122,23 +123,23 @@
 	<div class="Box Blue">
 		<h2>Bundle (synchronous)</h2>
 		<pre><script type="text/javascript">
-		var mod1 = require('module1');
-		document.writeln(mod1.greet());
-		mod1.hellostr = 'HELLO';
-		document.writeln(mod1.greet());
-		var mod2 = require('module2');
-		document.writeln(mod2.greet());
-		mod2.worldstr = 'WORLD';
-		document.writeln(mod2.greet());
+		var modA = require('moduleA');
+		document.writeln(modA.greet());
+		modA.hellostr = 'HELLO';
+		document.writeln(modA.greet());
+		var modB = require('moduleB');
+		document.writeln(modB.greet());
+		modB.worldstr = 'WORLD';
+		document.writeln(modB.greet());
 		</script></pre>
 	</div>
 	<div class="Box Blue">
-		<h2>Bundle (cached)</h2>
+		<h2>Bundle (synchronous, cached)</h2>
 		<pre><script type="text/javascript">
-		var mod1 = require('module1');
-		document.writeln(mod1.greet());
-		var mod2 = require('module2');
-		document.writeln(mod2.greet());
+		var modA = require('moduleA');
+		document.writeln(modA.greet());
+		var modB = require('moduleB');
+		document.writeln(modB.greet());
 		</script></pre>
 	</div>
 	<div class="Box Blue">

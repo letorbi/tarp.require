@@ -63,6 +63,7 @@ var parser = document.createElement('A');
 //      since defineProperty is only supported for DOM objects there.
 
 var cache = new Object();
+var locks = new Object();
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -94,19 +95,33 @@ function require(identifier, callback) {
 	//      shouldn't be used for all browsers, since at least mobile Safari
 	//      seems to have an issue where onreadystatechange is called twice for
 	//      readyState 4.
-	request[request.onload===null?'onload':'onreadystatechange'] = function() {
+	callback && (request[request.onload===null?'onload':'onreadystatechange'] = onLoad);
+	request.open('GET', descriptor.uri, !!callback);
+	// NOTE Sending the request causes the event loop to continue. Therefore
+	//      pending AJAX load events for the same url might be executed before
+	//      the synchronous onLoad is called. This should be no problem, but in
+	//      Chrome the responseText of the sneaked in load events will be empty.
+	//      Therefore we have to lock the loading while executong send().   
+	locks[cacheid] = locks[cacheid]++||1;
+	request.send();
+	locks[cacheid]--;
+	!callback && onLoad();
+	return cache[cacheid];
+
+	function onLoad() {
 		if (request.readyState != 4)
 			return;
 		if (request.status != 200)
 			throw new SmoothieError('unable to load '+descriptor.id+" ("+request.status+" "+request.statusText+")");
+		if (locks[cacheid]) {
+			console.warn("module locked: "+descriptor.id);
+			callback && setTimeout(onLoad, 0);
+			return;
+		}
 		if (!cache[cacheid])
 			load(descriptor, cache, pwd, 'function(){\n'+request.responseText+'\n}');
 		callback && callback(cache[cacheid]);
 	}
-
-	request.open('GET', descriptor.uri, !!callback);
-	request.send();
-	return cache[cacheid];
 }
 
 // INFO Module resolver
@@ -214,7 +229,8 @@ main && require(main, boot);
 function /*load*/(module/*, cache, pwd, source*/) {
 	try {
 		var global = window;
-		var exports = module.exports = new Object();
+		var exports = new Object();
+		Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
 		arguments[2].unshift(module.id.match(/(?:.*\/)?/)[0]);
 		Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
 		eval('('+arguments[3]+')();\n//@ sourceURL='+module.uri+'\n');

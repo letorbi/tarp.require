@@ -1,5 +1,5 @@
 module = {
-	'module1': function() {
+	'moduleB': function() {
 		'use strict';
 
 		exports.hellostr = 'hello';
@@ -8,7 +8,7 @@ module = {
 			return exports.hellostr+' world from '+module.id+'!';
 		}
 	},
-	'module2': function() {
+	'moduleA': function() {
 		'use strict';
 
 		exports.worldstr = 'world';
