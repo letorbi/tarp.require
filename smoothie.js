@@ -37,7 +37,7 @@ SmoothieError.prototype = Object.create(Error.prototype);
 // NOTE Main module identifier
 var main = window.Smoothie&&window.Smoothie.main!==undefined?window.Smoothie.main:'main';
 // NOTE Global module paths
-var paths = window.Smoothie&&window.Smoothie.paths!==undefined?window.Smoothie.paths.slice(0):['./'];
+var paths = window.Smoothie&&window.Smoothie.paths!==undefined?window.Smoothie.paths:['./'];
 
 // INFO Current module paths
 //      path[0] contains the path of the currently loaded module, path[1]
@@ -134,12 +134,14 @@ function resolve(identifier) {
 	var m = identifier.match(/^(?:([^:\/]+):)?(\.\.?)?\/?((?:.*\/)?)([^\.]+)?(\..*)?$/);
 	// NOTE Matches [1]:[/path/to]
 	var p = pwd[0].match(/^(?:([^:\/]+):)?(.*)/);
-
-	parser.href = '/'+((m[2]?p[2]+m[2]+'/':'')+m[3])+(m[4]?m[4]:'index');
-	return {
-		'id': (parseInt(p[1])>0?p[1]+':':parseInt(m[1])>0?m[1]+':':'')+parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/g, ''),
-		'uri': paths[p[1]?parseInt(p[1]):m[1]?parseInt(m[1]):0]+parser.href.replace(/^[^:]*:\/\/[^\/]*\//, '')+(m[5]?m[5]:'.js')
-	};
+	var root = m[2] ? paths[p[1]?parseInt(p[1]):0] : paths[m[1]?parseInt(m[1]):0];
+	parser.href = (m[2]?root+p[2]+m[2]+'/':root)+m[3]+(m[4]?m[4]:'index');
+	var id = parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/g, '');
+	var uri = "/"+id+(m[5]?m[5]:'.js');
+	root.replace(/[^\/]+\//g, function(r) {
+		id = (id.substr(0, r.length) == r) ?id.substr(r.length) : id = '../'+id;
+	});
+	return {'id':id,'uri':uri};
 }
 
 // INFO Boot loader
@@ -210,6 +212,18 @@ catch (e) {
 	cache = document.createElement('DIV');
 }
 
+// INFO Adding preloaded modules to cache
+
+for (var id in Smoothie.preloaded)
+	cache['$'+id] = Smoothie.preloaded[id].toString();
+
+// INFO Parsing module root paths
+
+for (var i=0; i<paths.length; i++) {
+	parser.href = paths[i];
+	paths[i] = '/'+parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/g, '');
+}
+
 // INFO Bootstrapping 2: Loading the main module
 
 main && require(main, boot);
@@ -235,7 +249,7 @@ function /*load*/(module/*, cache, pwd, source*/) {
 		Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
 		eval('('+arguments[3]+')();\n//@ sourceURL='+module.uri+'\n');
 		// NODE Store module code in the cache if the loaded file is a bundle
-		if (typeof module.id !== 'String')
+		if (typeof module.id !== 'string')
 			for (id in module)
 				arguments[1]['$'+require.resolve(id).id] = module[id].toString();
 	}
@@ -251,4 +265,3 @@ function /*load*/(module/*, cache, pwd, source*/) {
 }
 
 );
-

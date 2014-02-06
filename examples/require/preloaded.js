@@ -2,7 +2,7 @@
 !window.Smoothie.preloaded && (window.Smoothie.preloaded = new Object()); 
 module = typeof module=='undefined' ? Smoothie.preloaded : new Object(); 
 
-module['moduleA'] = function() {
+module['preloadedA'] = function() {
 	'use strict';
 
 	exports.hellostr = 'hello';
@@ -12,7 +12,7 @@ module['moduleA'] = function() {
 	}
 }
 
-module['moduleB'] = function() {
+module['preloadedB'] = function() {
 	'use strict';
 
 	exports.worldstr = 'world';

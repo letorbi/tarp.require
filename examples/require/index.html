@@ -12,10 +12,12 @@
 	<script type="text/javascript">
 		var Smoothie = {
 			'main':null,
-			'paths': ['./',"/alternative/module/root/"]
+			'paths': ['./',"/alternative/module/root/"],
+			'preloaded': new Object()
 		};
 	</script>
-	<script type="text/javascript" src="../../smoothie.js"></script>
+	<script type="text/javascript" src="./preloaded.js"></script>
+	<script type="text/javascript" src="../../standalone/require.js"></script>
 </head>
 
 <body>
@@ -23,6 +25,7 @@
 	<div class="Box Red">
 		<h2>Module paths</h2>
 		<pre><script type="text/javascript">
+		console.log(window.Smoothie);
 		Smoothie.paths = ['/evil/hack/path/'];
 		document.writeln(require.paths);
 		require.paths.push('/yet/another/evil/hack/');
@@ -97,6 +100,8 @@
 		<pre><script type="text/javascript">
 		var mod = require('module');
 		document.writeln(mod.greet());
+		mod.greetstr = 'hello world';
+		document.write(mod.greet());
 		</script></pre>
 	</div>
 	<div class="Box Green">
@@ -154,6 +159,19 @@
 		document.writeln(whale.greet());
 		var dolphin = require('ocean/dolphin');
 		document.writeln(dolphin.greet());
+		</script></pre>
+	</div>
+	<div class="Box Blue">
+		<h2>Bundle (preloaded)</h2>
+		<pre><script type="text/javascript">
+		var preA = require('preloadedA');
+		document.writeln(preA.greet());
+		preA.hellostr = 'HELLO';
+		document.writeln(preA.greet());
+		var preB = require('preloadedB');
+		document.writeln(preB.greet());
+		preB.worldstr = 'WORLD';
+		document.writeln(preB.greet());
 		</script></pre>
 	</div>
 </body>

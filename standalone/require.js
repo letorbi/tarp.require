@@ -139,12 +139,14 @@ function resolve(identifier) {
 	var m = identifier.match(/^(?:([^:\/]+):)?(\.\.?)?\/?((?:.*\/)?)([^\.]+)?(\..*)?$/);
 	// NOTE Matches [1]:[/path/to]
 	var p = pwd[0].match(/^(?:([^:\/]+):)?(.*)/);
-
-	parser.href = '/'+((m[2]?p[2]+m[2]+'/':'')+m[3])+(m[4]?m[4]:'index');
-	return {
-		'id': (parseInt(p[1])>0?p[1]+':':parseInt(m[1])>0?m[1]+':':'')+parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/g, ''),
-		'uri': paths[p[1]?parseInt(p[1]):m[1]?parseInt(m[1]):0]+parser.href.replace(/^[^:]*:\/\/[^\/]*\//, '')+(m[5]?m[5]:'.js')
-	};
+	var root = m[2] ? paths[p[1]?parseInt(p[1]):0] : paths[m[1]?parseInt(m[1]):0];
+	parser.href = (m[2]?root+p[2]+m[2]+'/':root)+m[3]+(m[4]?m[4]:'index');
+	var id = parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/g, '');
+	var uri = "/"+id+(m[5]?m[5]:'.js');
+	root.replace(/[^\/]+\//g, function(r) {
+		id = (id.substr(0, r.length) == r) ?id.substr(r.length) : id = '../'+id;
+	});
+	return {'id':id,'uri':uri};
 }
 
 // INFO Exporting require to global scope
@@ -166,6 +168,18 @@ catch (e) {
 	// NOTE We definetly need a getter for the cache, so we make the the cache a
 	//      DOM-object in IE8.
 	cache = document.createElement('DIV');
+}
+
+// INFO Adding preloaded modules to cache
+
+for (var id in Smoothie.preloaded)
+	cache['$'+id] = Smoothie.preloaded[id].toString();
+
+// INFO Parsing module root paths
+
+for (var i=0; i<paths.length; i++) {
+	parser.href = paths[i];
+	paths[i] = '/'+parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/g, '');
 }
 
 })(
