@@ -172,8 +172,8 @@ catch (e) {
 
 // INFO Adding preloaded modules to cache
 
-for (var id in Smoothie.preloaded)
-	cache['$'+id] = Smoothie.preloaded[id].toString();
+for (var id in (window.Smoothie && window.Smoothie.preloaded))
+	cache['$'+id] = window.Smoothie.preloaded[id].toString();
 
 // INFO Parsing module root paths
 

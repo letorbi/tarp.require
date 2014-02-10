@@ -37,7 +37,7 @@ SmoothieError.prototype = Object.create(Error.prototype);
 // NOTE Main module identifier
 var main = window.Smoothie&&window.Smoothie.main!==undefined?window.Smoothie.main:'main';
 // NOTE Global module paths
-var paths = window.Smoothie&&window.Smoothie.paths!==undefined?window.Smoothie.paths:['./'];
+var paths = window.Smoothie&&window.Smoothie.paths!==undefined?window.Smoothie.paths.slice(0):['./'];
 
 // INFO Current module paths
 //      path[0] contains the path of the currently loaded module, path[1]
@@ -214,8 +214,8 @@ catch (e) {
 
 // INFO Adding preloaded modules to cache
 
-for (var id in Smoothie.preloaded)
-	cache['$'+id] = Smoothie.preloaded[id].toString();
+for (var id in (window.Smoothie && window.Smoothie.preloaded))
+	cache['$'+id] = window.Smoothie.preloaded[id].toString();
 
 // INFO Parsing module root paths
 
