@@ -201,9 +201,12 @@ function /*load*/(module/*, cache, pwd, source*/) {
 		Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
 		arguments[2].unshift(module.id.match(/(?:.*\/)?/)[0]);
 		Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
-		eval('('+arguments[3]+')();\n//@ sourceURL='+module.uri+'\n');
-		// NODE Store module code in the cache if the loaded file is a bundle
-		if (typeof module.id !== 'String')
+		// NOTE Firebug ignores the sourceUrl when the source is composed inside
+		//      the eval call.
+		arguments[3] = '('+arguments[3]+')();\n//# sourceURL='+module.uri;
+		eval(arguments[3]);
+		// NOTE Store module code in the cache if the loaded file is a bundle
+		if (typeof module.id !== 'string')
 			for (id in module)
 				arguments[1]['$'+require.resolve(id).id] = module[id].toString();
 	}

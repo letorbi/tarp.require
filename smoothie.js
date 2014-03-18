@@ -241,27 +241,20 @@ main && require(main, boot);
 //      also the reason why `source`, `pwd` & `cache` are not named parameters.
 
 function /*load*/(module/*, cache, pwd, source*/) {
-	try {
-		var global = window;
-		var exports = new Object();
-		Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
-		arguments[2].unshift(module.id.match(/(?:.*\/)?/)[0]);
-		Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
-		eval('('+arguments[3]+')();\n//@ sourceURL='+module.uri+'\n');
-		// NODE Store module code in the cache if the loaded file is a bundle
-		if (typeof module.id !== 'string')
-			for (id in module)
-				arguments[1]['$'+require.resolve(id).id] = module[id].toString();
-	}
-	catch (e) {
-		if (e.name == 'SyntaxError')
-			throw new SyntaxError(e.message+" in "+module.uri, module.uri);
-		else
-			throw e;
-	}
-	finally {
-		arguments[2].shift();
-	}
+	var global = window;
+	var exports = new Object();
+	Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
+	arguments[2].unshift(module.id.match(/(?:.*\/)?/)[0]);
+	Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
+	// NOTE Firebug ignores the sourceUrl when the source is composed inside
+	//      the eval call.
+	arguments[3] = '('+arguments[3]+')();\n//# sourceURL='+module.uri;
+	eval(arguments[3]);
+	// NOTE Store module code in the cache if the loaded file is a bundle
+	if (typeof module.id !== 'string')
+		for (id in module)
+			arguments[1]['$'+require.resolve(id).id] = module[id].toString();
+	arguments[2].shift();
 }
 
 );
