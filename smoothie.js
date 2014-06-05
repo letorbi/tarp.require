@@ -76,6 +76,27 @@ var locks = new Object();
 //      module has been loaded.
 
 function require(identifier, callback) {
+  if(identifier instanceof Array && callback) {
+    if(identifier.length < 1) {
+      callback.apply(this, []);
+      return;
+    }
+    var newarr = [];
+    for(var i = 0; i < identifier.length; i++)
+          newarr.push(identifier[i]);
+    var modname = newarr.pop();
+    require(modname, function(mod){
+      require(newarr, function(){
+        var args = [];
+        for(var i = 0; i < arguments.length; i++)
+          args.push(arguments[i]);
+        args.push(mod);
+        callback.apply(this, args);
+      });
+    });
+    return;
+  }
+
 	var descriptor = resolve(identifier);
 	var cacheid = '$'+descriptor.id;
 
