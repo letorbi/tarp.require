@@ -81,25 +81,21 @@ var locks = new Object();
 //      module has been loaded.
 
 function require(identifier, callback) {
-  if(identifier instanceof Array && callback) {
-    if(identifier.length < 1) {
-      callback.apply(this, []);
-      return;
+  if(identifier instanceof Array) {
+    var modules = [];
+    var modules_left = identifier.length;
+    for(var i = 0; i < identifier.length; i++){
+      (function(idx, modname){
+        modules.push(require(modname, function(mod){
+          modules[idx] = mod;
+          modules_left--;
+          if(modules_left == 0) {
+            callback.apply(this, modules);
+          }
+        }));
+      })(i, identifier[i]);
     }
-    var newarr = [];
-    for(var i = 0; i < identifier.length; i++)
-          newarr.push(identifier[i]);
-    var modname = newarr.pop();
-    require(modname, function(mod){
-      require(newarr, function(){
-        var args = [];
-        for(var i = 0; i < arguments.length; i++)
-          args.push(arguments[i]);
-        args.push(mod);
-        callback.apply(this, args);
-      });
-    });
-    return;
+    return modules;
   }
 
 	var descriptor = resolve(identifier);
