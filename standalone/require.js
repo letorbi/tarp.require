@@ -81,6 +81,12 @@ var locks = new Object();
 //      module has been loaded.
 
 function require(identifier, callback) {
+	if (typeof(window.requireOverrides) !== 'undefined' &&
+		window.requireOverrides.hasOwnProperty(identifier)) {
+		callback && setTimeout(function(){callback(window.requireOverrides[identifier])}, 0);
+		return window.requireOverrides[identifier];
+	}
+
 	var descriptor = resolve(identifier);
 	var cacheid = '$'+descriptor.id;
 
@@ -123,8 +129,13 @@ function require(identifier, callback) {
 			callback && setTimeout(onLoad, 0);
 			return;
 		}
-		if (!cache[cacheid])
-			load(descriptor, cache, pwd, 'function(){\n'+request.responseText+'\n}');
+		if (!cache[cacheid]) {
+			var contents = request.responseText;
+			if (typeof(window.requireCompiler) !== 'undefined') {
+				contents = window.requireCompiler(contents);
+			}
+			load(descriptor, cache, pwd, 'function(){\n'+contents+'\n}');
+		}
 		callback && callback(cache[cacheid]);
 	}
 }
