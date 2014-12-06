@@ -67,6 +67,7 @@ var lock = new Object();
 //      and changing the values in the Smoothie object will have no effect
 //      afterwards!
 
+var main = window.Smoothie&&window.Smoothie.main!==undefined?window.Smoothie.main:'main';
 var requirePath = window.Smoothie&&window.Smoothie.requirePath!==undefined ? window.Smoothie.requirePath.slice(0) : ['./'];
 var requireCompiler = window.Smoothie&&window.Smoothie.requireCompiler!==undefined ? window.Smoothie.requireCompiler : null;
 
