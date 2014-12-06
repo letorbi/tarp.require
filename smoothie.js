@@ -97,6 +97,24 @@ for (var i=0; i<requirePath.length; i++) {
 
 function require(identifier, callback, compiler) {
 	compiler = compiler!==undefined ? compiler : requireCompiler;
+
+  if(identifier instanceof Array) {
+    var modules = [];
+    var modules_left = identifier.length;
+    for(var i = 0; i < identifier.length; i++){
+      (function(idx, modname){
+        modules.push(require(modname, function(mod){
+          modules[idx] = mod;
+          modules_left--;
+          if(modules_left == 0) {
+            callback.apply(this, modules);
+          }
+        }, compiler));
+      })(i, identifier[i]);
+    }
+    return modules;
+  }
+
 	var descriptor = resolve(identifier);
 	var cacheid = '$'+descriptor.id;
 
