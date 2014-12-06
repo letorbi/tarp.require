@@ -12,8 +12,12 @@
 	<script type="text/javascript">
 		var Smoothie = {
 			'main':null,
-			'paths': ['./',"/alternative/module/root/"],
-			'preloaded': new Object()
+			'requirePath': ['./',"/alternative/module/root/"],
+			'requirePreloaded': new Object(),
+			'requireCompiler': function(source) {
+				console.log("Fake require compiler called");
+				return source;
+			}
 		};
 	</script>
 	<script type="text/javascript" src="./preloaded.js"></script>
@@ -26,10 +30,10 @@
 		<h2>Module paths</h2>
 		<pre><script type="text/javascript">
 		console.log(window.Smoothie);
-		Smoothie.paths = ['/evil/hack/path/'];
-		document.writeln(require.paths);
-		require.paths.push('/yet/another/evil/hack/');
-		document.writeln(require.paths+' (must be the same as above)');
+		Smoothie.requirePath = ['/evil/hack/path/'];
+		document.writeln(require.path);
+		require.path.push('/yet/another/evil/hack/');
+		document.writeln(require.path+' (must be the same as above)');
 		</script></pre>
 	</div>
 	<div class="Box Red">
@@ -80,18 +84,21 @@
 		</script></pre>
 	</div>
 	<div class="Box Green">
-		<h2>Module (synchronous)</h2>
+		<h2>Module (synchronous, alternative compiler)</h2>
 		<pre><script type="text/javascript">
-		var mod = require('module');
+		var mod = require('module', null, function(source) {
+			console.log("Alternative fake require compiler called");
+			return source;
+		});
 		document.writeln(mod.greet());
 		mod.greetstr = 'HELLO WORLD';
 		document.write(mod.greet());
 		</script></pre>
 	</div>
 	<div class="Box Green">
-		<h2>Module (synchronous, replaced exports)</h2>
+		<h2>Module (synchronous, replaced exports, no compiler)</h2>
 		<pre><script type="text/javascript">
-		var mod = require('replaced');
+		var mod = require('replaced', null, null);
 		document.writeln(mod.greet());
 		</script></pre>
 	</div>
@@ -107,7 +114,7 @@
 	<div class="Box Green">
 		<h2>Module (synchronous, relative)</h2>
 		<pre><script type="text/javascript">
-		var main = require('./relative/main');
+		var main = require('module');
 		document.writeln(main.greet());
 		</script></pre>
 	</div>
