@@ -96,25 +96,21 @@ for (var i=0; i<requirePath.length; i++) {
 //      module has been loaded.
 
 function require(identifier, callback, compiler) {
+	if (identifier instanceof Array) {
+		var modules = new Array();
+		var modcount = identifier.length;
+		for (var index = 0; index < identifier.length; index++) {
+			(function(id, i) {
+				modules.push(require(id, callback&&function(mod) {
+					modules[i] = mod;
+					(--modcount==0) && callback(modules);
+				}, compiler));
+			})(identifier[index], index);
+		}
+		return modules;
+	}
+
 	compiler = compiler!==undefined ? compiler : requireCompiler;
-
-  if(identifier instanceof Array) {
-    var modules = [];
-    var modules_left = identifier.length;
-    for(var i = 0; i < identifier.length; i++){
-      (function(idx, modname){
-        modules.push(require(modname, function(mod){
-          modules[idx] = mod;
-          modules_left--;
-          if(modules_left == 0) {
-            callback.apply(this, modules);
-          }
-        }, compiler));
-      })(i, identifier[i]);
-    }
-    return modules;
-  }
-
 	var descriptor = resolve(identifier);
 	var cacheid = '$'+descriptor.id;
 

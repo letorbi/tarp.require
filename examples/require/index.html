@@ -84,6 +84,17 @@
 		</script></pre>
 	</div>
 	<div class="Box Green">
+		<h2>Module (asynchronous, relative, array loader)</h2>
+		<pre  id="asyncModulePre3"><script type="text/javascript">
+		require('./module1', function(mod) {
+			var node = document.getElementById('asyncModulePre3');
+			node.innerHTML += mod.greet()+'\n';
+		});
+		//var mod1 = require('./module1');
+		//document.writeln(mod1.greet());
+		</script></pre>
+	</div>
+	<div class="Box Green">
 		<h2>Module (synchronous, alternative compiler)</h2>
 		<pre><script type="text/javascript">
 		var mod = require('module', null, function(source) {
@@ -109,13 +120,6 @@
 		document.writeln(mod.greet());
 		mod.greetstr = 'hello world';
 		document.write(mod.greet());
-		</script></pre>
-	</div>
-	<div class="Box Green">
-		<h2>Module (synchronous, relative)</h2>
-		<pre><script type="text/javascript">
-		var main = require('module');
-		document.writeln(main.greet());
 		</script></pre>
 	</div>
 	<div class="Box Blue">
