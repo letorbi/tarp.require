@@ -43,19 +43,21 @@
 		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
 		mname = './module';
 		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-		mname = '../module';
-		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-
+		try {
+			mname = '../module';
+			document.write('require.resolve('+mname+') -> ');
+			require.resolve(mname);
+		}
+		catch (e) {
+			document.writeln(e+" (this error is intended)");
+		}
 		mname = 'module.js';
 		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
 		var mname = '/module.js';
 		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
 		mname = './module.js';
 		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
-		mname = '../module.js';
-		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-
-		mname = '../foo/bar/./././baz///moo/maa/../../../mee/gee';
+		mname = './boo/../foo/bar/./././baz///moo/maa/../../../mee/gee';
 		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
 		mname = 'foo/bar//baz///moo////maa/mee';
 		document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
@@ -90,8 +92,6 @@
 			var node = document.getElementById('asyncModulePre3');
 			node.innerHTML += mod.greet()+'\n';
 		});
-		//var mod1 = require('./module1');
-		//document.writeln(mod1.greet());
 		</script></pre>
 	</div>
 	<div class="Box Green">

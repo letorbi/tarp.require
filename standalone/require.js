@@ -59,17 +59,17 @@ var parser = document.createElement('A');
 
 var cache = document.createElement('DIV');
 
-// INFO Module cache lock
+// INFO Send lock
 // NOTE Sending the request causes the event loop to continue. Therefore
 //      pending AJAX load events for the same url might be executed before
 //      the synchronous onLoad is called. This should be no problem, but in
 //      Chrome the responseText of the sneaked in load events will be empty.
 //      Therefore we have to lock the loading while executing send().   
 
-var locks = new Object();
+var lock = new Object();
 
 // INFO Smoothie options
-// NOTE The values can be set by defining a object called Smoothie. The
+//      The values can be set by defining a object called Smoothie. The
 //      Smoothe object has to be defined before this script here is loaded
 //      and changing the values in the Smoothie object will have no effect
 //      afterwards!
@@ -77,20 +77,19 @@ var locks = new Object();
 var requirePath = window.Smoothie&&window.Smoothie.requirePath!==undefined ? window.Smoothie.requirePath.slice(0) : ['./'];
 var requireCompiler = window.Smoothie&&window.Smoothie.requireCompiler!==undefined ? window.Smoothie.requireCompiler : null;
 
-// NOTE Add preloaded modules to cache
-for (var id in (window.Smoothie && window.Smoothie.requirePreloaded))
-	cache['$'+id] = window.Smoothie.requirePreloaded[id].toString();
-
-// NOTE Add module overrides to cache
-for (var id in (window.Smoothie && window.Smoothie.requireOverrides))
-	cache['$'+id] = window.Smoothie.requireOverrides[id];
-
-// INFO Parse module root paths
-
+// NOTE Parse module root paths
 for (var i=0; i<requirePath.length; i++) {
 	parser.href = requirePath[i];
 	requirePath[i] = '/'+parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/g, '');
 }
+
+// NOTE Add preloaded modules to cache
+for (var id in (window.Smoothie && window.Smoothie.requirePreloaded))
+	cache['$'+resolve(id).id] = window.Smoothie.requirePreloaded[id].toString();
+
+// NOTE Add module overrides to cache
+for (var id in (window.Smoothie && window.Smoothie.requireOverrides))
+	cache['$'+resolve(id).id] = window.Smoothie.requireOverrides[id];
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -139,9 +138,9 @@ function require(identifier, callback, compiler) {
 	//      readyState 4.
 	callback && (request[request.onload===null?'onload':'onreadystatechange'] = onLoad);
 	request.open('GET', descriptor.uri, !!callback);
-	locks[cacheid] = locks[cacheid]++||1;
+	lock[cacheid] = lock[cacheid]++||1;
 	request.send();
-	locks[cacheid]--;
+	lock[cacheid]--;
 	!callback && onLoad();
 	return cache[cacheid];
 
@@ -149,8 +148,8 @@ function require(identifier, callback, compiler) {
 		if (request.readyState != 4)
 			return;
 		if (request.status != 200)
-			throw new SmoothieError('unable to load '+descriptor.id+" ("+request.status+" "+request.statusText+")");
-		if (locks[cacheid]) {
+			throw new SmoothieError("unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
+		if (lock[cacheid]) {
 			console.warn("module locked: "+descriptor.id);
 			callback && setTimeout(onLoad, 0);
 			return;
@@ -175,11 +174,11 @@ function resolve(identifier) {
 	var p = pwd[0].match(/^(?:([^:\/]+):)?(.*)/);
 	var root = m[2] ? requirePath[p[1]?parseInt(p[1]):0] : requirePath[m[1]?parseInt(m[1]):0];
 	parser.href = (m[2]?root+p[2]+m[2]+'/':root)+m[3]+(m[4]?m[4]:'index');
-	var id = parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/g, '');
-	var uri = "/"+id+(m[5]?m[5]:'.js');
-	root.replace(/[^\/]+\//g, function(r) {
-		id = (id.substr(0, r.length) == r) ?id.substr(r.length) : id = '../'+id;
-	});
+	var id = "/"+parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/, '');
+	var uri = id+(m[5]?m[5]:'.js');
+	if (id.substr(0,root.length) != root)
+		throw new SmoothieError("Relative identifier outside of module root");
+	id = (m[1]?m[1]+":":"0:")+id.substr(root.length);
 	return {'id':id,'uri':uri};
 }
 
