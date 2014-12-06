@@ -1,6 +1,6 @@
 !window.Smoothie && (window.Smoothie = new Object()); 
-!window.Smoothie.preloaded && (window.Smoothie.preloaded = new Object()); 
-module = typeof module=='undefined' ? Smoothie.preloaded : new Object(); 
+!window.Smoothie.requirePreloaded && (window.Smoothie.requirePreloaded = new Object()); 
+module = typeof module=='undefined' ? Smoothie.requirePreloaded : new Object(); 
 
 module['preloadedA'] = function() {
 	'use strict';

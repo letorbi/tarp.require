@@ -34,16 +34,6 @@ var SmoothieError = function(message, fileName, lineNumber) {
 }
 SmoothieError.prototype = Object.create(Error.prototype);
 
-// INFO Smoothie options
-//      The values can be set by defining a object called Smoothie, which
-//      contains properties of the same name as the options to be changed.
-// NOTE The Smoothe object has to be defined before this script here is loaded
-//      and changing the values in the Smoothie object will have no effect
-//      afterwards!
-
-// NOTE Global module paths
-var paths = window.Smoothie&&window.Smoothie.paths!==undefined?window.Smoothie.paths.slice(0):['./'];
-
 // INFO Current module paths
 //      path[0] contains the path of the currently loaded module, path[1]
 //      contains the path its parent module and so on.
@@ -58,17 +48,49 @@ var pwd = Array('');
 var parser = document.createElement('A');
 
 // INFO Module cache
-//      Contains getter functions for the exports objects of all the loaded
+// NOTE Contains getter functions for the exports objects of all the loaded
 //      modules. The getter for the module 'mymod' is name '$name' to prevent
 //      collisions with predefined object properties (see note below).
 //      As long as a module has not been loaded the getter is either undefined
 //      or contains the module code as a function (in case the module has been
 //      pre-laoded in a bundle).
-// NOTE For IE8 the cache will be replaced by a HTMLDivElement-object later on,
-//      since defineProperty is only supported for DOM objects there.
+//      IE8 support defineProperty only for DOM objects, therfore we use a
+//      HTMLDivElement as cache.
 
-var cache = new Object();
+var cache = document.createElement('DIV');
+
+// INFO Module cache lock
+// NOTE Sending the request causes the event loop to continue. Therefore
+//      pending AJAX load events for the same url might be executed before
+//      the synchronous onLoad is called. This should be no problem, but in
+//      Chrome the responseText of the sneaked in load events will be empty.
+//      Therefore we have to lock the loading while executing send().   
+
 var locks = new Object();
+
+// INFO Smoothie options
+// NOTE The values can be set by defining a object called Smoothie. The
+//      Smoothe object has to be defined before this script here is loaded
+//      and changing the values in the Smoothie object will have no effect
+//      afterwards!
+
+var requirePath = window.Smoothie&&window.Smoothie.requirePath!==undefined ? window.Smoothie.requirePath.slice(0) : ['./'];
+var requireCompiler = window.Smoothie&&window.Smoothie.requireCompiler!==undefined ? window.Smoothie.requireCompiler : null;
+
+// NOTE Add preloaded modules to cache
+for (var id in (window.Smoothie && window.Smoothie.requirePreloaded))
+	cache['$'+id] = window.Smoothie.requirePreloaded[id].toString();
+
+// NOTE Add module overrides to cache
+for (var id in (window.Smoothie && window.Smoothie.requireOverrides))
+	cache['$'+id] = window.Smoothie.requireOverrides[id];
+
+// INFO Parse module root paths
+
+for (var i=0; i<requirePath.length; i++) {
+	parser.href = requirePath[i];
+	requirePath[i] = '/'+parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/g, '');
+}
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -80,13 +102,8 @@ var locks = new Object();
 //      and the mpdule exports are passed to the callback function after the
 //      module has been loaded.
 
-function require(identifier, callback) {
-	if (typeof(window.requireOverrides) !== 'undefined' &&
-		window.requireOverrides.hasOwnProperty(identifier)) {
-		callback && setTimeout(function(){callback(window.requireOverrides[identifier])}, 0);
-		return window.requireOverrides[identifier];
-	}
-
+function require(identifier, callback, compiler) {
+	compiler = compiler!==undefined ? compiler : requireCompiler;
 	var descriptor = resolve(identifier);
 	var cacheid = '$'+descriptor.id;
 
@@ -108,11 +125,6 @@ function require(identifier, callback) {
 	//      readyState 4.
 	callback && (request[request.onload===null?'onload':'onreadystatechange'] = onLoad);
 	request.open('GET', descriptor.uri, !!callback);
-	// NOTE Sending the request causes the event loop to continue. Therefore
-	//      pending AJAX load events for the same url might be executed before
-	//      the synchronous onLoad is called. This should be no problem, but in
-	//      Chrome the responseText of the sneaked in load events will be empty.
-	//      Therefore we have to lock the loading while executong send().   
 	locks[cacheid] = locks[cacheid]++||1;
 	request.send();
 	locks[cacheid]--;
@@ -130,11 +142,8 @@ function require(identifier, callback) {
 			return;
 		}
 		if (!cache[cacheid]) {
-			var contents = request.responseText;
-			if (typeof(window.requireCompiler) !== 'undefined') {
-				contents = window.requireCompiler(contents);
-			}
-			load(descriptor, cache, pwd, 'function(){\n'+contents+'\n}');
+			var source = compiler ? compiler(request.responseText) : request.responseText;
+			load(descriptor, cache, pwd, 'function(){\n'+source+'\n}');
 		}
 		callback && callback(cache[cacheid]);
 	}
@@ -150,7 +159,7 @@ function resolve(identifier) {
 	var m = identifier.match(/^(?:([^:\/]+):)?(\.\.?)?\/?((?:.*\/)?)([^\.]+)?(\..*)?$/);
 	// NOTE Matches [1]:[/path/to]
 	var p = pwd[0].match(/^(?:([^:\/]+):)?(.*)/);
-	var root = m[2] ? paths[p[1]?parseInt(p[1]):0] : paths[m[1]?parseInt(m[1]):0];
+	var root = m[2] ? requirePath[p[1]?parseInt(p[1]):0] : requirePath[m[1]?parseInt(m[1]):0];
 	parser.href = (m[2]?root+p[2]+m[2]+'/':root)+m[3]+(m[4]?m[4]:'index');
 	var id = parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/g, '');
 	var uri = "/"+id+(m[5]?m[5]:'.js');
@@ -168,29 +177,14 @@ if (window.require !== undefined)
 try {
 	Object.defineProperty(window, 'require', {'value':require});
 	Object.defineProperty(window.require, 'resolve', {'value':resolve});
-	Object.defineProperty(window.require, 'paths', {'get':function(){return paths.slice(0);}});
+	Object.defineProperty(window.require, 'path', {'get':function(){return requirePath.slice(0);}});
 }
 catch (e) {
 	// NOTE IE8 can't use defineProperty on non-DOM objects, so we have to fall
 	//      back to unsave property assignments in this case.
 	window.require = require;
 	window.require.resolve = resolve;
-	window.require.paths = paths.slice(0);
-	// NOTE We definetly need a getter for the cache, so we make the the cache a
-	//      DOM-object in IE8.
-	cache = document.createElement('DIV');
-}
-
-// INFO Adding preloaded modules to cache
-
-for (var id in (window.Smoothie && window.Smoothie.preloaded))
-	cache['$'+id] = window.Smoothie.preloaded[id].toString();
-
-// INFO Parsing module root paths
-
-for (var i=0; i<paths.length; i++) {
-	parser.href = paths[i];
-	paths[i] = '/'+parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/g, '');
+	window.require.path = requirePath.slice(0);
 }
 
 })(
