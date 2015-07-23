@@ -211,6 +211,8 @@ catch (e) {
 //      a parameter to the closure above to provide a clean environment (only
 //      global variables, module and exports) for the loaded module. This is
 //      also the reason why `source`, `pwd` & `cache` are not named parameters.
+// NOTE If we would strict use mode here, the evaluated code would be forced to be
+//      in strict mode, too.
 
 function /*load*/(module/*, cache, pwd, source*/) {
 	var global = window;
@@ -218,16 +220,32 @@ function /*load*/(module/*, cache, pwd, source*/) {
 	Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
 	arguments[2].unshift(module.id.match(/(?:.*\/)?/)[0]);
 	Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
-	// NOTE Firebug ignores the sourceUrl when the source is composed inside
-	//      the eval call.
 	arguments[3] = '('+arguments[3]+')();\n//# sourceURL='+module.uri;
-	eval(arguments[3]);
+	// NOTE Mozilla is still not able to handle sourceURL annotations within
+	//      evaluated code right. Therefore the eval call has to be wrapped
+	//      into a try-catch block that corrects the original error.
+	// NOTE In Webkit on the other hand eval calls must not be placed within a
+	//      try-catch block. Otherwise the error stack will be messed up.
+	if (typeof (new Error()).fileName == "string") {
+		try {
+			eval(arguments[3]);
+		}
+		catch (e) {
+			// NOTE This code assumes that the exception is an instance of
+			//      Error. Exceptions of other types might cause unexpected
+			//      behaviour.
+			throw new e.constructor(e.message, module.uri, e.lineNumber);
+		}
+	}
+	else {
+		eval(arguments[3]);
+	}
 	// NOTE Store module code in the cache if the loaded file is a bundle
 	if (typeof module.id !== 'string')
 		for (id in module)
 			arguments[1]['$'+require.resolve(id).id] = module[id].toString();
 	arguments[2].shift();
-}
+
 
 );
 
