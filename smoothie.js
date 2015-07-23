@@ -1,7 +1,7 @@
 //
 // This file is part of Smoothie.
 //
-// Copyright (C) 2013,14 Torben Haase, Flowy Apps (torben@flowyapps.com)
+// Copyright (C) 2013-2015 Flowy Apps GmbH <hello@flowyapps.com>
 //
 // Smoothie is free software: you can redistribute it and/or modify it under the
 // terms of the GNU Lesser General Public License as published by the Free
