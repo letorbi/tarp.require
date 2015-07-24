@@ -42,21 +42,33 @@ SmoothieError.prototype = Object.create(Error.prototype);
 //      column number.
 if (typeof (new Error()).fileName == "string") {
 	window.addEventListener("error", function(evt) {
-		if (evt.error.stack) {
-			var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
-			if (!m) {
-				console.warn("Smoothie: unable to read file name from stack");
-			}
-			else if (evt.error.fileName != m[1]) {
+		if (evt.error instanceof Error) {
+			if (mod[0]) {
 				evt.preventDefault();
-				throw new evt.error.constructor(evt.error.message, m[1], evt.error.lineNumber);
+				throw new evt.error.constructor(evt.error.message, mod[0].uri, evt.error.lineNumber);
+			}
+			else {
+				var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
+				if (m === null) {
+					console.warn("Smoothie: unable to read file name from stack");
+				}
+				else if (evt.error.fileName != m[1]) {
+					evt.preventDefault();
+					throw new evt.error.constructor(evt.error.message, m[1], evt.error.lineNumber);
+				}
 			}
 		}
 	}, false);
 }
 
+// INFO Current module descriptors
+//      mod[0] contains the descriptor of the currently loaded module,
+//      mod[1] contains the descriptor its parent module and so on.
+
+var mod = Array();
+
 // INFO Current module paths
-//      path[0] contains the path of the currently loaded module, path[1]
+//      pwd[0] contains the path of the currently loaded module, pwd[1]
 //      contains the path its parent module and so on.
 
 var pwd = Array('');
@@ -143,7 +155,7 @@ function require(identifier, callback, compiler) {
 
 	if (cache[cacheid]) {
 		if (typeof cache[cacheid] === 'string')
-			load(descriptor, cache, pwd, cache[cacheid]);
+			load(descriptor, cache, pwd, mod, cache[cacheid]);
 		// NOTE The callback should always be called asynchronously to ensure
 		//      that a cached call won't differ from an uncached one.
 		callback && setTimeout(function(){callback(cache[cacheid])}, 0);
@@ -177,7 +189,7 @@ function require(identifier, callback, compiler) {
 		}
 		if (!cache[cacheid]) {
 			var source = compiler ? compiler(request.responseText) : request.responseText;
-			load(descriptor, cache, pwd, 'function(){\n'+source+'\n}');
+			load(descriptor, cache, pwd, mod, 'function(){\n'+source+'\n}');
 		}
 		callback && callback(cache[cacheid]);
 	}
@@ -235,20 +247,22 @@ catch (e) {
 // NOTE If we would strict use mode here, the evaluated code would be forced to be
 //      in strict mode, too.
 
-function /*load*/(module/*, cache, pwd, source*/) {
+function /*load*/(module/*, cache, pwd, mod, source*/) {
 	var global = window;
 	var exports = new Object();
 	Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
 	arguments[2].unshift(module.id.match(/(?:.*\/)?/)[0]);
+	arguments[3].unshift(module);
 	Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
-	arguments[3] = '('+arguments[3]+')();\n//# sourceURL='+module.uri;
-	eval(arguments[3]);
+	arguments[4] = '('+arguments[4]+')();\n//# sourceURL='+module.uri;
+	eval(arguments[4]);
 	// NOTE Store module code in the cache if the loaded file is a bundle
 	if (typeof module.id !== 'string')
 		for (id in module)
 			arguments[1]['$'+require.resolve(id).id] = module[id].toString();
+	arguments[3].shift();
 	arguments[2].shift();
-
+}
 
 );
 
