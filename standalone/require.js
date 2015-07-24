@@ -43,9 +43,9 @@ SmoothieError.prototype = Object.create(Error.prototype);
 if (typeof (new Error()).fileName == "string") {
 	window.addEventListener("error", function(evt) {
 		if (evt.error instanceof Error) {
-			if (mod[0]) {
+			if (pwd[0]) {
 				evt.preventDefault();
-				throw new evt.error.constructor(evt.error.message, mod[0].uri, evt.error.lineNumber);
+				throw new evt.error.constructor(evt.error.message, pwd[0].uri, evt.error.lineNumber);
 			}
 			else {
 				var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
@@ -62,16 +62,10 @@ if (typeof (new Error()).fileName == "string") {
 }
 
 // INFO Current module descriptors
-//      mod[0] contains the descriptor of the currently loaded module,
-//      mod[1] contains the descriptor its parent module and so on.
+//      pwd[0] contains the descriptor of the currently loaded module,
+//      pwd[1] contains the descriptor its parent module and so on.
 
-var mod = Array();
-
-// INFO Current module paths
-//      pwd[0] contains the path of the currently loaded module, pwd[1]
-//      contains the path its parent module and so on.
-
-var pwd = Array('');
+var pwd = Array();
 
 // INFO Path parser
 //      A HTMLAnchorElement parses its href property automatically, so we use
@@ -155,7 +149,7 @@ function require(identifier, callback, compiler) {
 
 	if (cache[cacheid]) {
 		if (typeof cache[cacheid] === 'string')
-			load(descriptor, cache, pwd, mod, cache[cacheid]);
+			load(descriptor, cache, pwd, cache[cacheid]);
 		// NOTE The callback should always be called asynchronously to ensure
 		//      that a cached call won't differ from an uncached one.
 		callback && setTimeout(function(){callback(cache[cacheid])}, 0);
@@ -189,7 +183,7 @@ function require(identifier, callback, compiler) {
 		}
 		if (!cache[cacheid]) {
 			var source = compiler ? compiler(request.responseText) : request.responseText;
-			load(descriptor, cache, pwd, mod, 'function(){\n'+source+'\n}');
+			load(descriptor, cache, pwd, 'function(){\n'+source+'\n}');
 		}
 		callback && callback(cache[cacheid]);
 	}
@@ -203,12 +197,12 @@ function require(identifier, callback, compiler) {
 function resolve(identifier) {
 	// NOTE Matches [1]:[..]/[path/to/][file][.js]
 	var m = identifier.match(/^(?:([^:\/]+):)?(\.\.?)?\/?((?:.*\/)?)([^\.]+)?(\..*)?$/);
-	// NOTE Matches [1]:[/path/to]
-	var p = pwd[0].match(/^(?:([^:\/]+):)?(.*)/);
+	// NOTE Matches [1]:[/path/to/]file.js
+	var p = (pwd[0]?pwd[0].id:"").match(/^(?:([^:\/]+):)?(.*\/|)[^\/]*$/);
 	var root = m[2] ? requirePath[p[1]?parseInt(p[1]):0] : requirePath[m[1]?parseInt(m[1]):0];
 	parser.href = (m[2]?root+p[2]+m[2]+'/':root)+m[3]+(m[4]?m[4]:'index');
 	var id = "/"+parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/, '');
-	var uri = id+(m[5]?m[5]:'.js');
+	var uri = parser.href+(m[5]?m[5]:'.js');
 	if (id.substr(0,root.length) != root)
 		throw new SmoothieError("Relative identifier outside of module root");
 	id = (m[1]?m[1]+":":"0:")+id.substr(root.length);
@@ -247,20 +241,18 @@ catch (e) {
 // NOTE If we would strict use mode here, the evaluated code would be forced to be
 //      in strict mode, too.
 
-function /*load*/(module/*, cache, pwd, mod, source*/) {
+function /*load*/(module/*, cache, pwd, source*/) {
 	var global = window;
 	var exports = new Object();
 	Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
-	arguments[2].unshift(module.id.match(/(?:.*\/)?/)[0]);
-	arguments[3].unshift(module);
+	arguments[2].unshift(module);
 	Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
-	arguments[4] = '('+arguments[4]+')();\n//# sourceURL='+module.uri;
-	eval(arguments[4]);
+	arguments[3] = '('+arguments[3]+')();\n//# sourceURL='+module.uri;
+	eval(arguments[3]);
 	// NOTE Store module code in the cache if the loaded file is a bundle
 	if (typeof module.id !== 'string')
 		for (id in module)
 			arguments[1]['$'+require.resolve(id).id] = module[id].toString();
-	arguments[3].shift();
 	arguments[2].shift();
 }
 
