@@ -27,6 +27,25 @@ var SmoothieError = function(message, fileName, lineNumber) {
 }
 SmoothieError.prototype = Object.create(Error.prototype);
 
+// NOTE Mozilla still sets the wrong fileName porperty for errors that occur
+//      inside an eval call (even with sourceURL). However, the stack
+//      contains the correct source, so it can be used to re-threw the error
+//      with the correct fileName property.
+// NOTE Re-threwing a new error object will mess up the stack trace and the
+//      column number.
+if (typeof (new Error()).fileName == "string") {
+	window.addEventListener("error", function(evt) {
+		var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
+		if (!m) {
+			console.warn("Smoothie: unable to read file name from stack");
+		}
+		else if (evt.error.fileName != m[1]) {
+			evt.preventDefault();
+			throw new evt.error.constructor(evt.error.message, m[1], evt.error.lineNumber);
+		}
+	}, false);
+}
+
 // INFO Current module paths
 //      path[0] contains the path of the currently loaded module, path[1]
 //      contains the path its parent module and so on.
@@ -266,29 +285,7 @@ function /*load*/(module/*, cache, pwd, source*/) {
 	arguments[2].unshift(module.id.match(/(?:.*\/)?/)[0]);
 	Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
 	arguments[3] = '('+arguments[3]+')();\n//# sourceURL='+module.uri;
-	// NOTE Mozilla is still not able to handle sourceURL annotations within
-	//      evaluated code right. Therefore the eval call has to be wrapped
-	//      into a try-catch block that corrects the original error.
-	// NOTE In Webkit on the other hand eval calls must not be placed within a
-	//      try-catch block. Otherwise the error stack will be messed up.
-	if (!eval.$inEval && typeof (new Error()).fileName == "string") {
-		try {
-			eval.$inEval = true;
-			eval(arguments[3]);
-		}
-		catch (e) {
-			if (e.stack)
-				throw new e.constructor(e.message, e.stack.match(/^@([^\n]+):\d+:\d+/)[1], e.lineNumber);
-			else
-				throw e;
-		}
-		finally {
-			eval.$inEval = false;
-		}
-	}
-	else {
-		eval(arguments[3]);
-	}
+	eval(arguments[3]);
 	// NOTE Store module code in the cache if the loaded file is a bundle
 	if (typeof module.id !== 'string')
 		for (id in module)
