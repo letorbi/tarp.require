@@ -226,15 +226,19 @@ function /*load*/(module/*, cache, pwd, source*/) {
 	//      into a try-catch block that corrects the original error.
 	// NOTE In Webkit on the other hand eval calls must not be placed within a
 	//      try-catch block. Otherwise the error stack will be messed up.
-	if (typeof (new Error()).fileName == "string") {
+	if (!eval.$inEval && typeof (new Error()).fileName == "string") {
 		try {
+			eval.$inEval = true;
 			eval(arguments[3]);
 		}
 		catch (e) {
-			// NOTE This code assumes that the exception is an instance of
-			//      Error. Exceptions of other types might cause unexpected
-			//      behaviour.
-			throw new e.constructor(e.message, module.uri, e.lineNumber);
+			if (e.stack)
+				throw new e.constructor(e.message, e.stack.match(/^@([^\n]+):\d+:\d+/)[1], e.lineNumber);
+			else
+				throw e;
+		}
+		finally {
+			eval.$inEval = false;
 		}
 	}
 	else {
