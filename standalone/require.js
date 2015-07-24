@@ -42,13 +42,15 @@ SmoothieError.prototype = Object.create(Error.prototype);
 //      column number.
 if (typeof (new Error()).fileName == "string") {
 	window.addEventListener("error", function(evt) {
-		var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
-		if (!m) {
-			console.warn("Smoothie: unable to read file name from stack");
-		}
-		else if (evt.error.fileName != m[1]) {
-			evt.preventDefault();
-			throw new evt.error.constructor(evt.error.message, m[1], evt.error.lineNumber);
+		if (evt.error.stack) {
+			var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
+			if (!m) {
+				console.warn("Smoothie: unable to read file name from stack");
+			}
+			else if (evt.error.fileName != m[1]) {
+				evt.preventDefault();
+				throw new evt.error.constructor(evt.error.message, m[1], evt.error.lineNumber);
+			}
 		}
 	}, false);
 }
