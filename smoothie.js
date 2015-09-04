@@ -27,11 +27,11 @@ var SmoothieError = function(message, fileName, lineNumber) {
 }
 SmoothieError.prototype = Object.create(Error.prototype);
 
-// NOTE Mozilla still sets the wrong fileName porperty for errors that occur
+// NOTE Mozilla still sets the wrong fileName property for errors that occur
 //      inside an eval call (even with sourceURL). However, the stack
 //      contains the correct source, so it can be used to re-threw the error
 //      with the correct fileName property.
-// NOTE Re-threwing a new error object will mess up the stack trace and the
+// WARN Re-threwing a new error object will mess up the stack trace and the
 //      column number.
 if (typeof (new Error()).fileName == "string") {
 	self.addEventListener("error", function(evt) {
@@ -74,7 +74,7 @@ var parser = URL ? new URL(location.href) : document.createElement('A');
 //      As long as a module has not been loaded the getter is either undefined
 //      or contains the module code as a function (in case the module has been
 //      pre-loaded in a bundle).
-// NOTE IE8 supports defineProperty only for DOM objects, therfore we use a
+// WARN IE8 supports defineProperty only for DOM objects, therfore we use a
 //      HTMLDivElement as cache in that case. This breaks web worker support,
 //      but we don't care since IE8 has no web workers at all.
 
@@ -84,7 +84,7 @@ try {
 	delete cache.foo;
 }
 catch (e) {
-	console.warn("Error, falling back to DOM workaround for defineProperty: "+e);
+	console.warn("Smoothie: Falling back to DOM workaround for defineProperty ("+e+")");
 	cache = document.createElement('DIV');
 }
 
@@ -103,6 +103,8 @@ var lock = new Object();
 //      and changing the values in the Smoothie object will have no effect
 //      afterwards!
 
+
+var loaderMain = window.Smoothie&&window.Smoothie.loaderMain!==undefined?window.Smoothie.loaderMain:'main';
 var requirePath = self.Smoothie&&self.Smoothie.requirePath!==undefined ? self.Smoothie.requirePath.slice(0) : ['./'];
 var requireCompiler = self.Smoothie&&self.Smoothie.requireCompiler!==undefined ? self.Smoothie.requireCompiler : null;
 
@@ -278,7 +280,7 @@ catch (e) {
 
 // INFO Bootstrapping 2: Loading the main module
 
-main && require(main, boot);
+require(loaderMain, boot);
 
 })(
 
