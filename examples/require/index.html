@@ -185,6 +185,17 @@
 		document.writeln(preB.greet());
 		</script></pre>
 	</div>
+	<div class="Box Blue">
+		<h2>Web Worker</h2>
+		<pre id="workerModulePre1"><script type="text/javascript">
+		var worker = new Worker("worker.js");
+		worker.addEventListener("message", function(evt) {
+			var node = document.getElementById('workerModulePre1');
+			node.innerHTML += evt.data+'\n';
+		}, false);
+		worker.postMessage("hello");
+		</script></pre>
+	</div>
 </body>
 
 </html>

@@ -34,7 +34,7 @@ SmoothieError.prototype = Object.create(Error.prototype);
 // NOTE Re-threwing a new error object will mess up the stack trace and the
 //      column number.
 if (typeof (new Error()).fileName == "string") {
-	window.addEventListener("error", function(evt) {
+	self.addEventListener("error", function(evt) {
 		if (evt.error instanceof Error) {
 			if (pwd[0]) {
 				evt.preventDefault();
@@ -61,11 +61,11 @@ if (typeof (new Error()).fileName == "string") {
 var pwd = Array();
 
 // INFO Path parser
-//      A HTMLAnchorElement parses its href property automatically, so we use
-//      this functionality to parse our module paths instead of implemnting our
-//      own.
+// NOTE Older browsers don't support the URL interface, therefore we use an
+//      anchor element as parser in that case. Thes breaks web worker support,
+//      but we don't care since these browser also don't support web workers.
 
-var parser = document.createElement('A');
+var parser = URL ? new URL(location.href) : document.createElement('A');
 
 // INFO Module cache
 // NOTE Contains getter functions for the exports objects of all the loaded
@@ -73,11 +73,20 @@ var parser = document.createElement('A');
 //      collisions with predefined object properties (see note below).
 //      As long as a module has not been loaded the getter is either undefined
 //      or contains the module code as a function (in case the module has been
-//      pre-laoded in a bundle).
-//      IE8 support defineProperty only for DOM objects, therfore we use a
-//      HTMLDivElement as cache.
+//      pre-loaded in a bundle).
+// NOTE IE8 supports defineProperty only for DOM objects, therfore we use a
+//      HTMLDivElement as cache in that case. This breaks web worker support,
+//      but we don't care since IE8 has no web workers at all.
 
-var cache = document.createElement('DIV');
+try {
+	var cache = new Object();
+	Object.defineProperty(cache, "foo", {'value':"bar",'configurable':true});
+	delete cache.foo;
+}
+catch (e) {
+	console.warn("Error, falling back to DOM workaround for defineProperty: "+e);
+	cache = document.createElement('DIV');
+}
 
 // INFO Send lock
 // NOTE Sending the request causes the event loop to continue. Therefore
@@ -94,23 +103,23 @@ var lock = new Object();
 //      and changing the values in the Smoothie object will have no effect
 //      afterwards!
 
-var main = window.Smoothie&&window.Smoothie.main!==undefined?window.Smoothie.main:'main';
-var requirePath = window.Smoothie&&window.Smoothie.requirePath!==undefined ? window.Smoothie.requirePath.slice(0) : ['./'];
-var requireCompiler = window.Smoothie&&window.Smoothie.requireCompiler!==undefined ? window.Smoothie.requireCompiler : null;
+var requirePath = self.Smoothie&&self.Smoothie.requirePath!==undefined ? self.Smoothie.requirePath.slice(0) : ['./'];
+var requireCompiler = self.Smoothie&&self.Smoothie.requireCompiler!==undefined ? self.Smoothie.requireCompiler : null;
 
 // NOTE Parse module root paths
+var base = [location.origin, location.href.substr(0, location.href.lastIndexOf("/")+1)];
 for (var i=0; i<requirePath.length; i++) {
-	parser.href = requirePath[i];
-	requirePath[i] = '/'+parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/g, '');
+	parser.href = (requirePath[i][0]=="."?base[1]:base[0])+requirePath[i];
+	requirePath[i] = parser.href;
 }
 
 // NOTE Add preloaded modules to cache
-for (var id in (window.Smoothie && window.Smoothie.requirePreloaded))
-	cache['$'+resolve(id).id] = window.Smoothie.requirePreloaded[id].toString();
+for (var id in (self.Smoothie && self.Smoothie.requirePreloaded))
+	cache['$'+resolve(id).id] = self.Smoothie.requirePreloaded[id].toString();
 
 // NOTE Add module overrides to cache
-for (var id in (window.Smoothie && window.Smoothie.requireOverrides))
-	cache['$'+resolve(id).id] = window.Smoothie.requireOverrides[id];
+for (var id in (self.Smoothie && self.Smoothie.requireOverrides))
+	cache['$'+resolve(id).id] = self.Smoothie.requireOverrides[id];
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -195,11 +204,10 @@ function resolve(identifier) {
 	var p = (pwd[0]?pwd[0].id:"").match(/^(?:([^:\/]+):)?(.*\/|)[^\/]*$/);
 	var root = m[2] ? requirePath[p[1]?parseInt(p[1]):0] : requirePath[m[1]?parseInt(m[1]):0];
 	parser.href = (m[2]?root+p[2]+m[2]+'/':root)+m[3]+(m[4]?m[4]:'index');
-	var id = "/"+parser.href.replace(/^[^:]*:\/\/[^\/]*\/|\/(?=\/)/, '');
 	var uri = parser.href+(m[5]?m[5]:'.js');
-	if (id.substr(0,root.length) != root)
+	if (uri.substr(0,root.length) != root)
 		throw new SmoothieError("Relative identifier outside of module root");
-	id = (m[1]?m[1]+":":"0:")+id.substr(root.length);
+	var id = (m[1]?m[1]+":":"0:")+parser.href.substr(root.length);
 	return {'id':id,'uri':uri};
 }
 
@@ -252,20 +260,20 @@ function boot(module) {
 
 // INFO Bootstrapping 1: Exporting require to global scope
 
-if (window.require !== undefined)
+if (self.require !== undefined)
 	throw new SmoothieError('\'require\' already defined in global scope');
 
 try {
-	Object.defineProperty(window, 'require', {'value':require});
-	Object.defineProperty(window.require, 'resolve', {'value':resolve});
-	Object.defineProperty(window.require, 'paths', {'get':function(){return paths.slice(0);}});
+	Object.defineProperty(self, 'require', {'value':require});
+	Object.defineProperty(self.require, 'resolve', {'value':resolve});
+	Object.defineProperty(self.require, 'path', {'get':function(){return requirePath.slice(0);}});
 }
 catch (e) {
 	// NOTE IE8 can't use defineProperty on non-DOM objects, so we have to fall
 	//      back to unsave property assignments in this case.
-	window.require = require;
-	window.require.resolve = resolve;
-	window.require.paths = paths.slice(0);
+	self.require = require;
+	self.require.resolve = resolve;
+	self.require.path = requirePath.slice(0);
 }
 
 // INFO Bootstrapping 2: Loading the main module
@@ -287,7 +295,7 @@ main && require(main, boot);
 //      in strict mode, too.
 
 function /*load*/(module/*, cache, pwd, source*/) {
-	var global = window;
+	var global = self;
 	var exports = new Object();
 	Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
 	arguments[2].unshift(module);
