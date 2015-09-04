@@ -104,7 +104,7 @@ var lock = new Object();
 //      afterwards!
 
 
-var loaderMain = window.Smoothie&&window.Smoothie.loaderMain!==undefined?window.Smoothie.loaderMain:'main';
+var loaderMain = self.Smoothie&&self.Smoothie.loaderMain!==undefined?self.Smoothie.loaderMain:'main';
 var requirePath = self.Smoothie&&self.Smoothie.requirePath!==undefined ? self.Smoothie.requirePath.slice(0) : ['./'];
 var requireCompiler = self.Smoothie&&self.Smoothie.requireCompiler!==undefined ? self.Smoothie.requireCompiler : null;
 
