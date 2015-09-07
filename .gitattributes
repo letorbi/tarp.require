@@ -1,0 +1,77 @@
+# NOTE The following settings are based on own experience as well as on the
+#      following sources:
+#      http://davidlaing.com/2012/09/19/customise-your-gitattributes-to-become-a-git-ninja/
+#      https://github.com/Danimoth/gitattributes/blob/master/Common.gitattributes
+
+# NOTE The tabspace filter converts every four spaces at the beginnig of a
+#      line into tabs. Details are explained here:
+#      https://stackoverflow.com/questions/2316677/can-git-automatically-switch-between-spaces-and-tabs
+
+# NOTE Auto detect text files and perform LF normalization.
+#      This setting will handle all files NOT found below.
+* text=auto
+
+# INFO Source code
+
+*.htm text filter=tabspace
+*.HTM text filter=tabspace
+*.html text filter=tabspace
+*.HTML text filter=tabspace
+*.php text filter=tabspace
+*.PHP text filter=tabspace
+*.css text filter=tabspace
+*.CSS text filter=tabspace
+*.js text filter=tabspace
+*.JS text filter=tabspace
+*.json text filter=tabspace
+*.JSON text filter=tabspace
+# NOTE Shell scripts always need Unix style line feeds
+*.sh text filter=tabspace eol=lf
+*.SH text filter=tabspace eol=lf
+
+# INFO Documents
+
+*.doc binary diff=astextplain
+*.DOC binary diff=astextplain
+*.docx binary diff=astextplain
+*.DOCX binary diff=astextplain
+*.dot binary diff=astextplain
+*.DOT binary diff=astextplain
+*.pdf binary diff=astextplain
+*.PDF binary diff=astextplain
+*.rtf binary diff=astextplain
+*.RTF binary diff=astextplain
+*.odt binary diff=odf
+*.ODT binary diff=odf
+*.ods binary diff=odf
+*.ODS binary diff=odf
+*.odp binary diff=odf
+*.ODP binary diff=odf
+
+# INFO Graphics
+
+*.png binary
+*.PNG binary
+*.jpg binary
+*.JPG binary
+*.jpeg binary
+*.JPEG binary
+*.gif binary
+*.GIF binary
+*.ico binary
+*.ICO binary
+*.svg text
+*.SVG text
+*.svgz binary
+*.SVGZ binary
+
+# INFO Fonts
+
+*.ttf binary
+*.TTF binary
+*.otf binary
+*.OTF binary
+*.eot binary
+*.EOT binary
+*.woff binary
+*.WOFF binary
