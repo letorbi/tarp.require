@@ -211,7 +211,7 @@ function resolve(identifier) {
 // INFO Exporting require to global scope
 
 if (self.require !== undefined)
-    throw new Error("Honey: '\'require\' already defined in global scope');
+    throw new Error("Honey: '\'require\' already defined in global scope");
 
 try {
     Object.defineProperty(self, 'require', {'value':require});
