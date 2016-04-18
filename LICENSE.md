@@ -1,9 +1,9 @@
 The MIT License (MIT)
 =====================
 
-Honey Require - A module loader for the Honey JavaScript environment
+Honey Require - A CommonJS module loader for the Honey JavaScript environment
 
-Copyright (c) 2015 Torben Haase
+Copyright (c) 2015,2016 Torben Haase
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
