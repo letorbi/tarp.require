@@ -62,13 +62,7 @@ var pwd = Array();
 //      anchor element as parser in that case. Thes breaks web worker support,
 //      but we don't care since these browsers also don't support web workers.
 
-try {
-    var parser = new URL(location.href);
-}
-catch (e) {
-    console.warn("Honey: falling back to DOM workaround for URL parser ("+e+")");
-    parser = document.createElement('A');
-}
+var parser = new URL(location.href);
 
 // INFO Module cache
 //      Contains getter functions for the exports objects of all the loaded
@@ -77,19 +71,8 @@ catch (e) {
 //      As long as a module has not been loaded the getter is either undefined
 //      or contains the module code as a function (in case the module has been
 //      pre-loaded in a bundle).
-// WARN IE8 supports defineProperty only for DOM objects, therfore we use a
-//      HTMLDivElement as cache in that case. This breaks web worker support,
-//      but we don't care since IE8 has no web workers at all.
 
-try {
-    var cache = new Object();
-    Object.defineProperty(cache, "foo", {'value':"bar",'configurable':true});
-    delete cache.foo;
-}
-catch (e) {
-    console.warn("Honey: falling back to DOM workaround for cache object ("+e+")");
-    cache = document.createElement('DIV');
-}
+var cache = new Object();
 
 // INFO Send lock
 //      Sending the request causes the event loop to continue. Therefore
@@ -156,42 +139,43 @@ function require(identifier, callback, compiler) {
     if (cache[cacheid]) {
         if (typeof cache[cacheid] === 'string')
             load(descriptor, cache, pwd, cache[cacheid]);
-        // NOTE The callback should always be called asynchronously to ensure
-        //      that a cached call won't differ from an uncached one.
-        callback && setTimeout(function(){callback(cache[cacheid])}, 0);
+        if (callback)
+            // NOTE The callback should always be called asynchronously to ensure
+            //      that a cached call won't differ from an uncached one.
+            setTimeout(function(){callback(cache[cacheid])}, 0);
         return cache[cacheid];
     }
 
     var request = new XMLHttpRequest();
 
-    // NOTE IE8 doesn't support the onload event, therefore we use
-    //      onreadystatechange as a fallback here. However, onreadystatechange
-    //      shouldn't be used for all browsers, since at least mobile Safari
-    //      seems to have an issue where onreadystatechange is called twice for
-    //      readyState 4.
-    callback && (request[request.onload===null?'onload':'onreadystatechange'] = onLoad);
+    if (callback)
+        request.onload = onLoad;
     request.open('GET', descriptor.uri, !!callback);
+    // NOTE Locking is required to prevent some browsers from running onLoad during load
     lock[cacheid] = lock[cacheid]++||1;
     request.send();
     lock[cacheid]--;
-    !callback && onLoad();
+    if (!callback)
+        onLoad();
     return cache[cacheid];
 
     function onLoad() {
-        if (request.readyState != 4)
-            return;
-        if (request.status != 200)
-            throw new Error("Honey: unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
         if (lock[cacheid]) {
             console.warn("Honey: module locked: "+descriptor.id);
-            callback && setTimeout(onLoad, 0);
-            return;
+            setTimeout(onLoad, 0);
         }
-        if (!cache[cacheid]) {
-            var source = compiler ? compiler(request.responseText) : request.responseText;
-            load(descriptor, cache, pwd, 'function(){\n'+source+'\n}');
+        else {
+            if (request.readyState != 4)
+                return;
+            if (request.status != 200)
+                throw new Error("Honey: unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
+            if (!cache[cacheid]) {
+                var source = compiler ? compiler(request.responseText) : request.responseText;
+                load(descriptor, cache, pwd, 'function(){\n'+source+'\n}');
+            }
+            if (callback)
+                callback(cache[cacheid]);
         }
-        callback && callback(cache[cacheid]);
     }
 }
 
@@ -214,23 +198,14 @@ function resolve(identifier) {
     return {'id':id,'uri':uri};
 }
 
-// INFO Exporting require to global scope
+// NOTE Export require to global scope
 
 if (self.require !== undefined)
     throw new Error("Honey: '\'require\' already defined in global scope");
 
-try {
-    Object.defineProperty(self, 'require', {'value':require});
-    Object.defineProperty(self.require, 'resolve', {'value':resolve});
-    Object.defineProperty(self.require, 'path', {'get':function(){return requirePath.slice(0);}});
-}
-catch (e) {
-    // NOTE IE8 can't use defineProperty on non-DOM objects, so we have to fall
-    //      back to unsave property assignments in this case.
-    self.require = require;
-    self.require.resolve = resolve;
-    self.require.path = requirePath.slice(0);
-}
+Object.defineProperty(self, 'require', {'value':require});
+Object.defineProperty(self.require, 'resolve', {'value':resolve});
+Object.defineProperty(self.require, 'path', {'get':function(){return requirePath.slice(0);}});
 
 })(
 
