@@ -1,7 +1,7 @@
 //
 // This file is part of Honey Require
 //
-// Copyright (c) 2015 Torben Haase
+// Copyright (c) 2015,2016 Torben Haase
 //
 // Honey Require is free software: you can redistribute it and/or modify it
 // under the terms of the MIT License (MIT).
@@ -104,7 +104,7 @@ for (var id in (self.Honey && self.Honey.requirePreloaded))
     cache['$'+resolve(id).id] = self.Honey.requirePreloaded[id].toString();
 
 // NOTE Add module overrides to cache
-for (var id in (self.Honey && self.Honey.requireOverrides))
+for (id in (self.Honey && self.Honey.requireOverrides))
     cache['$'+resolve(id).id] = self.Honey.requireOverrides[id];
 
 // INFO Module getter
@@ -142,7 +142,7 @@ function require(identifier, callback, compiler) {
         if (callback)
             // NOTE The callback should always be called asynchronously to ensure
             //      that a cached call won't differ from an uncached one.
-            setTimeout(function(){callback(cache[cacheid])}, 0);
+            setTimeout(function(){callback(cache[cacheid]);}, 0);
         return cache[cacheid];
     }
 
@@ -231,7 +231,7 @@ function /*load*/(module/*, cache, pwd, source*/) {
     eval(arguments[3]);
     // NOTE Store module code in the cache if the loaded file is a bundle
     if (typeof module.id !== 'string')
-        for (id in module)
+        for (var id in module)
             arguments[1]['$'+require.resolve(id).id] = module[id].toString();
     arguments[2].shift();
 }
