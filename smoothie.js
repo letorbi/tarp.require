@@ -20,7 +20,7 @@
 //      environment for each module and runs its code. Scroll down to the end of
 //      the file to see the function definition.
 (function(load) { 'use strict';
-
+ 
 var SmoothieError = function(message, fileName, lineNumber) {
 	this.name = "SmoothieError";
 	this.message = message;
