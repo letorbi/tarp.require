@@ -30,8 +30,8 @@ module['moduleA'] = function() {
 
   exports.greet = function() {
     return exports.hellostr+' world from '+module.id+'!';
-  }
-}
+  };
+};
 
 module['moduleB'] = function() {
   'use strict';
@@ -40,5 +40,5 @@ module['moduleB'] = function() {
 
   exports.greet = function() {
     return 'hello '+exports.worldstr+' from '+module.id+'!';
-  }
-}
+  };
+};

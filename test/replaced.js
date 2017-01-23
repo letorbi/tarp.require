@@ -28,8 +28,8 @@
 var Exports = function() {
   this.greet = function() {
     return exports.greetstr+' from '+exports.namestr+'!';
-  }
-}
+  };
+};
 exports = new Exports();
 
 exports.greetstr = 'Hello world';

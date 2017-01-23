@@ -25,7 +25,7 @@ var Honey = {
   'requirePath': ['./',"/alternative/module/root/"],
   'requirePreloaded': new Object(),
   'requireCompiler': function(source) {
-    console.log("Fake require compiler called");
+    console.info("Fake require compiler called");
     return source;
   }
 };

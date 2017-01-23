@@ -30,8 +30,8 @@ module['preloadedA'] = function() {
 
   exports.greet = function() {
     return exports.hellostr+' world from '+module.id+'!';
-  }
-}
+  };
+};
 
 module['preloadedB'] = function() {
   'use strict';
@@ -40,5 +40,5 @@ module['preloadedB'] = function() {
 
   exports.greet = function() {
     return 'hello '+exports.worldstr+' from '+module.id+'!';
-  }
-}
+  };
+};
