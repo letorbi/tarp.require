@@ -95,7 +95,10 @@ var requireCompiler = self.Honey&&self.Honey.requireCompiler!==undefined ? self.
 // NOTE Parse module root paths
 var base = [location.origin, location.href.substr(0, location.href.lastIndexOf("/")+1)];
 for (var i=0; i<requirePath.length; i++) {
-	parser.href = (requirePath[i][0]=="."?base[1]:base[0])+requirePath[i];
+  if (!/^(?:\w+:)?\/\//.test(requirePath[i]))
+    parser.href = (requirePath[i][0]=="."?base[1]:base[0])+requirePath[i];
+  else
+    parser.href = requirePath[i];
 	requirePath[i] = parser.href;
 }
 
