@@ -25,193 +25,193 @@ If not, see <https://opensource.org/licenses/MIT>.
 <html>
 
 <head>
-    <title>Honey Require test page</title>
-    
-    <script type="text/javascript">
-        var Honey = {
-            'requirePath': ["./", "/alternative/module/root/", "http://example.com/"],
-            'requirePreloaded': new Object(),
-            'requireCompiler': function(source) {
-                console.log("Fake require compiler called");
-                return source;
-            }
-        };
-    </script>
-    <script type="text/javascript" src="./preloaded.js"></script>
-    <script type="text/javascript" src="../require.js"></script>
+  <title>Honey Require test page</title>
+  
+  <script type="text/javascript">
+    var Honey = {
+      'requirePath': ["./", "/alternative/module/root/", "http://example.com/"],
+      'requirePreloaded': new Object(),
+      'requireCompiler': function(source) {
+        console.log("Fake require compiler called");
+        return source;
+      }
+    };
+  </script>
+  <script type="text/javascript" src="./preloaded.js"></script>
+  <script type="text/javascript" src="../require.js"></script>
 </head>
 
 <body>
-    <h1>Honey Require test page</h1>
-    <div class="Box Red">
-        <h2>Module paths</h2>
-        <pre><script type="text/javascript">
-        Honey.requirePath = ['/evil/hack/path/'];
-        document.writeln(require.path);
-        require.path.push('/yet/another/evil/hack/');
-        document.writeln(require.path+' (must be the same as above)');
-        </script></pre>
-    </div>
-    <div class="Box Red">
-        <h2>Identifier => Module</h2>
-        <pre><script type="text/javascript">
-        mname = 'module';
-        document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-        mname = './module';
-        document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-        try {
-            mname = '../module';
-            document.write('require.resolve('+mname+') -> ');
-            require.resolve(mname);
-        }
-        catch (e) {
-            document.writeln(e+" (this error is intended)");
-        }
-        mname = 'module.js';
-        document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
-        var mname = '/module.js';
-        document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-        mname = './module.js';
-        document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
-        mname = './boo/../foo/bar/./././baz///moo/maa/../../../mee/gee';
-        document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-        mname = 'foo/bar//baz///moo////maa/mee';
-        document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-        mname = '/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
-        document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-        mname = '1:/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
-        document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-        </script></pre>
-    </div>
-    <div class="Box Green">
-        <h2>Module (asynchronous)</h2>
-        <pre id="asyncModulePre1"><script type="text/javascript">
-        require('./async.js', function(mod) {
-            var node = document.getElementById('asyncModulePre1');
-            node.innerHTML += mod.greet()+'\n';
-        });
-        </script></pre>
-    </div>
-    <div class="Box Green">
-        <h2>Module (asynchronous, cached)</h2>
-        <pre id="asyncModulePre2"><script type="text/javascript">
-        require('./module.js', function(mod) {
-            var node = document.getElementById('asyncModulePre2');
-            node.innerHTML += mod.greet()+'\n';
-        });
-        </script></pre>
-    </div>
-    <div class="Box Green">
-        <h2>Module (asynchronous, relative, array loader)</h2>
-        <pre  id="asyncModulePre3"><script type="text/javascript">
-        require('./module1', function(mod) {
-            var node = document.getElementById('asyncModulePre3');
-            node.innerHTML += mod.greet()+'\n';
-        });
-        </script></pre>
-    </div>
-    <div class="Box Green">
-        <h2>Module (synchronous, alternative compiler)</h2>
-        <pre><script type="text/javascript">
-        var mod = require('module', null, function(source) {
-            console.log("Alternative fake require compiler called");
-            return source;
-        });
-        document.writeln(mod.greet());
-        mod.greetstr = 'HELLO WORLD';
-        document.write(mod.greet());
-        </script></pre>
-    </div>
-    <div class="Box Green">
-        <h2>Module (synchronous, replaced exports, no compiler)</h2>
-        <pre><script type="text/javascript">
-        var mod = require('replaced', null, null);
-        document.writeln(mod.greet());
-        </script></pre>
-    </div>
-    <div class="Box Green">
-        <h2>Module (synchronous, cached)</h2>
-        <pre><script type="text/javascript">
-        var mod = require('module');
-        document.writeln(mod.greet());
-        mod.greetstr = 'hello world';
-        document.write(mod.greet());
-        </script></pre>
-    </div>
-    <div class="Box Blue">
-        <h2>Bundle (asynchronous)</h2>
-        <pre id="asyncBundlePre"><script type="text/javascript">
-        require('bundle');
-        require('moduleA', function(mod) {
-            var node = document.getElementById('asyncBundlePre');
-            node.innerHTML += mod.greet()+'\n';
-        });
-        require('moduleB', function(mod) {
-            var node = document.getElementById('asyncBundlePre');
-            node.innerHTML += mod.greet()+'\n';
-        });
-        </script></pre>
-    </div>
-    <div class="Box Blue">
-        <h2>Bundle (synchronous)</h2>
-        <pre><script type="text/javascript">
-        var modA = require('moduleA');
-        document.writeln(modA.greet());
-        modA.hellostr = 'HELLO';
-        document.writeln(modA.greet());
-        var modB = require('moduleB');
-        document.writeln(modB.greet());
-        modB.worldstr = 'WORLD';
-        document.writeln(modB.greet());
-        </script></pre>
-    </div>
-    <div class="Box Blue">
-        <h2>Bundle (synchronous, cached)</h2>
-        <pre><script type="text/javascript">
-        var modA = require('moduleA');
-        document.writeln(modA.greet());
-        var modB = require('moduleB');
-        document.writeln(modB.greet());
-        </script></pre>
-    </div>
-    <div class="Box Blue">
-        <h2>Bundle (synchronous, relative)</h2>
-        <pre><script type="text/javascript">
-        require('relative/water');
-        var fish = require('fish');
-        document.writeln(fish.greet());
-        var shark = require('relative/shark');
-        document.writeln(shark.greet());
-        var whale = require('whale');
-        document.writeln(whale.greet());
-        var dolphin = require('ocean/dolphin');
-        document.writeln(dolphin.greet());
-        </script></pre>
-    </div>
-    <div class="Box Blue">
-        <h2>Bundle (preloaded)</h2>
-        <pre><script type="text/javascript">
-        var preA = require('preloadedA');
-        document.writeln(preA.greet());
-        preA.hellostr = 'HELLO';
-        document.writeln(preA.greet());
-        var preB = require('preloadedB');
-        document.writeln(preB.greet());
-        preB.worldstr = 'WORLD';
-        document.writeln(preB.greet());
-        </script></pre>
-    </div>
-    <div class="Box Blue">
-        <h2>Web Worker</h2>
-        <pre id="workerModulePre1"><script type="text/javascript">
-        var worker = new Worker("worker.js");
-        worker.addEventListener("message", function(evt) {
-            var node = document.getElementById('workerModulePre1');
-            node.innerHTML += evt.data+'\n';
-        }, false);
-        worker.postMessage("hello");
-        </script></pre>
-    </div>
+  <h1>Honey Require test page</h1>
+  <div class="Box Red">
+    <h2>Module paths</h2>
+    <pre><script type="text/javascript">
+    Honey.requirePath = ['/evil/hack/path/'];
+    document.writeln(require.path);
+    require.path.push('/yet/another/evil/hack/');
+    document.writeln(require.path+' (must be the same as above)');
+    </script></pre>
+  </div>
+  <div class="Box Red">
+    <h2>Identifier => Module</h2>
+    <pre><script type="text/javascript">
+    mname = 'module';
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    mname = './module';
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    try {
+      mname = '../module';
+      document.write('require.resolve('+mname+') -> ');
+      require.resolve(mname);
+    }
+    catch (e) {
+      document.writeln(e+" (this error is intended)");
+    }
+    mname = 'module.js';
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
+    var mname = '/module.js';
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    mname = './module.js';
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
+    mname = './boo/../foo/bar/./././baz///moo/maa/../../../mee/gee';
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    mname = 'foo/bar//baz///moo////maa/mee';
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    mname = '/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    mname = '1:/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    </script></pre>
+  </div>
+  <div class="Box Green">
+    <h2>Module (asynchronous)</h2>
+    <pre id="asyncModulePre1"><script type="text/javascript">
+    require('./async.js', function(mod) {
+      var node = document.getElementById('asyncModulePre1');
+      node.innerHTML += mod.greet()+'\n';
+    });
+    </script></pre>
+  </div>
+  <div class="Box Green">
+    <h2>Module (asynchronous, cached)</h2>
+    <pre id="asyncModulePre2"><script type="text/javascript">
+    require('./module.js', function(mod) {
+      var node = document.getElementById('asyncModulePre2');
+      node.innerHTML += mod.greet()+'\n';
+    });
+    </script></pre>
+  </div>
+  <div class="Box Green">
+    <h2>Module (asynchronous, relative, array loader)</h2>
+    <pre  id="asyncModulePre3"><script type="text/javascript">
+    require('./module1', function(mod) {
+      var node = document.getElementById('asyncModulePre3');
+      node.innerHTML += mod.greet()+'\n';
+    });
+    </script></pre>
+  </div>
+  <div class="Box Green">
+    <h2>Module (synchronous, alternative compiler)</h2>
+    <pre><script type="text/javascript">
+    var mod = require('module', null, function(source) {
+      console.log("Alternative fake require compiler called");
+      return source;
+    });
+    document.writeln(mod.greet());
+    mod.greetstr = 'HELLO WORLD';
+    document.write(mod.greet());
+    </script></pre>
+  </div>
+  <div class="Box Green">
+    <h2>Module (synchronous, replaced exports, no compiler)</h2>
+    <pre><script type="text/javascript">
+    var mod = require('replaced', null, null);
+    document.writeln(mod.greet());
+    </script></pre>
+  </div>
+  <div class="Box Green">
+    <h2>Module (synchronous, cached)</h2>
+    <pre><script type="text/javascript">
+    var mod = require('module');
+    document.writeln(mod.greet());
+    mod.greetstr = 'hello world';
+    document.write(mod.greet());
+    </script></pre>
+  </div>
+  <div class="Box Blue">
+    <h2>Bundle (asynchronous)</h2>
+    <pre id="asyncBundlePre"><script type="text/javascript">
+    require('bundle');
+    require('moduleA', function(mod) {
+      var node = document.getElementById('asyncBundlePre');
+      node.innerHTML += mod.greet()+'\n';
+    });
+    require('moduleB', function(mod) {
+      var node = document.getElementById('asyncBundlePre');
+      node.innerHTML += mod.greet()+'\n';
+    });
+    </script></pre>
+  </div>
+  <div class="Box Blue">
+    <h2>Bundle (synchronous)</h2>
+    <pre><script type="text/javascript">
+    var modA = require('moduleA');
+    document.writeln(modA.greet());
+    modA.hellostr = 'HELLO';
+    document.writeln(modA.greet());
+    var modB = require('moduleB');
+    document.writeln(modB.greet());
+    modB.worldstr = 'WORLD';
+    document.writeln(modB.greet());
+    </script></pre>
+  </div>
+  <div class="Box Blue">
+    <h2>Bundle (synchronous, cached)</h2>
+    <pre><script type="text/javascript">
+    var modA = require('moduleA');
+    document.writeln(modA.greet());
+    var modB = require('moduleB');
+    document.writeln(modB.greet());
+    </script></pre>
+  </div>
+  <div class="Box Blue">
+    <h2>Bundle (synchronous, relative)</h2>
+    <pre><script type="text/javascript">
+    require('relative/water');
+    var fish = require('fish');
+    document.writeln(fish.greet());
+    var shark = require('relative/shark');
+    document.writeln(shark.greet());
+    var whale = require('whale');
+    document.writeln(whale.greet());
+    var dolphin = require('ocean/dolphin');
+    document.writeln(dolphin.greet());
+    </script></pre>
+  </div>
+  <div class="Box Blue">
+    <h2>Bundle (preloaded)</h2>
+    <pre><script type="text/javascript">
+    var preA = require('preloadedA');
+    document.writeln(preA.greet());
+    preA.hellostr = 'HELLO';
+    document.writeln(preA.greet());
+    var preB = require('preloadedB');
+    document.writeln(preB.greet());
+    preB.worldstr = 'WORLD';
+    document.writeln(preB.greet());
+    </script></pre>
+  </div>
+  <div class="Box Blue">
+    <h2>Web Worker</h2>
+    <pre id="workerModulePre1"><script type="text/javascript">
+    var worker = new Worker("worker.js");
+    worker.addEventListener("message", function(evt) {
+      var node = document.getElementById('workerModulePre1');
+      node.innerHTML += evt.data+'\n';
+    }, false);
+    worker.postMessage("hello");
+    </script></pre>
+  </div>
 </body>
 
 </html>

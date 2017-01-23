@@ -22,17 +22,17 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 var Honey = {
-    'requirePath': ['./',"/alternative/module/root/"],
-    'requirePreloaded': new Object(),
-    'requireCompiler': function(source) {
-        console.log("Fake require compiler called");
-        return source;
-    }
+  'requirePath': ['./',"/alternative/module/root/"],
+  'requirePreloaded': new Object(),
+  'requireCompiler': function(source) {
+    console.log("Fake require compiler called");
+    return source;
+  }
 };
 importScripts("../require.js");
 
 var mod = require("module");
 
 self.addEventListener("message", function() {
-    self.postMessage(mod.greet());
+  self.postMessage(mod.greet());
 }, false);

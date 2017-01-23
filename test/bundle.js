@@ -24,21 +24,21 @@
 module = typeof module=='undefined' ? Honey.requirePreloaded : new Object(); 
 
 module['moduleA'] = function() {
-    'use strict';
+  'use strict';
 
-    exports.hellostr = 'hello';
+  exports.hellostr = 'hello';
 
-    exports.greet = function() {
-        return exports.hellostr+' world from '+module.id+'!';
-    }
+  exports.greet = function() {
+    return exports.hellostr+' world from '+module.id+'!';
+  }
 }
 
 module['moduleB'] = function() {
-    'use strict';
+  'use strict';
 
-    exports.worldstr = 'world';
+  exports.worldstr = 'world';
 
-    exports.greet = function() {
-        return 'hello '+exports.worldstr+' from '+module.id+'!';
-    }
+  exports.greet = function() {
+    return 'hello '+exports.worldstr+' from '+module.id+'!';
+  }
 }

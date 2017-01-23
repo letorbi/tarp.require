@@ -22,13 +22,13 @@
 'use strict';
 
 // this.greet = function() {
-// 	return exports.greetstr+' from '+exports.namestr+'!';
+//   return exports.greetstr+' from '+exports.namestr+'!';
 // }
 
 var Exports = function() {
-    this.greet = function() {
-        return exports.greetstr+' from '+exports.namestr+'!';
-    }
+  this.greet = function() {
+    return exports.greetstr+' from '+exports.namestr+'!';
+  }
 }
 exports = new Exports();
 

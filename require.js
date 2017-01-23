@@ -31,24 +31,24 @@
 // WARN Re-throwing an error object will mess up the stack trace and the
 //      column number.
 if (typeof (new Error()).fileName == "string") {
-	self.addEventListener("error", function(evt) {
-		if (evt.error instanceof Error) {
-			if (pwd[0]) {
-				evt.preventDefault();
-				throw new evt.error.constructor(evt.error.message, pwd[0].uri, evt.error.lineNumber);
-			}
-			else {
-				var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
-				if (m === null) {
-					console.warn("Honey: unable to read file name from stack");
-				}
-				else if (evt.error.fileName != m[1]) {
-					evt.preventDefault();
-					throw new evt.error.constructor(evt.error.message, m[1], evt.error.lineNumber);
-				}
-			}
-		}
-	}, false);
+  self.addEventListener("error", function(evt) {
+    if (evt.error instanceof Error) {
+      if (pwd[0]) {
+        evt.preventDefault();
+        throw new evt.error.constructor(evt.error.message, pwd[0].uri, evt.error.lineNumber);
+      }
+      else {
+        var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
+        if (m === null) {
+          console.warn("Honey: unable to read file name from stack");
+        }
+        else if (evt.error.fileName != m[1]) {
+          evt.preventDefault();
+          throw new evt.error.constructor(evt.error.message, m[1], evt.error.lineNumber);
+        }
+      }
+    }
+  }, false);
 }
 
 // INFO Current module descriptors
@@ -99,16 +99,16 @@ for (var i=0; i<requirePath.length; i++) {
     parser.href = (requirePath[i][0]=="."?base[1]:base[0])+requirePath[i];
   else
     parser.href = requirePath[i];
-	requirePath[i] = parser.href;
+  requirePath[i] = parser.href;
 }
 
 // NOTE Add preloaded modules to cache
 for (var id in (self.Honey && self.Honey.requirePreloaded))
-	cache['$'+resolve(id).id] = self.Honey.requirePreloaded[id].toString();
+  cache['$'+resolve(id).id] = self.Honey.requirePreloaded[id].toString();
 
 // NOTE Add module overrides to cache
 for (id in (self.Honey && self.Honey.requireOverrides))
-	cache['$'+resolve(id).id] = self.Honey.requireOverrides[id];
+  cache['$'+resolve(id).id] = self.Honey.requireOverrides[id];
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -121,65 +121,65 @@ for (id in (self.Honey && self.Honey.requireOverrides))
 //      module has been loaded.
 
 function require(identifier, callback, compiler) {
-	if (identifier instanceof Array) {
-		var modules = new Array();
-		var modcount = identifier.length;
-		for (var index = 0; index < identifier.length; index++) {
-			(function(id, i) {
-				modules.push(require(id, callback&&function(mod) {
-					modules[i] = mod;
-					(--modcount==0) && callback(modules);
-				}, compiler));
-			})(identifier[index], index);
-		}
-		return modules;
-	}
+  if (identifier instanceof Array) {
+    var modules = new Array();
+    var modcount = identifier.length;
+    for (var index = 0; index < identifier.length; index++) {
+      (function(id, i) {
+        modules.push(require(id, callback&&function(mod) {
+          modules[i] = mod;
+          (--modcount==0) && callback(modules);
+        }, compiler));
+      })(identifier[index], index);
+    }
+    return modules;
+  }
 
-	compiler = compiler!==undefined ? compiler : requireCompiler;
-	var descriptor = resolve(identifier);
-	var cacheid = '$'+descriptor.id;
+  compiler = compiler!==undefined ? compiler : requireCompiler;
+  var descriptor = resolve(identifier);
+  var cacheid = '$'+descriptor.id;
 
-	if (cache[cacheid]) {
-		if (typeof cache[cacheid] === 'string')
-			load(descriptor, cache, pwd, cache[cacheid]);
-		if (callback)
-			// NOTE The callback should always be called asynchronously to ensure
-			//      that a cached call won't differ from an uncached one.
-			setTimeout(function(){callback(cache[cacheid]);}, 0);
-		return cache[cacheid];
-	}
+  if (cache[cacheid]) {
+    if (typeof cache[cacheid] === 'string')
+      load(descriptor, cache, pwd, cache[cacheid]);
+    if (callback)
+      // NOTE The callback should always be called asynchronously to ensure
+      //      that a cached call won't differ from an uncached one.
+      setTimeout(function(){callback(cache[cacheid]);}, 0);
+    return cache[cacheid];
+  }
 
-	var request = new XMLHttpRequest();
+  var request = new XMLHttpRequest();
 
-	if (callback)
-		request.onload = onLoad;
-	request.open('GET', descriptor.uri, !!callback);
-	// NOTE Locking is required to prevent some browsers from running onLoad during load
-	lock[cacheid] = lock[cacheid]++||1;
-	request.send();
-	lock[cacheid]--;
-	if (!callback)
-		onLoad();
-	return cache[cacheid];
+  if (callback)
+    request.onload = onLoad;
+  request.open('GET', descriptor.uri, !!callback);
+  // NOTE Locking is required to prevent some browsers from running onLoad during load
+  lock[cacheid] = lock[cacheid]++||1;
+  request.send();
+  lock[cacheid]--;
+  if (!callback)
+    onLoad();
+  return cache[cacheid];
 
-	function onLoad() {
-		if (lock[cacheid]) {
-			console.warn("Honey: module locked: "+descriptor.id);
-			setTimeout(onLoad, 0);
-		}
-		else {
-			if (request.readyState != 4)
-				return;
-			if (request.status != 200)
-				throw new Error("Honey: unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
-			if (!cache[cacheid]) {
-				var source = compiler ? compiler(request.responseText) : request.responseText;
-				load(descriptor, cache, pwd, 'function(){\n'+source+'\n}');
-			}
-			if (callback)
-				callback(cache[cacheid]);
-		}
-	}
+  function onLoad() {
+    if (lock[cacheid]) {
+      console.warn("Honey: module locked: "+descriptor.id);
+      setTimeout(onLoad, 0);
+    }
+    else {
+      if (request.readyState != 4)
+        return;
+      if (request.status != 200)
+        throw new Error("Honey: unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
+      if (!cache[cacheid]) {
+        var source = compiler ? compiler(request.responseText) : request.responseText;
+        load(descriptor, cache, pwd, 'function(){\n'+source+'\n}');
+      }
+      if (callback)
+        callback(cache[cacheid]);
+    }
+  }
 }
 
 // INFO Module resolver
@@ -188,23 +188,23 @@ function require(identifier, callback, compiler) {
 //      `fetch` to load a module.
 
 function resolve(identifier) {
-	// NOTE Matches [1]:[..]/[path/to/][file][.js]
-	var m = identifier.match(/^(?:([^:\/]+):)?(\.\.?)?\/?((?:.*\/)?)([^\.]+)?(\..*)?$/);
-	// NOTE Matches [1]:[/path/to/]file.js
-	var p = (pwd[0]?pwd[0].id:"").match(/^(?:([^:\/]+):)?(.*\/|)[^\/]*$/);
-	var root = m[2] ? requirePath[p[1]?parseInt(p[1]):0] : requirePath[m[1]?parseInt(m[1]):0];
-	parser.href = (m[2]?root+p[2]+m[2]+'/':root)+m[3]+(m[4]?m[4]:'index');
-	var uri = parser.href+(m[5]?m[5]:'.js');
-	if (uri.substr(0,root.length) != root)
-		throw new Error("Honey: relative identifier outside of module root");
-	var id = (m[1]?m[1]+":":"0:")+parser.href.substr(root.length);
-	return {'id':id,'uri':uri};
+  // NOTE Matches [1]:[..]/[path/to/][file][.js]
+  var m = identifier.match(/^(?:([^:\/]+):)?(\.\.?)?\/?((?:.*\/)?)([^\.]+)?(\..*)?$/);
+  // NOTE Matches [1]:[/path/to/]file.js
+  var p = (pwd[0]?pwd[0].id:"").match(/^(?:([^:\/]+):)?(.*\/|)[^\/]*$/);
+  var root = m[2] ? requirePath[p[1]?parseInt(p[1]):0] : requirePath[m[1]?parseInt(m[1]):0];
+  parser.href = (m[2]?root+p[2]+m[2]+'/':root)+m[3]+(m[4]?m[4]:'index');
+  var uri = parser.href+(m[5]?m[5]:'.js');
+  if (uri.substr(0,root.length) != root)
+    throw new Error("Honey: relative identifier outside of module root");
+  var id = (m[1]?m[1]+":":"0:")+parser.href.substr(root.length);
+  return {'id':id,'uri':uri};
 }
 
 // NOTE Export require to global scope
 
 if (self.require !== undefined)
-	throw new Error("Honey: '\'require\' already defined in global scope");
+  throw new Error("Honey: '\'require\' already defined in global scope");
 
 Object.defineProperty(self, 'require', {'value':require});
 Object.defineProperty(self.require, 'resolve', {'value':resolve});
@@ -225,18 +225,18 @@ Object.defineProperty(self.require, 'path', {'get':function(){return requirePath
 //      in strict mode, too.
 
 function /*load*/(module/*, cache, pwd, source*/) {
-	var global = self;
-	var exports = new Object();
-	Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
-	arguments[2].unshift(module);
-	Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
-	arguments[3] = '('+arguments[3]+')();\n//# sourceURL='+module.uri;
-	eval(arguments[3]);
-	// NOTE Store module code in the cache if the loaded file is a bundle
-	if (typeof module.id !== 'string')
-		for (var id in module)
-			arguments[1]['$'+require.resolve(id).id] = module[id].toString();
-	arguments[2].shift();
+  var global = self;
+  var exports = new Object();
+  Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
+  arguments[2].unshift(module);
+  Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
+  arguments[3] = '('+arguments[3]+')();\n//# sourceURL='+module.uri;
+  eval(arguments[3]);
+  // NOTE Store module code in the cache if the loaded file is a bundle
+  if (typeof module.id !== 'string')
+    for (var id in module)
+      arguments[1]['$'+require.resolve(id).id] = module[id].toString();
+  arguments[2].shift();
 }
 
 );
