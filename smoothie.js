@@ -216,24 +216,6 @@ function resolve(identifier) {
   return {'id':id,'uri':uri};
 }
 
-// NOTE Export require to global scope
-
-if (self.require !== undefined)
-  throw new SmoothieError("'require' already defined in global scope");
-
-try {
-  Object.defineProperty(self, 'require', {'value':require});
-  Object.defineProperty(self.require, 'resolve', {'value':resolve});
-  Object.defineProperty(self.require, 'path', {'get':function(){return requirePath.slice(0);}});
-}
-catch (e) {
-  // NOTE IE8 can't use defineProperty on non-DOM objects, so we have to fall
-  //      back to unsave property assignments in this case.
-  self.require = require;
-  self.require.resolve = resolve;
-  self.require.path = requirePath.slice(0);
-}
-
 // INFO Boot loader
 //      After the the main module has been loaded it is passed to this function,
 //      which calls the appropriate hooks according to the document loading
@@ -253,10 +235,12 @@ function boot(module) {
       //      if the page has been loaded from cache. Therefore we have to
       //      wait until the 'complete' state has been reached to call the
       //      hooks for 'interactive' then.
-      if (ieInteractiveWithBody = !!document.body) { 
+      ieInteractiveWithBody = !!document.body;
+      if (ieInteractiveWithBody) {
         module.ready && module.ready(document.body);
         module.interactive && module.interactive(document.body);
       }
+      // falls through
     case 'loading':
       document.onreadystatechange = function() {
         switch (document.readyState) {
