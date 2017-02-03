@@ -31,7 +31,7 @@ SmoothieError.prototype = Object.create(Error.prototype);
 //      inside an eval call (even with sourceURL). However, the stack
 //      contains the correct source, so it can be used to re-threw the error
 //      with the correct fileName property.
-// WARN Re-threwing a new error object will mess up the stack trace and the
+// WARN Re-throwing an error object will mess up the stack trace and the
 //      column number.
 if (typeof (new Error()).fileName == "string") {
   self.addEventListener("error", function(evt) {
@@ -61,35 +61,35 @@ if (typeof (new Error()).fileName == "string") {
 var pwd = Array();
 
 // INFO Path parser
-// NOTE Older browsers don't support the URL interface, therefore we use an
+//      Older browsers don't support the URL interface, therefore we use an
 //      anchor element as parser in that case. Thes breaks web worker support,
-//      but we don't care since these browser also don't support web workers.
+//      but we don't care since these browsers also don't support web workers.
 
 var parser = URL ? new URL(location.href) : document.createElement('A');
 
 // INFO Module cache
-// NOTE Contains getter functions for the exports objects of all the loaded
+//      Contains getter functions for the exports objects of all the loaded
 //      modules. The getter for the module 'mymod' is name '$name' to prevent
 //      collisions with predefined object properties (see note below).
 //      As long as a module has not been loaded the getter is either undefined
 //      or contains the module code as a function (in case the module has been
 //      pre-loaded in a bundle).
-// WARN IE8 supports defineProperty only for DOM objects, therfore we use a
+
+// NOTE IE8 supports defineProperty only for DOM objects, therfore we use a
 //      HTMLDivElement as cache in that case. This breaks web worker support,
 //      but we don't care since IE8 has no web workers at all.
-
 try {
   var cache = new Object();
   Object.defineProperty(cache, "foo", {'value':"bar",'configurable':true});
   delete cache.foo;
 }
 catch (e) {
-  console.warn("Smoothie: Falling back to DOM workaround for defineProperty ("+e+")");
+  console.warn("Smoothie: Falling back to DOM workaround for defineProperty: "+e);
   cache = document.createElement('DIV');
 }
 
 // INFO Send lock
-// NOTE Sending the request causes the event loop to continue. Therefore
+//      Sending the request causes the event loop to continue. Therefore
 //      pending AJAX load events for the same url might be executed before
 //      the synchronous onLoad is called. This should be no problem, but in
 //      Chrome the responseText of the sneaked in load events will be empty.
@@ -99,10 +99,9 @@ var lock = new Object();
 
 // INFO Smoothie options
 //      The values can be set by defining a object called Smoothie. The
-//      Smoothe object has to be defined before this script here is loaded
+//      Smoothie object has to be defined before this script here is loaded
 //      and changing the values in the Smoothie object will have no effect
 //      afterwards!
-
 
 var loaderMain = self.Smoothie&&self.Smoothie.loaderMain!==undefined?self.Smoothie.loaderMain:'main';
 var requirePath = self.Smoothie&&self.Smoothie.requirePath!==undefined ? self.Smoothie.requirePath.slice(0) : ['./'];
@@ -111,7 +110,10 @@ var requireCompiler = self.Smoothie&&self.Smoothie.requireCompiler!==undefined ?
 // NOTE Parse module root paths
 var base = [location.origin, location.href.substr(0, location.href.lastIndexOf("/")+1)];
 for (var i=0; i<requirePath.length; i++) {
-  parser.href = (requirePath[i][0]=="."?base[1]:base[0])+requirePath[i];
+  if (!/^(?:\w+:)?\/\//.test(requirePath[i]))
+    parser.href = (requirePath[i][0]=="."?base[1]:base[0])+requirePath[i];
+  else
+    parser.href = requirePath[i];
   requirePath[i] = parser.href;
 }
 
@@ -120,7 +122,7 @@ for (var id in (self.Smoothie && self.Smoothie.requirePreloaded))
   cache['$'+resolve(id).id] = self.Smoothie.requirePreloaded[id].toString();
 
 // NOTE Add module overrides to cache
-for (var id in (self.Smoothie && self.Smoothie.requireOverrides))
+for (id in (self.Smoothie && self.Smoothie.requireOverrides))
   cache['$'+resolve(id).id] = self.Smoothie.requireOverrides[id];
 
 // INFO Module getter
@@ -155,42 +157,43 @@ function require(identifier, callback, compiler) {
   if (cache[cacheid]) {
     if (typeof cache[cacheid] === 'string')
       load(descriptor, cache, pwd, cache[cacheid]);
-    // NOTE The callback should always be called asynchronously to ensure
-    //      that a cached call won't differ from an uncached one.
-    callback && setTimeout(function(){callback(cache[cacheid])}, 0);
+    if (callback)
+      // NOTE The callback should always be called asynchronously to ensure
+      //      that a cached call won't differ from an uncached one.
+      setTimeout(function(){callback(cache[cacheid]);}, 0);
     return cache[cacheid];
   }
 
   var request = new XMLHttpRequest();
 
-  // NOTE IE8 doesn't support the onload event, therefore we use
-  //      onreadystatechange as a fallback here. However, onreadystatechange
-  //      shouldn't be used for all browsers, since at least mobile Safari
-  //      seems to have an issue where onreadystatechange is called twice for
-  //      readyState 4.
-  callback && (request[request.onload===null?'onload':'onreadystatechange'] = onLoad);
+  if (callback)
+    request.onload = onLoad;
   request.open('GET', descriptor.uri, !!callback);
+  // NOTE Locking is required to prevent some browsers from running onLoad during load
   lock[cacheid] = lock[cacheid]++||1;
   request.send();
   lock[cacheid]--;
-  !callback && onLoad();
+  if (!callback)
+    onLoad();
   return cache[cacheid];
 
   function onLoad() {
-    if (request.readyState != 4)
-      return;
-    if (request.status != 200)
-      throw new SmoothieError("unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
     if (lock[cacheid]) {
-      console.warn("module locked: "+descriptor.id);
-      callback && setTimeout(onLoad, 0);
-      return;
+      console.warn("Smoothie: module locked: "+descriptor.id);
+      setTimeout(onLoad, 0);
     }
-    if (!cache[cacheid]) {
-      var source = compiler ? compiler(request.responseText) : request.responseText;
-      load(descriptor, cache, pwd, 'function(){\n'+source+'\n}');
+    else {
+      if (request.readyState != 4)
+        return;
+      if (request.status != 200)
+        throw new SmoothieError("unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
+      if (!cache[cacheid]) {
+        var source = compiler ? compiler(request.responseText) : request.responseText;
+        load(descriptor, cache, pwd, 'function(){\n'+source+'\n}');
+      }
+      if (callback)
+        callback(cache[cacheid]);
     }
-    callback && callback(cache[cacheid]);
   }
 }
 
@@ -208,9 +211,27 @@ function resolve(identifier) {
   parser.href = (m[2]?root+p[2]+m[2]+'/':root)+m[3]+(m[4]?m[4]:'index');
   var uri = parser.href+(m[5]?m[5]:'.js');
   if (uri.substr(0,root.length) != root)
-    throw new SmoothieError("Relative identifier outside of module root");
+    throw new SmoothieError("relative identifier outside of module root");
   var id = (m[1]?m[1]+":":"0:")+parser.href.substr(root.length);
   return {'id':id,'uri':uri};
+}
+
+// NOTE Export require to global scope
+
+if (self.require !== undefined)
+  throw new SmoothieError("'require' already defined in global scope");
+
+try {
+  Object.defineProperty(self, 'require', {'value':require});
+  Object.defineProperty(self.require, 'resolve', {'value':resolve});
+  Object.defineProperty(self.require, 'path', {'get':function(){return requirePath.slice(0);}});
+}
+catch (e) {
+  // NOTE IE8 can't use defineProperty on non-DOM objects, so we have to fall
+  //      back to unsave property assignments in this case.
+  self.require = require;
+  self.require.resolve = resolve;
+  self.require.path = requirePath.slice(0);
 }
 
 // INFO Boot loader
