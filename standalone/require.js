@@ -29,8 +29,8 @@
 (function(load) { 'use strict';
 
 var SmoothieError = function(message, fileName, lineNumber) {
-	this.name = "SmoothieError";
-	this.message = message;
+  this.name = "SmoothieError";
+  this.message = message;
 }
 SmoothieError.prototype = Object.create(Error.prototype);
 
@@ -41,24 +41,24 @@ SmoothieError.prototype = Object.create(Error.prototype);
 // NOTE Re-threwing a new error object will mess up the stack trace and the
 //      column number.
 if (typeof (new Error()).fileName == "string") {
-	self.addEventListener("error", function(evt) {
-		if (evt.error instanceof Error) {
-			if (pwd[0]) {
-				evt.preventDefault();
-				throw new evt.error.constructor(evt.error.message, pwd[0].uri, evt.error.lineNumber);
-			}
-			else {
-				var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
-				if (m === null) {
-					console.warn("Smoothie: unable to read file name from stack");
-				}
-				else if (evt.error.fileName != m[1]) {
-					evt.preventDefault();
-					throw new evt.error.constructor(evt.error.message, m[1], evt.error.lineNumber);
-				}
-			}
-		}
-	}, false);
+  self.addEventListener("error", function(evt) {
+    if (evt.error instanceof Error) {
+      if (pwd[0]) {
+        evt.preventDefault();
+        throw new evt.error.constructor(evt.error.message, pwd[0].uri, evt.error.lineNumber);
+      }
+      else {
+        var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
+        if (m === null) {
+          console.warn("Smoothie: unable to read file name from stack");
+        }
+        else if (evt.error.fileName != m[1]) {
+          evt.preventDefault();
+          throw new evt.error.constructor(evt.error.message, m[1], evt.error.lineNumber);
+        }
+      }
+    }
+  }, false);
 }
 
 // INFO Current module descriptors
@@ -86,13 +86,13 @@ var parser = URL ? new URL(location.href) : document.createElement('A');
 //      but we don't care since IE8 has no web workers at all.
 
 try {
-	var cache = new Object();
-	Object.defineProperty(cache, "foo", {'value':"bar",'configurable':true});
-	delete cache.foo;
+  var cache = new Object();
+  Object.defineProperty(cache, "foo", {'value':"bar",'configurable':true});
+  delete cache.foo;
 }
 catch (e) {
-	console.warn("Falling back to DOM workaround for defineProperty: "+e);
-	cache = document.createElement('DIV');
+  console.warn("Falling back to DOM workaround for defineProperty: "+e);
+  cache = document.createElement('DIV');
 }
 
 // INFO Send lock
@@ -116,17 +116,17 @@ var requireCompiler = self.Smoothie&&self.Smoothie.requireCompiler!==undefined ?
 // NOTE Parse module root paths
 var base = [location.origin, location.href.substr(0, location.href.lastIndexOf("/")+1)];
 for (var i=0; i<requirePath.length; i++) {
-	parser.href = (requirePath[i][0]=="."?base[1]:base[0])+requirePath[i];
-	requirePath[i] = parser.href;
+  parser.href = (requirePath[i][0]=="."?base[1]:base[0])+requirePath[i];
+  requirePath[i] = parser.href;
 }
 
 // NOTE Add preloaded modules to cache
 for (var id in (self.Smoothie && self.Smoothie.requirePreloaded))
-	cache['$'+resolve(id).id] = self.Smoothie.requirePreloaded[id].toString();
+  cache['$'+resolve(id).id] = self.Smoothie.requirePreloaded[id].toString();
 
 // NOTE Add module overrides to cache
 for (var id in (self.Smoothie && self.Smoothie.requireOverrides))
-	cache['$'+resolve(id).id] = self.Smoothie.requireOverrides[id];
+  cache['$'+resolve(id).id] = self.Smoothie.requireOverrides[id];
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -139,64 +139,64 @@ for (var id in (self.Smoothie && self.Smoothie.requireOverrides))
 //      module has been loaded.
 
 function require(identifier, callback, compiler) {
-	if (identifier instanceof Array) {
-		var modules = new Array();
-		var modcount = identifier.length;
-		for (var index = 0; index < identifier.length; index++) {
-			(function(id, i) {
-				modules.push(require(id, callback&&function(mod) {
-					modules[i] = mod;
-					(--modcount==0) && callback(modules);
-				}, compiler));
-			})(identifier[index], index);
-		}
-		return modules;
-	}
+  if (identifier instanceof Array) {
+    var modules = new Array();
+    var modcount = identifier.length;
+    for (var index = 0; index < identifier.length; index++) {
+      (function(id, i) {
+        modules.push(require(id, callback&&function(mod) {
+          modules[i] = mod;
+          (--modcount==0) && callback(modules);
+        }, compiler));
+      })(identifier[index], index);
+    }
+    return modules;
+  }
 
-	compiler = compiler!==undefined ? compiler : requireCompiler;
-	var descriptor = resolve(identifier);
-	var cacheid = '$'+descriptor.id;
+  compiler = compiler!==undefined ? compiler : requireCompiler;
+  var descriptor = resolve(identifier);
+  var cacheid = '$'+descriptor.id;
 
-	if (cache[cacheid]) {
-		if (typeof cache[cacheid] === 'string')
-			load(descriptor, cache, pwd, cache[cacheid]);
-		// NOTE The callback should always be called asynchronously to ensure
-		//      that a cached call won't differ from an uncached one.
-		callback && setTimeout(function(){callback(cache[cacheid])}, 0);
-		return cache[cacheid];
-	}
+  if (cache[cacheid]) {
+    if (typeof cache[cacheid] === 'string')
+      load(descriptor, cache, pwd, cache[cacheid]);
+    // NOTE The callback should always be called asynchronously to ensure
+    //      that a cached call won't differ from an uncached one.
+    callback && setTimeout(function(){callback(cache[cacheid])}, 0);
+    return cache[cacheid];
+  }
 
-	var request = new XMLHttpRequest();
+  var request = new XMLHttpRequest();
 
-	// NOTE IE8 doesn't support the onload event, therefore we use
-	//      onreadystatechange as a fallback here. However, onreadystatechange
-	//      shouldn't be used for all browsers, since at least mobile Safari
-	//      seems to have an issue where onreadystatechange is called twice for
-	//      readyState 4.
-	callback && (request[request.onload===null?'onload':'onreadystatechange'] = onLoad);
-	request.open('GET', descriptor.uri, !!callback);
-	lock[cacheid] = lock[cacheid]++||1;
-	request.send();
-	lock[cacheid]--;
-	!callback && onLoad();
-	return cache[cacheid];
+  // NOTE IE8 doesn't support the onload event, therefore we use
+  //      onreadystatechange as a fallback here. However, onreadystatechange
+  //      shouldn't be used for all browsers, since at least mobile Safari
+  //      seems to have an issue where onreadystatechange is called twice for
+  //      readyState 4.
+  callback && (request[request.onload===null?'onload':'onreadystatechange'] = onLoad);
+  request.open('GET', descriptor.uri, !!callback);
+  lock[cacheid] = lock[cacheid]++||1;
+  request.send();
+  lock[cacheid]--;
+  !callback && onLoad();
+  return cache[cacheid];
 
-	function onLoad() {
-		if (request.readyState != 4)
-			return;
-		if (request.status != 200)
-			throw new SmoothieError("unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
-		if (lock[cacheid]) {
-			console.warn("module locked: "+descriptor.id);
-			callback && setTimeout(onLoad, 0);
-			return;
-		}
-		if (!cache[cacheid]) {
-			var source = compiler ? compiler(request.responseText) : request.responseText;
-			load(descriptor, cache, pwd, 'function(){\n'+source+'\n}');
-		}
-		callback && callback(cache[cacheid]);
-	}
+  function onLoad() {
+    if (request.readyState != 4)
+      return;
+    if (request.status != 200)
+      throw new SmoothieError("unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
+    if (lock[cacheid]) {
+      console.warn("module locked: "+descriptor.id);
+      callback && setTimeout(onLoad, 0);
+      return;
+    }
+    if (!cache[cacheid]) {
+      var source = compiler ? compiler(request.responseText) : request.responseText;
+      load(descriptor, cache, pwd, 'function(){\n'+source+'\n}');
+    }
+    callback && callback(cache[cacheid]);
+  }
 }
 
 // INFO Module resolver
@@ -205,35 +205,35 @@ function require(identifier, callback, compiler) {
 //      `fetch` to load a module.
 
 function resolve(identifier) {
-	// NOTE Matches [1]:[..]/[path/to/][file][.js]
-	var m = identifier.match(/^(?:([^:\/]+):)?(\.\.?)?\/?((?:.*\/)?)([^\.]+)?(\..*)?$/);
-	// NOTE Matches [1]:[/path/to/]file.js
-	var p = (pwd[0]?pwd[0].id:"").match(/^(?:([^:\/]+):)?(.*\/|)[^\/]*$/);
-	var root = m[2] ? requirePath[p[1]?parseInt(p[1]):0] : requirePath[m[1]?parseInt(m[1]):0];
-	parser.href = (m[2]?root+p[2]+m[2]+'/':root)+m[3]+(m[4]?m[4]:'index');
-	var uri = parser.href+(m[5]?m[5]:'.js');
-	if (uri.substr(0,root.length) != root)
-		throw new SmoothieError("Relative identifier outside of module root");
-	var id = (m[1]?m[1]+":":"0:")+parser.href.substr(root.length);
-	return {'id':id,'uri':uri};
+  // NOTE Matches [1]:[..]/[path/to/][file][.js]
+  var m = identifier.match(/^(?:([^:\/]+):)?(\.\.?)?\/?((?:.*\/)?)([^\.]+)?(\..*)?$/);
+  // NOTE Matches [1]:[/path/to/]file.js
+  var p = (pwd[0]?pwd[0].id:"").match(/^(?:([^:\/]+):)?(.*\/|)[^\/]*$/);
+  var root = m[2] ? requirePath[p[1]?parseInt(p[1]):0] : requirePath[m[1]?parseInt(m[1]):0];
+  parser.href = (m[2]?root+p[2]+m[2]+'/':root)+m[3]+(m[4]?m[4]:'index');
+  var uri = parser.href+(m[5]?m[5]:'.js');
+  if (uri.substr(0,root.length) != root)
+    throw new SmoothieError("Relative identifier outside of module root");
+  var id = (m[1]?m[1]+":":"0:")+parser.href.substr(root.length);
+  return {'id':id,'uri':uri};
 }
 
 // INFO Exporting require to global scope
 
 if (self.require !== undefined)
-	throw new SmoothieError('\'require\' already defined in global scope');
+  throw new SmoothieError('\'require\' already defined in global scope');
 
 try {
-	Object.defineProperty(self, 'require', {'value':require});
-	Object.defineProperty(self.require, 'resolve', {'value':resolve});
-	Object.defineProperty(self.require, 'path', {'get':function(){return requirePath.slice(0);}});
+  Object.defineProperty(self, 'require', {'value':require});
+  Object.defineProperty(self.require, 'resolve', {'value':resolve});
+  Object.defineProperty(self.require, 'path', {'get':function(){return requirePath.slice(0);}});
 }
 catch (e) {
-	// NOTE IE8 can't use defineProperty on non-DOM objects, so we have to fall
-	//      back to unsave property assignments in this case.
-	self.require = require;
-	self.require.resolve = resolve;
-	self.require.path = requirePath.slice(0);
+  // NOTE IE8 can't use defineProperty on non-DOM objects, so we have to fall
+  //      back to unsave property assignments in this case.
+  self.require = require;
+  self.require.resolve = resolve;
+  self.require.path = requirePath.slice(0);
 }
 
 })(
@@ -251,18 +251,18 @@ catch (e) {
 //      in strict mode, too.
 
 function /*load*/(module/*, cache, pwd, source*/) {
-	var global = self;
-	var exports = new Object();
-	Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
-	arguments[2].unshift(module);
-	Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
-	arguments[3] = '('+arguments[3]+')();\n//# sourceURL='+module.uri;
-	eval(arguments[3]);
-	// NOTE Store module code in the cache if the loaded file is a bundle
-	if (typeof module.id !== 'string')
-		for (id in module)
-			arguments[1]['$'+require.resolve(id).id] = module[id].toString();
-	arguments[2].shift();
+  var global = self;
+  var exports = new Object();
+  Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
+  arguments[2].unshift(module);
+  Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
+  arguments[3] = '('+arguments[3]+')();\n//# sourceURL='+module.uri;
+  eval(arguments[3]);
+  // NOTE Store module code in the cache if the loaded file is a bundle
+  if (typeof module.id !== 'string')
+    for (id in module)
+      arguments[1]['$'+require.resolve(id).id] = module[id].toString();
+  arguments[2].shift();
 }
 
 );

@@ -1,3 +1,3 @@
 module.exports = function() {
-    return "this is module3";
+  return "this is module3";
 };

@@ -1,5 +1,5 @@
 'use strict';
 
 exports.greet = function() {
-	return 'Hello from sub!';
+  return 'Hello from sub!';
 }
