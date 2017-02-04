@@ -110,20 +110,6 @@ for (var i=0; i<requirePath.length; i++) {
 //      module has been loaded.
 
 function require(identifier, callback) {
-  if (identifier instanceof Array) {
-    var modules = new Array();
-    var modcount = identifier.length;
-    for (var index = 0; index < identifier.length; index++) {
-      (function(id, i) {
-        modules.push(require(id, callback&&function(mod) {
-          modules[i] = mod;
-          (--modcount==0) && callback(modules);
-        }));
-      })(identifier[index], index);
-    }
-    return modules;
-  }
-
   var descriptor = resolve(identifier);
   var cacheid = '$'+descriptor.id;
 

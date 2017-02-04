@@ -16,8 +16,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-var modules = require(['./module2','./module3']);
+var module2 = require('./module2');
+var module3 = require('./module3');
 
 exports.greet = function() {
-  return "This is module1, "+modules[0]()+" and "+modules[1]()+"!";
+  return "This is module1, "+module2()+" and "+module3()+"!";
 };
