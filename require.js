@@ -48,18 +48,20 @@ if (typeof (new Error()).fileName == "string") {
   }, false);
 }
 
+var pwd, parser, cache, requirePath, base, i;
+
 // INFO Current module descriptors
 //      pwd[0] contains the descriptor of the currently loaded module,
 //      pwd[1] contains the descriptor its parent module and so on.
 
-var pwd = Array();
+pwd = Array();
 
 // INFO Path parser
 //      Older browsers don't support the URL interface, therefore we use an
 //      anchor element as parser in that case. Thes breaks web worker support,
 //      but we don't care since these browsers also don't support web workers.
 
-var parser = new URL(location.href);
+parser = new URL(location.href);
 
 // INFO Module cache
 //      Contains getter functions for the exports objects of all the loaded
@@ -69,7 +71,7 @@ var parser = new URL(location.href);
 //      or contains the module code as a function (in case the module has been
 //      pre-loaded in a bundle).
 
-var cache = new Object();
+cache = new Object();
 
 // INFO Tarp options
 //      The values can be set by defining a object called Tarp. The
@@ -77,11 +79,11 @@ var cache = new Object();
 //      and changing the values in the Tarp object will have no effect
 //      afterwards!
 
-var requirePath = self.Tarp&&self.Tarp.requirePath!==undefined ? self.Tarp.requirePath.slice(0) : ['./'];
+requirePath = self.Tarp&&self.Tarp.requirePath!==undefined ? self.Tarp.requirePath.slice(0) : ['./'];
 
 // NOTE Parse module root paths
-var base = [location.origin, location.href.substr(0, location.href.lastIndexOf("/")+1)];
-for (var i=0; i<requirePath.length; i++) {
+base = [location.origin, location.href.substr(0, location.href.lastIndexOf("/")+1)];
+for (i=0; i<requirePath.length; i++) {
   if (!/^(?:\w+:)?\/\//.test(requirePath[i]))
     parser.href = (requirePath[i][0]=="."?base[1]:base[0])+requirePath[i];
   else
@@ -100,22 +102,20 @@ for (var i=0; i<requirePath.length; i++) {
 //      module has been loaded.
 
 function require(identifier) {
-  var descriptor = resolve(identifier);
-  var cacheid = '$'+descriptor.id;
-
+  var descriptor, cacheid, request;
+  descriptor = resolve(identifier);
+  cacheid = '$'+descriptor.id;
   if (cache[cacheid]) {
     if (typeof cache[cacheid] === 'string')
       load(descriptor, cache, pwd, cache[cacheid]);
     return cache[cacheid];
   }
-
-  var request = new XMLHttpRequest();
+  request = new XMLHttpRequest();
   request.open('GET', descriptor.uri, false);
   request.send();
   if (request.status != 200)
     throw new Error("Tarp: unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
-  var source = 'function(){\n'+request.responseText+'\n}';
-  load(descriptor, cache, pwd, source);
+  load(descriptor, cache, pwd, 'function(){\n'+request.responseText+'\n}');
   return cache[cacheid];
 }
 
@@ -125,16 +125,17 @@ function require(identifier) {
 //      `fetch` to load a module.
 
 function resolve(identifier) {
+  var m, p, root, uri, id;
   // NOTE Matches [1]:[..]/[path/to/][file][.js]
-  var m = identifier.match(/^(?:([^:\/]+):)?(\.\.?)?\/?((?:.*\/)?)([^\.]+)?(\..*)?$/);
+  m = identifier.match(/^(?:([^:\/]+):)?(\.\.?)?\/?((?:.*\/)?)([^\.]+)?(\..*)?$/);
   // NOTE Matches [1]:[/path/to/]file.js
-  var p = (pwd[0]?pwd[0].id:"").match(/^(?:([^:\/]+):)?(.*\/|)[^\/]*$/);
-  var root = m[2] ? requirePath[p[1]?parseInt(p[1]):0] : requirePath[m[1]?parseInt(m[1]):0];
+  p = (pwd[0]?pwd[0].id:"").match(/^(?:([^:\/]+):)?(.*\/|)[^\/]*$/);
+  root = m[2] ? requirePath[p[1]?parseInt(p[1]):0] : requirePath[m[1]?parseInt(m[1]):0];
   parser.href = (m[2]?root+p[2]+m[2]+'/':root)+m[3]+(m[4]?m[4]:'index');
-  var uri = parser.href+(m[5]?m[5]:'.js');
+  uri = parser.href+(m[5]?m[5]:'.js');
   if (uri.substr(0,root.length) != root)
     throw new Error("Tarp: relative identifier outside of module root");
-  var id = (m[1]?m[1]+":":"0:")+parser.href.substr(root.length);
+  id = (m[1]?m[1]+":":"0:")+parser.href.substr(root.length);
   return {'id':id,'uri':uri};
 }
 
@@ -142,7 +143,6 @@ function resolve(identifier) {
 
 if (self.require !== undefined)
   throw new Error("Tarp: '\'require\' already defined in global scope");
-
 Object.defineProperty(self, 'require', {'value':require});
 Object.defineProperty(self.require, 'resolve', {'value':resolve});
 Object.defineProperty(self.require, 'path', {'get':function(){return requirePath.slice(0);}});
@@ -162,13 +162,13 @@ Object.defineProperty(self.require, 'path', {'get':function(){return requirePath
 //      in strict mode, too.
 
 function /*load*/(module/*, cache, pwd, source*/) {
-  var global = self;
-  var exports = new Object();
+  var global, exports;
+  global = self;
+  exports = new Object();
   Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
-  arguments[2].unshift(module);
   Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
-  arguments[3] = '('+arguments[3]+')();\n//# sourceURL='+module.uri;
-  eval(arguments[3]);
+  arguments[2].unshift(module);
+  eval('('+arguments[3]+')();\n//# sourceURL='+module.uri);
   // NOTE Store module code in the cache if the loaded file is a bundle
   if (typeof module.id !== 'string')
     for (var id in module)
