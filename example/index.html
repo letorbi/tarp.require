@@ -2,30 +2,30 @@
 
 <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-This file is part of Smoothie.
+This file is part of Tarp.
 
 Copyright (C) 2013-2017 Torben Haase <https://pixelsvsnytes.com>
 
-Smoothie is free software: you can redistribute it and/or modify it under the
+Tarp is free software: you can redistribute it and/or modify it under the
 terms of the GNU Lesser General Public License as published by the Free
 Software Foundation, either version 3 of the License, or (at your option) any
 later version.
 
-Smoothie is distributed in the hope that it will be useful, but WITHOUT ANY
+Tarp is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
 details.You should have received a copy of the GNU Lesser General Public
-License along with Smoothie.  If not, see <http://www.gnu.org/licenses/>.
+License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
 
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
 
 <html>
 
 <head>
-  <title>Honey Require test page</title>
+  <title>Tarp Require test page</title>
   
   <script type="text/javascript">
-    var Honey = {
+    var Tarp = {
       'requirePath': ["./", "/alternative/module/root/", "http://example.com/"],
       'requirePreloaded': new Object(),
       'requireCompiler': function(source) {
@@ -39,11 +39,11 @@ License along with Smoothie.  If not, see <http://www.gnu.org/licenses/>.
 </head>
 
 <body>
-  <h1>Honey Require test page</h1>
+  <h1>Tarp Require test page</h1>
   <div class="Box Red">
     <h2>Module paths</h2>
     <pre><script type="text/javascript">
-    Honey.requirePath = ['/evil/hack/path/'];
+    Tarp.requirePath = ['/evil/hack/path/'];
     document.writeln(require.path);
     require.path.push('/yet/another/evil/hack/');
     document.writeln(require.path+' (must be the same as above)');

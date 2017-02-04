@@ -1,18 +1,18 @@
 //
-// This file is part of Smoothie.
+// This file is part of Tarp.
 //
 // Copyright (C) 2013-2017 Torben Haase <https://pixelsvsbytes.com>
 //
-// Smoothie is free software: you can redistribute it and/or modify it under the
+// Tarp is free software: you can redistribute it and/or modify it under the
 // terms of the GNU Lesser General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option) any
 // later version.
 //
-// Smoothie is distributed in the hope that it will be useful, but WITHOUT ANY
+// Tarp is distributed in the hope that it will be useful, but WITHOUT ANY
 // WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 // A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
 // details.You should have received a copy of the GNU Lesser General Public
-// License along with Smoothie.  If not, see <http://www.gnu.org/licenses/>.
+// License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,7 +37,7 @@ if (typeof (new Error()).fileName == "string") {
       else {
         var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
         if (m === null) {
-          console.warn("Honey: unable to read file name from stack");
+          console.warn("Tarp: unable to read file name from stack");
         }
         else if (evt.error.fileName != m[1]) {
           evt.preventDefault();
@@ -80,14 +80,14 @@ var cache = new Object();
 
 var lock = new Object();
 
-// INFO Honey options
-//      The values can be set by defining a object called Honey. The
-//      Honey object has to be defined before this script here is loaded
-//      and changing the values in the Honey object will have no effect
+// INFO Tarp options
+//      The values can be set by defining a object called Tarp. The
+//      Tarp object has to be defined before this script here is loaded
+//      and changing the values in the Tarp object will have no effect
 //      afterwards!
 
-var requirePath = self.Honey&&self.Honey.requirePath!==undefined ? self.Honey.requirePath.slice(0) : ['./'];
-var requireCompiler = self.Honey&&self.Honey.requireCompiler!==undefined ? self.Honey.requireCompiler : null;
+var requirePath = self.Tarp&&self.Tarp.requirePath!==undefined ? self.Tarp.requirePath.slice(0) : ['./'];
+var requireCompiler = self.Tarp&&self.Tarp.requireCompiler!==undefined ? self.Tarp.requireCompiler : null;
 
 // NOTE Parse module root paths
 var base = [location.origin, location.href.substr(0, location.href.lastIndexOf("/")+1)];
@@ -100,12 +100,12 @@ for (var i=0; i<requirePath.length; i++) {
 }
 
 // NOTE Add preloaded modules to cache
-for (var id in (self.Honey && self.Honey.requirePreloaded))
-  cache['$'+resolve(id).id] = self.Honey.requirePreloaded[id].toString();
+for (var id in (self.Tarp && self.Tarp.requirePreloaded))
+  cache['$'+resolve(id).id] = self.Tarp.requirePreloaded[id].toString();
 
 // NOTE Add module overrides to cache
-for (id in (self.Honey && self.Honey.requireOverrides))
-  cache['$'+resolve(id).id] = self.Honey.requireOverrides[id];
+for (id in (self.Tarp && self.Tarp.requireOverrides))
+  cache['$'+resolve(id).id] = self.Tarp.requireOverrides[id];
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -161,14 +161,14 @@ function require(identifier, callback, compiler) {
 
   function onLoad() {
     if (lock[cacheid]) {
-      console.warn("Honey: module locked: "+descriptor.id);
+      console.warn("Tarp: module locked: "+descriptor.id);
       setTimeout(onLoad, 0);
     }
     else {
       if (request.readyState != 4)
         return;
       if (request.status != 200)
-        throw new Error("Honey: unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
+        throw new Error("Tarp: unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
       if (!cache[cacheid]) {
         var source = compiler ? compiler(request.responseText) : request.responseText;
         load(descriptor, cache, pwd, 'function(){\n'+source+'\n}');
@@ -193,7 +193,7 @@ function resolve(identifier) {
   parser.href = (m[2]?root+p[2]+m[2]+'/':root)+m[3]+(m[4]?m[4]:'index');
   var uri = parser.href+(m[5]?m[5]:'.js');
   if (uri.substr(0,root.length) != root)
-    throw new Error("Honey: relative identifier outside of module root");
+    throw new Error("Tarp: relative identifier outside of module root");
   var id = (m[1]?m[1]+":":"0:")+parser.href.substr(root.length);
   return {'id':id,'uri':uri};
 }
@@ -201,7 +201,7 @@ function resolve(identifier) {
 // NOTE Export require to global scope
 
 if (self.require !== undefined)
-  throw new Error("Honey: '\'require\' already defined in global scope");
+  throw new Error("Tarp: '\'require\' already defined in global scope");
 
 Object.defineProperty(self, 'require', {'value':require});
 Object.defineProperty(self.require, 'resolve', {'value':resolve});
