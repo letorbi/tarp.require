@@ -28,10 +28,6 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     var Tarp = {
       'requirePath': ["./", "/alternative/module/root/", "http://example.com/"],
       'requirePreloaded': new Object(),
-      'requireCompiler': function(source) {
-        console.log("Fake require compiler called");
-        return source;
-      }
     };
   </script>
   <script type="text/javascript" src="../require.js"></script>
@@ -104,25 +100,6 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
       var node = document.getElementById('asyncModulePre3');
       node.innerHTML += mod.greet()+'\n';
     });
-    </script></pre>
-  </div>
-  <div class="Box Green">
-    <h2>Module (synchronous, alternative compiler)</h2>
-    <pre><script type="text/javascript">
-    var mod = require('module', null, function(source) {
-      console.log("Alternative fake require compiler called");
-      return source;
-    });
-    document.writeln(mod.greet());
-    mod.greetstr = 'HELLO WORLD';
-    document.write(mod.greet());
-    </script></pre>
-  </div>
-  <div class="Box Green">
-    <h2>Module (synchronous, replaced exports, no compiler)</h2>
-    <pre><script type="text/javascript">
-    var mod = require('replaced', null, null);
-    document.writeln(mod.greet());
     </script></pre>
   </div>
   <div class="Box Green">

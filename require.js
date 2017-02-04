@@ -109,7 +109,7 @@ for (var i=0; i<requirePath.length; i++) {
 //      and the mpdule exports are passed to the callback function after the
 //      module has been loaded.
 
-function require(identifier, callback, compiler) {
+function require(identifier, callback) {
   if (identifier instanceof Array) {
     var modules = new Array();
     var modcount = identifier.length;
@@ -118,13 +118,12 @@ function require(identifier, callback, compiler) {
         modules.push(require(id, callback&&function(mod) {
           modules[i] = mod;
           (--modcount==0) && callback(modules);
-        }, compiler));
+        }));
       })(identifier[index], index);
     }
     return modules;
   }
 
-  compiler = compiler!==undefined ? compiler : requireCompiler;
   var descriptor = resolve(identifier);
   var cacheid = '$'+descriptor.id;
 
@@ -162,7 +161,7 @@ function require(identifier, callback, compiler) {
       if (request.status != 200)
         throw new Error("Tarp: unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
       if (!cache[cacheid]) {
-        var source = compiler ? compiler(request.responseText) : request.responseText;
+        var source = request.responseText;
         load(descriptor, cache, pwd, 'function(){\n'+source+'\n}');
       }
       if (callback)
