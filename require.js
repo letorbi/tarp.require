@@ -71,15 +71,6 @@ var parser = new URL(location.href);
 
 var cache = new Object();
 
-// INFO Send lock
-//      Sending the request causes the event loop to continue. Therefore
-//      pending AJAX load events for the same url might be executed before
-//      the synchronous onLoad is called. This should be no problem, but in
-//      Chrome the responseText of the sneaked in load events will be empty.
-//      Therefore we have to lock the loading while executing send().   
-
-var lock = new Object();
-
 // INFO Tarp options
 //      The values can be set by defining a object called Tarp. The
 //      Tarp object has to be defined before this script here is loaded
@@ -108,51 +99,24 @@ for (var i=0; i<requirePath.length; i++) {
 //      and the mpdule exports are passed to the callback function after the
 //      module has been loaded.
 
-function require(identifier, callback) {
+function require(identifier) {
   var descriptor = resolve(identifier);
   var cacheid = '$'+descriptor.id;
 
   if (cache[cacheid]) {
     if (typeof cache[cacheid] === 'string')
       load(descriptor, cache, pwd, cache[cacheid]);
-    if (callback)
-      // NOTE The callback should always be called asynchronously to ensure
-      //      that a cached call won't differ from an uncached one.
-      setTimeout(function(){callback(cache[cacheid]);}, 0);
     return cache[cacheid];
   }
 
   var request = new XMLHttpRequest();
-
-  if (callback)
-    request.onload = onLoad;
-  request.open('GET', descriptor.uri, !!callback);
-  // NOTE Locking is required to prevent some browsers from running onLoad during load
-  lock[cacheid] = lock[cacheid]++||1;
+  request.open('GET', descriptor.uri, false);
   request.send();
-  lock[cacheid]--;
-  if (!callback)
-    onLoad();
+  if (request.status != 200)
+    throw new Error("Tarp: unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
+  var source = 'function(){\n'+request.responseText+'\n}';
+  load(descriptor, cache, pwd, source);
   return cache[cacheid];
-
-  function onLoad() {
-    if (lock[cacheid]) {
-      console.warn("Tarp: module locked: "+descriptor.id);
-      setTimeout(onLoad, 0);
-    }
-    else {
-      if (request.readyState != 4)
-        return;
-      if (request.status != 200)
-        throw new Error("Tarp: unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
-      if (!cache[cacheid]) {
-        var source = request.responseText;
-        load(descriptor, cache, pwd, 'function(){\n'+source+'\n}');
-      }
-      if (callback)
-        callback(cache[cacheid]);
-    }
-  }
 }
 
 // INFO Module resolver

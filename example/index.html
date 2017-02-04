@@ -76,70 +76,34 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     </script></pre>
   </div>
   <div class="Box Green">
-    <h2>Module (asynchronous)</h2>
-    <pre id="asyncModulePre1"><script type="text/javascript">
-    require('./async.js', function(mod) {
-      var node = document.getElementById('asyncModulePre1');
-      node.innerHTML += mod.greet()+'\n';
-    });
-    </script></pre>
-  </div>
-  <div class="Box Green">
-    <h2>Module (asynchronous, cached)</h2>
-    <pre id="asyncModulePre2"><script type="text/javascript">
-    require('./module.js', function(mod) {
-      var node = document.getElementById('asyncModulePre2');
-      node.innerHTML += mod.greet()+'\n';
-    });
-    </script></pre>
-  </div>
-  <div class="Box Green">
-    <h2>Module (asynchronous, relative)</h2>
-    <pre  id="asyncModulePre3"><script type="text/javascript">
-    require('./module1', function(mod) {
-      var node = document.getElementById('asyncModulePre3');
-      node.innerHTML += mod.greet()+'\n';
-    });
-    </script></pre>
-  </div>
-  <div class="Box Green">
-    <h2>Module (synchronous, cached)</h2>
+    <h2>Module</h2>
     <pre><script type="text/javascript">
     var mod = require('module');
     document.writeln(mod.greet());
-    mod.greetstr = 'hello world';
-    document.write(mod.greet());
+    mod.greetstr = 'HELLO WORLD';
     </script></pre>
   </div>
-  <div class="Box Blue">
-    <h2>Bundle (asynchronous)</h2>
-    <pre id="asyncBundlePre"><script type="text/javascript">
-    require('bundle');
-    require('moduleA', function(mod) {
-      var node = document.getElementById('asyncBundlePre');
-      node.innerHTML += mod.greet()+'\n';
-    });
-    require('moduleB', function(mod) {
-      var node = document.getElementById('asyncBundlePre');
-      node.innerHTML += mod.greet()+'\n';
-    });
-    </script></pre>
-  </div>
-  <div class="Box Blue">
-    <h2>Bundle (synchronous)</h2>
+  <div class="Box Green">
+    <h2>Module (cached)</h2>
     <pre><script type="text/javascript">
+    var mod = require('module');
+    document.writeln(mod.greet());
+    </script></pre>
+  </div>
+  <div class="Box Blue">
+    <h2>Bundle</h2>
+    <pre><script type="text/javascript">
+    require('bundle');
     var modA = require('moduleA');
     document.writeln(modA.greet());
     modA.hellostr = 'HELLO';
-    document.writeln(modA.greet());
     var modB = require('moduleB');
     document.writeln(modB.greet());
     modB.worldstr = 'WORLD';
-    document.writeln(modB.greet());
     </script></pre>
   </div>
   <div class="Box Blue">
-    <h2>Bundle (synchronous, cached)</h2>
+    <h2>Bundle (cached)</h2>
     <pre><script type="text/javascript">
     var modA = require('moduleA');
     document.writeln(modA.greet());
@@ -148,7 +112,7 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     </script></pre>
   </div>
   <div class="Box Blue">
-    <h2>Bundle (synchronous, relative)</h2>
+    <h2>Bundle (relative)</h2>
     <pre><script type="text/javascript">
     require('relative/water');
     var fish = require('fish');
