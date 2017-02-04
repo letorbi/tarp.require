@@ -87,7 +87,6 @@ var lock = new Object();
 //      afterwards!
 
 var requirePath = self.Tarp&&self.Tarp.requirePath!==undefined ? self.Tarp.requirePath.slice(0) : ['./'];
-var requireCompiler = self.Tarp&&self.Tarp.requireCompiler!==undefined ? self.Tarp.requireCompiler : null;
 
 // NOTE Parse module root paths
 var base = [location.origin, location.href.substr(0, location.href.lastIndexOf("/")+1)];
