@@ -34,7 +34,6 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
       }
     };
   </script>
-  <script type="text/javascript" src="./preloaded.js"></script>
   <script type="text/javascript" src="../require.js"></script>
 </head>
 
@@ -183,19 +182,6 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     document.writeln(whale.greet());
     var dolphin = require('ocean/dolphin');
     document.writeln(dolphin.greet());
-    </script></pre>
-  </div>
-  <div class="Box Blue">
-    <h2>Bundle (preloaded)</h2>
-    <pre><script type="text/javascript">
-    var preA = require('preloadedA');
-    document.writeln(preA.greet());
-    preA.hellostr = 'HELLO';
-    document.writeln(preA.greet());
-    var preB = require('preloadedB');
-    document.writeln(preB.greet());
-    preB.worldstr = 'WORLD';
-    document.writeln(preB.greet());
     </script></pre>
   </div>
   <div class="Box Blue">

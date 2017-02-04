@@ -99,14 +99,6 @@ for (var i=0; i<requirePath.length; i++) {
   requirePath[i] = parser.href;
 }
 
-// NOTE Add preloaded modules to cache
-for (var id in (self.Tarp && self.Tarp.requirePreloaded))
-  cache['$'+resolve(id).id] = self.Tarp.requirePreloaded[id].toString();
-
-// NOTE Add module overrides to cache
-for (id in (self.Tarp && self.Tarp.requireOverrides))
-  cache['$'+resolve(id).id] = self.Tarp.requireOverrides[id];
-
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
 //      AJAX request from the module URI. If this was successful the code and
