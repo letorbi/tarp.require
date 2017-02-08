@@ -16,11 +16,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-!window.Tarp && (window.Tarp = new Object()); 
-!window.Tarp.requirePreloaded && (window.Tarp.requirePreloaded = new Object());
-module = typeof module=='undefined' ? Tarp.requirePreloaded : new Object(); 
+module.bundle = true;
 
-module['moduleA'] = function() {
+exports['moduleA'] = function() {
   'use strict';
 
   exports.hellostr = 'hello';
@@ -30,7 +28,7 @@ module['moduleA'] = function() {
   };
 };
 
-module['moduleB'] = function() {
+exports['moduleB'] = function() {
   'use strict';
 
   exports.worldstr = 'world';

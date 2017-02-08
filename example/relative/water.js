@@ -16,29 +16,27 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-!window.Tarp && (window.Tarp = new Object()); 
-!window.Tarp.preloaded && (window.Tarp.preloaded = new Object()); 
-module = typeof module=='undefined' ? Tarp.preloaded : new Object(); 
+module.bundle = true;
 
-module['fish'] = function() {
+exports['fish'] = function() {
   exports.greet = function() {
     return "Hello from fish";
   };
 };
 
-module['./shark'] = function() {
+exports['./shark'] = function() {
   exports.greet = function() {
     return "Hello from shark";
   };
 };
 
-module['../whale'] = function() {
+exports['../whale'] = function() {
   exports.greet = function() {
     return "Hello from whale";
   };
 };
 
-module['ocean/dolphin'] = function() {
+exports['ocean/dolphin'] = function() {
   exports.greet = function() {
     return "Hello from dolphin";
   };

@@ -170,9 +170,9 @@ function /*load*/(module/*, cache, pwd, source*/) {
   arguments[2].unshift(module);
   eval('('+arguments[3]+')();\n//# sourceURL='+module.uri);
   // NOTE Store module code in the cache if the loaded file is a bundle
-  if (typeof module.id !== 'string')
-    for (var id in module)
-      arguments[1]['$'+require.resolve(id).id] = module[id].toString();
+  if (module.bundle)
+    for (var id in exports)
+      arguments[1]['$'+require.resolve(id).id] = exports[id].toString();
   arguments[2].shift();
 }
 
