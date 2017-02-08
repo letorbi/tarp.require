@@ -48,20 +48,13 @@ if (typeof (new Error()).fileName == "string") {
   }, false);
 }
 
-var pwd, parser, cache, path, i;
+var pwd, cache, path, i;
 
 // INFO Current module descriptors
 //      pwd[0] contains the descriptor of the currently loaded module,
 //      pwd[1] contains the descriptor its parent module and so on.
 
 pwd = Array();
-
-// INFO Path parser
-//      Older browsers don't support the URL interface, therefore we use an
-//      anchor element as parser in that case. Thes breaks web worker support,
-//      but we don't care since these browsers also don't support web workers.
-
-parser = new URL(location.href);
 
 // INFO Module cache
 //      Contains getter functions for the exports objects of all the loaded
