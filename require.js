@@ -19,7 +19,7 @@
 // NOTE The load parameter points to the function, which prepares the
 //      environment for each module and runs its code. Scroll down to the end of
 //      the file to see the function definition.
-(function(load) { 'use strict';
+(function() { 'use strict';
 
 // NOTE Mozilla still sets the wrong fileName property for errors that occur
 //      inside an eval call (even with sourceURL). However, the stack
@@ -87,17 +87,23 @@ for (i=0; i<path.length; i++)
 //      module has been loaded.
 
 function require(identifier) {
-  var descriptor, request;
-  descriptor = resolve(identifier);
-  if (cache[descriptor.id] === undefined) {
+  var module, request, exports;
+  module = resolve(identifier);
+  if (cache[module.id] === undefined) {
     request = new XMLHttpRequest();
-    request.open('GET', descriptor.uri, false);
+    request.open('GET', module.uri, false);
     request.send();
     if (request.status != 200)
-      throw new Error("Tarp: unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
-    load(descriptor, cache, pwd, 'function(){\n'+request.responseText+'\n}');
+      throw new Error("Tarp: unable to load "+module.id+" ("+request.status+" "+request.statusText+")");
+    exports = Object.create(null);
+    Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
+    Object.defineProperty(cache, module.id, {'get':function(){return exports;}});
+    pwd.unshift(module);
+    (new Function("module, exports, global", request.responseText + "\n//# sourceURL=" + module.uri))
+      .call(self, module, exports, self);
+    pwd.shift();
   }
-  return cache[descriptor.id];
+  return cache[module.id];
 }
 
 // INFO Module resolver
@@ -129,29 +135,4 @@ Object.defineProperty(self, 'require', {'value':require});
 Object.defineProperty(self.require, 'resolve', {'value':resolve});
 Object.defineProperty(self.require, 'path', {'get':function(){return path.slice(0);}});
 
-})(
-
-// INFO Module loader
-//      Takes the module descriptor, the global variables and the module code,
-//      sets up the module envirinment, defines the module getter in the cache
-//      and evaluates the module code. If module is a bundle the code of the
-//      pre-loaded modules will be stored in the cache afterwards.
-// NOTE This functions is defined as an anonymous function, which is passed as
-//      a parameter to the closure above to provide a clean environment (only
-//      global variables, module and exports) for the loaded module. This is
-//      also the reason why `source`, `pwd` & `cache` are not named parameters.
-// NOTE If we would strict use mode here, the evaluated code would be forced to be
-//      in strict mode, too.
-
-function /*load*/(module/*, cache, pwd, source*/) {
-  var global, exports;
-  global = self;
-  exports = Object.create(null);
-  Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
-  Object.defineProperty(arguments[1], module.id, {'get':function(){return exports;}});
-  arguments[2].unshift(module);
-  eval('('+arguments[3]+')();\n//# sourceURL='+module.uri);
-  arguments[2].shift();
-}
-
-);
+})();
