@@ -89,17 +89,14 @@ for (i=0; i<path.length; i++)
 function require(identifier) {
   var descriptor, request;
   descriptor = resolve(identifier);
-  if (cache[descriptor.id]) {
-    if (typeof cache[descriptor.id] === 'string')
-      load(descriptor, cache, pwd, cache[descriptor.id]);
-    return cache[descriptor.id];
+  if (cache[descriptor.id] === undefined) {
+    request = new XMLHttpRequest();
+    request.open('GET', descriptor.uri, false);
+    request.send();
+    if (request.status != 200)
+      throw new Error("Tarp: unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
+    load(descriptor, cache, pwd, 'function(){\n'+request.responseText+'\n}');
   }
-  request = new XMLHttpRequest();
-  request.open('GET', descriptor.uri, false);
-  request.send();
-  if (request.status != 200)
-    throw new Error("Tarp: unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
-  load(descriptor, cache, pwd, 'function(){\n'+request.responseText+'\n}');
   return cache[descriptor.id];
 }
 
@@ -154,10 +151,6 @@ function /*load*/(module/*, cache, pwd, source*/) {
   Object.defineProperty(arguments[1], module.id, {'get':function(){return exports;}});
   arguments[2].unshift(module);
   eval('('+arguments[3]+')();\n//# sourceURL='+module.uri);
-  // NOTE Store module code in the cache if the loaded file is a bundle
-  if (module.bundle)
-    for (var id in exports)
-      arguments[1][require.resolve(id).id] = exports[id].toString();
   arguments[2].shift();
 }
 
