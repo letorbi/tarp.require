@@ -58,13 +58,11 @@ pwd = Array();
 
 // INFO Module cache
 //      Contains getter functions for the exports objects of all the loaded
-//      modules. The getter for the module 'mymod' is name '$name' to prevent
-//      collisions with predefined object properties (see note below).
-//      As long as a module has not been loaded the getter is either undefined
-//      or contains the module code as a function (in case the module has been
-//      pre-loaded in a bundle).
+//      modules. As long as a module has not been loaded the getter is either
+//      undefined or contains the module code as a string (in case the
+//      module has been pre-loaded in a bundle).
 
-cache = new Object();
+cache = Object.create(null);
 
 // INFO Tarp options
 //      The values can be set by defining a object called Tarp. The
@@ -89,13 +87,12 @@ for (i=0; i<path.length; i++)
 //      module has been loaded.
 
 function require(identifier) {
-  var descriptor, cacheid, request;
+  var descriptor, request;
   descriptor = resolve(identifier);
-  cacheid = '$'+descriptor.id;
-  if (cache[cacheid]) {
-    if (typeof cache[cacheid] === 'string')
-      load(descriptor, cache, pwd, cache[cacheid]);
-    return cache[cacheid];
+  if (cache[descriptor.id]) {
+    if (typeof cache[descriptor.id] === 'string')
+      load(descriptor, cache, pwd, cache[descriptor.id]);
+    return cache[descriptor.id];
   }
   request = new XMLHttpRequest();
   request.open('GET', descriptor.uri, false);
@@ -103,7 +100,7 @@ function require(identifier) {
   if (request.status != 200)
     throw new Error("Tarp: unable to load "+descriptor.id+" ("+request.status+" "+request.statusText+")");
   load(descriptor, cache, pwd, 'function(){\n'+request.responseText+'\n}');
-  return cache[cacheid];
+  return cache[descriptor.id];
 }
 
 // INFO Module resolver
@@ -152,15 +149,15 @@ Object.defineProperty(self.require, 'path', {'get':function(){return path.slice(
 function /*load*/(module/*, cache, pwd, source*/) {
   var global, exports;
   global = self;
-  exports = new Object();
+  exports = Object.create(null);
   Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
-  Object.defineProperty(arguments[1], '$'+module.id, {'get':function(){return exports;}});
+  Object.defineProperty(arguments[1], module.id, {'get':function(){return exports;}});
   arguments[2].unshift(module);
   eval('('+arguments[3]+')();\n//# sourceURL='+module.uri);
   // NOTE Store module code in the cache if the loaded file is a bundle
   if (module.bundle)
     for (var id in exports)
-      arguments[1]['$'+require.resolve(id).id] = exports[id].toString();
+      arguments[1][require.resolve(id).id] = exports[id].toString();
   arguments[2].shift();
 }
 
