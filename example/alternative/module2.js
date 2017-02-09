@@ -16,9 +16,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-var module2 = require('./module2');
-var module3 = require('./module3');
-
 exports.greet = function() {
-  return "This is module1, "+module2()+" and "+module3()+"!";
+  return " ...and from " + module.id;
 };

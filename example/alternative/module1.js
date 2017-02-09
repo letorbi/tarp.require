@@ -16,12 +16,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-'use strict';
-
-var fromstr = 'from';
-
-exports.greetstr = 'hello world';
+var mod = require('0:module');
+var mod2 = require('./module2');
 
 exports.greet = function() {
-    return exports.greetstr+' '+fromstr+' '+module.id+'!';
+  return "Hello from " + module.id + mod2.greet()+"!\n"+mod.greet();
 };
