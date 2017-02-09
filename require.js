@@ -119,7 +119,7 @@ function resolve(identifier) {
   base = pwd[0] && m[2] ? pwd[0].uri : root;
   uri = (new URL("./" + (m[2] || m[3] || "") + (m[4] || "index"), base)).href;
   if (uri.substr(0,root.length) != root)
-    throw new Error("TarpX: relative identifier outside of module root");
+    throw new Error("Tarp: relative identifier outside of module root");
   return {
     id: (m[1] || "0") + ":" + uri.substr(root.length),
     uri: uri + (m[5] || ".js"),
