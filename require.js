@@ -98,7 +98,7 @@ function require(identifier, root) {
     exports = Object.create(null);
     Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
     Object.defineProperty(cache, module.id, {'get':function(){return exports;}});
-    pwd.unshift(module);
+    pwd.unshift(module.uri);
     (new Function("module, exports, global", request.responseText + "\n//# sourceURL=" + module.uri))
       .call(self, module, exports, self);
     pwd.shift();
@@ -115,7 +115,7 @@ function resolve(identifier, root) {
   var m, base, uri;
   // NOTE Matches /[[.]/path/to/][file][.js]
   m = identifier.match(/^\/?((\.)?.*\/)?(.[^\.]*)?(\..*)?$/);
-  base = pwd[0] && m[2] ? pwd[0].uri : path[root || 0];
+  base = m[2] && pwd[0] ? pwd[0] : path[root || 0];
   uri = (new URL("./" + (m[1] || "") + (m[3] || "index"), base)).href;
   if (uri.substr(0,path[root || 0].length) != path[root || 0])
     throw new Error("Tarp: relative identifier outside of module root");
