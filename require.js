@@ -89,21 +89,21 @@ for (i=0; i<path.length; i++)
 function require(identifier, root) {
   var module, request, exports;
   module = resolve(identifier, root);
-  if (cache[module.id] === undefined) {
+  if (cache[module.uri] === undefined) {
     request = new XMLHttpRequest();
     request.open('GET', module.uri, false);
     request.send();
     if (request.status != 200)
-      throw new Error("Tarp: unable to load "+module.id+" ("+request.status+" "+request.statusText+")");
+      throw new Error("Tarp: Loading "+module.uri+" returned: "+request.status+" "+request.statusText);
     exports = Object.create(null);
     Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
-    Object.defineProperty(cache, module.id, {'get':function(){return exports;}});
+    Object.defineProperty(cache, module.uri, {'get':function(){return exports;}});
     pwd.unshift(module.uri);
     (new Function("module, exports, global", request.responseText + "\n//# sourceURL=" + module.uri))
       .call(self, module, exports, self);
     pwd.shift();
   }
-  return cache[module.id];
+  return cache[module.uri];
 }
 
 // INFO Module resolver
