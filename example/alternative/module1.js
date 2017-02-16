@@ -16,9 +16,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-var mod = require('0:module');
+var mod = require('module', 0);
 var mod2 = require('./module2');
 
 exports.greet = function() {
-  return "Hello from " + module.id + mod2.greet() + "!\n" + mod.greet();
+  return "Hello from " + module.id + mod2.greet()+ "!\n" + mod.greet();
 };

@@ -86,9 +86,9 @@ for (i=0; i<path.length; i++)
 //      and the mpdule exports are passed to the callback function after the
 //      module has been loaded.
 
-function require(identifier) {
+function require(identifier, root) {
   var module, request, exports;
-  module = resolve(identifier);
+  module = resolve(identifier, root);
   if (cache[module.id] === undefined) {
     request = new XMLHttpRequest();
     request.open('GET', module.uri, false);
@@ -111,19 +111,17 @@ function require(identifier) {
 //      values are returned as a module descriptor, which can be passed to
 //      `fetch` to load a module.
 
-function resolve(identifier) {
-  var m, base, root, uri;
-  // NOTE Matches [1]:([../rel/path]|[path/to/])[file][.js]
-  m = identifier.match(/^(?:([^:\/]+):)?(?:(\..*\/)|\/(.*\/)|\/)?([^\.]+)?(\..*)?$/);
-  root = m[1] || !pwd[0] ? parseInt(m[1] || 0) : pwd[0].root;
-  base = pwd[0] && m[2] ? pwd[0].uri : path[root];
-  uri = (new URL("./" + (m[2] || m[3] || "") + (m[4] || "index"), base)).href;
-  if (uri.substr(0,path[root].length) != path[root])
+function resolve(identifier, root) {
+  var m, base, uri;
+  // NOTE Matches ([../rel/path]|[path/to]|/)[file][.js]
+  m = identifier.match(/^(?:(\..*\/)|\/(.*\/)|\/)?([^\.]+)?(\..*)?$/);
+  base = pwd[0] && m[1] ? pwd[0].uri : path[root || 0];
+  uri = (new URL("./" + (m[1] || m[2] || "") + (m[3] || "index"), base)).href;
+  if (uri.substr(0,path[root || 0].length) != path[root || 0])
     throw new Error("Tarp: relative identifier outside of module root");
   return {
-    id: root + ":" + uri.substr(path[root].length),
-    uri: uri + (m[5] || ".js"),
-    root: root
+    id: uri.substr(path[root || 0].length),
+    uri: uri + (m[4] || ".js")
   };
 }
 

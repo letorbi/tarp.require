@@ -71,8 +71,8 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
     mname = '/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-    mname = '1:/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    mname = '/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
+    document.writeln('require.resolve('+mname+', 1) -> '+JSON.stringify(require.resolve(mname, 1)));
     </script></pre>
   </div>
   <div class="Box Green">
@@ -100,7 +100,7 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
   <div class="Box Green">
     <h2>Alternative path</h2>
     <pre><script type="text/javascript">
-    var mod = require('1:module1');
+    var mod = require('module1', 1);
     document.writeln(mod.greet());
     </script></pre>
   </div>
