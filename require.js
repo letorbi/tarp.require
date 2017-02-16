@@ -115,13 +115,13 @@ function resolve(identifier) {
   var m, base, root, uri;
   // NOTE Matches [1]:([../rel/path]|[path/to/])[file][.js]
   m = identifier.match(/^(?:([^:\/]+):)?(?:(\..*\/)|\/?(.*\/))?([^\.]+)?(\..*)?$/);
-  root = m[1] || !pwd[0] ? path[parseInt(m[1] || 0)] : pwd[0].root;
-  base = pwd[0] && m[2] ? pwd[0].uri : root;
+  root = m[1] || !pwd[0] ? parseInt(m[1] || 0) : pwd[0].root;
+  base = pwd[0] && m[2] ? pwd[0].uri : path[root];
   uri = (new URL("./" + (m[2] || m[3] || "") + (m[4] || "index"), base)).href;
-  if (uri.substr(0,root.length) != root)
+  if (uri.substr(0,path[root].length) != path[root])
     throw new Error("Tarp: relative identifier outside of module root");
   return {
-    id: (m[1] || "0") + ":" + uri.substr(root.length),
+    id: root + ":" + uri.substr(path[root].length),
     uri: uri + (m[5] || ".js"),
     root: root
   };
