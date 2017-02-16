@@ -26,8 +26,7 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
   
   <script type="text/javascript">
     var Tarp = {
-      'requirePath': ["./", "./alternative/", "http://example.com/"],
-      'requirePreloaded': new Object(),
+      requirePath: ["./", "./alternative/"],
     };
   </script>
   <script type="text/javascript" src="../require.js"></script>
@@ -35,15 +34,6 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
 
 <body>
   <h1>Tarp Require test page</h1>
-  <div class="Box Red">
-    <h2>Module paths</h2>
-    <pre><script type="text/javascript">
-    Tarp.requirePath = ['/evil/hack/path/'];
-    document.writeln(require.path);
-    require.path.push('/yet/another/evil/hack/');
-    document.writeln(require.path+' (must be the same as above)');
-    </script></pre>
-  </div>
   <div class="Box Red">
     <h2>Identifier => Module</h2>
     <pre><script type="text/javascript">
@@ -92,7 +82,7 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     </script></pre>
   </div>
   <div class="Box Green">
-    <h2>Alternative path</h2>
+    <h2>Alternative root</h2>
     <pre><script type="text/javascript">
     var mod = require('module1', 1);
     document.writeln(mod.greet());

@@ -70,7 +70,7 @@ cache = Object.create(null);
 //      and changing the values in the Tarp object will have no effect
 //      afterwards!
 
-path = self.Tarp&&self.Tarp.requirePath!==undefined ? self.Tarp.requirePath.slice(0) : ['./'];
+path = self.Tarp && self.Tarp.requirePath || ['./'];
 
 // NOTE Parse module root paths
 for (i=0; i<path.length; i++)
@@ -127,8 +127,7 @@ function resolve(identifier, root) {
 
 if (self.require !== undefined)
   throw new Error("Tarp: '\'require\' already defined in global scope");
-Object.defineProperty(self, 'require', {'value':require});
-Object.defineProperty(self.require, 'resolve', {'value':resolve});
-Object.defineProperty(self.require, 'path', {'get':function(){return path.slice(0);}});
+self.require = require;
+self.require.resolve = resolve;
 
 })();
