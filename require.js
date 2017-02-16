@@ -113,10 +113,10 @@ function require(identifier, root) {
 
 function resolve(identifier, root) {
   var m, base, uri;
-  // NOTE Matches ([../rel/path]|[path/to]|/)[file][.js]
-  m = identifier.match(/^(?:(\..*\/)|\/(.*\/)|\/)?([^\.]+)?(\..*)?$/);
-  base = pwd[0] && m[1] ? pwd[0].uri : path[root || 0];
-  uri = (new URL("./" + (m[1] || m[2] || "") + (m[3] || "index"), base)).href;
+  // NOTE Matches /[[.]/path/to/][file][.js]
+  m = identifier.match(/^\/?((\.)?.*\/)?(.[^\.]*)?(\..*)?$/);
+  base = pwd[0] && m[2] ? pwd[0].uri : path[root || 0];
+  uri = (new URL("./" + (m[1] || "") + (m[3] || "index"), base)).href;
   if (uri.substr(0,path[root || 0].length) != path[root || 0])
     throw new Error("Tarp: relative identifier outside of module root");
   return {
