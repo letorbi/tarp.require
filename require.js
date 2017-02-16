@@ -113,10 +113,10 @@ function require(identifier, root) {
 
 function resolve(identifier, root) {
   var m, base, url;
-  // NOTE Matches [/][[.]/path/to/][file][.js]
-  m = identifier.match(/^(\/)?((\.)?.*\/)?(.[^\.]*)?(\..*)?$/);
-  base = m[3] && pwd[0] ? pwd[0] : path[root];
-  url = new URL((m[1] || "./") + (m[2] || "") + (m[4] || "index") + (m[5] || ".js"), base);
+  // NOTE Matches [[.]/path/to/][file][.js]
+  m = identifier.match(/^((\.)?.*\/|)(.[^\.]*)?(\..*)?$/);
+  base = m[2] && pwd[0] ? pwd[0] : path[root];
+  url = new URL(m[1] + (m[3] || "index") + (m[4] || ".js"), base);
   return {
     id: url.pathname,
     uri: url.href
