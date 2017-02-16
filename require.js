@@ -88,7 +88,7 @@ for (i=0; i<path.length; i++)
 
 function require(identifier, root) {
   var module, request, exports;
-  module = resolve(identifier, root);
+  module = resolve(identifier, root || 0);
   if (cache[module.uri] === undefined) {
     request = new XMLHttpRequest();
     request.open('GET', module.uri, false);
@@ -115,12 +115,12 @@ function resolve(identifier, root) {
   var m, base, uri;
   // NOTE Matches /[[.]/path/to/][file][.js]
   m = identifier.match(/^\/?((\.)?.*\/)?(.[^\.]*)?(\..*)?$/);
-  base = m[2] && pwd[0] ? pwd[0] : path[root || 0];
+  base = m[2] && pwd[0] ? pwd[0] : path[root];
   uri = (new URL("./" + (m[1] || "") + (m[3] || "index"), base)).href;
-  if (uri.substr(0,path[root || 0].length) != path[root || 0])
+  if (uri.substr(0,path[root].length) != path[root])
     throw new Error("Tarp: relative identifier outside of module root");
   return {
-    id: uri.substr(path[root || 0].length),
+    id: uri.substr(path[root].length),
     uri: uri + (m[4] || ".js")
   };
 }

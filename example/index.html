@@ -48,29 +48,29 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     <h2>Identifier => Module</h2>
     <pre><script type="text/javascript">
     mname = 'module';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
     mname = './module';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
     try {
       mname = '../module';
       document.write('require.resolve('+mname+') -> ');
-      require.resolve(mname);
+      require.resolve(mname, 0);
     }
     catch (e) {
       document.writeln(e+" (this error is intended)");
     }
     mname = 'module.js';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0))); 
     var mname = '/module.js';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
     mname = './module.js';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0))); 
     mname = './boo/../foo/bar/./././baz///moo/maa/../../../mee/gee';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
     mname = 'foo/bar//baz///moo////maa/mee';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
     mname = '/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
     mname = '/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
     document.writeln('require.resolve('+mname+', 1) -> '+JSON.stringify(require.resolve(mname, 1)));
     </script></pre>
