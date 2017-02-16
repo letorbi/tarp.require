@@ -51,14 +51,8 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
     mname = './module';
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
-    try {
-      mname = '../module';
-      document.write('require.resolve('+mname+') -> ');
-      require.resolve(mname, 0);
-    }
-    catch (e) {
-      document.writeln(e+" (this error is intended)");
-    }
+    mname = '../module';
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
     mname = 'module.js';
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0))); 
     var mname = '/module.js';

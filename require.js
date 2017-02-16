@@ -112,16 +112,14 @@ function require(identifier, root) {
 //      `fetch` to load a module.
 
 function resolve(identifier, root) {
-  var m, base, uri;
-  // NOTE Matches /[[.]/path/to/][file][.js]
-  m = identifier.match(/^\/?((\.)?.*\/)?(.[^\.]*)?(\..*)?$/);
-  base = m[2] && pwd[0] ? pwd[0] : path[root];
-  uri = (new URL("./" + (m[1] || "") + (m[3] || "index"), base)).href;
-  if (uri.substr(0,path[root].length) != path[root])
-    throw new Error("Tarp: relative identifier outside of module root");
+  var m, base, url;
+  // NOTE Matches [/][[.]/path/to/][file][.js]
+  m = identifier.match(/^(\/)?((\.)?.*\/)?(.[^\.]*)?(\..*)?$/);
+  base = m[3] && pwd[0] ? pwd[0] : path[root];
+  url = new URL((m[1] || "./") + (m[2] || "") + (m[4] || "index") + (m[5] || ".js"), base);
   return {
-    id: uri.substr(path[root].length),
-    uri: uri + (m[4] || ".js")
+    id: url.pathname,
+    uri: url.href
   };
 }
 
