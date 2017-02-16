@@ -114,7 +114,7 @@ function require(identifier) {
 function resolve(identifier) {
   var m, base, root, uri;
   // NOTE Matches [1]:([../rel/path]|[path/to/])[file][.js]
-  m = identifier.match(/^(?:([^:\/]+):)?(?:(\..*\/)|\/?(.*\/))?([^\.]+)?(\..*)?$/);
+  m = identifier.match(/^(?:([^:\/]+):)?(?:(\..*\/)|\/(.*\/)|\/)?([^\.]+)?(\..*)?$/);
   root = m[1] || !pwd[0] ? parseInt(m[1] || 0) : pwd[0].root;
   base = pwd[0] && m[2] ? pwd[0].uri : path[root];
   uri = (new URL("./" + (m[2] || m[3] || "") + (m[4] || "index"), base)).href;
