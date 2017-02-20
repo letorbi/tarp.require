@@ -48,7 +48,7 @@ if (typeof (new Error()).fileName == "string") {
   }, false);
 }
 
-var pwd, cache, path, i;
+var pwd, cache, root;
 
 // INFO Current module descriptors
 //      pwd[0] contains the descriptor of the currently loaded module,
@@ -70,11 +70,7 @@ cache = Object.create(null);
 //      and changing the values in the Tarp object will have no effect
 //      afterwards!
 
-path = self.Tarp && self.Tarp.requirePath || ['./'];
-
-// NOTE Parse module root paths
-for (i=0; i<path.length; i++)
-  path[i] = (new URL(path[i], location.href)).href;
+root = location.href;
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -86,9 +82,9 @@ for (i=0; i<path.length; i++)
 //      and the mpdule exports are passed to the callback function after the
 //      module has been loaded.
 
-function require(identifier, root) {
+function require(identifier) {
   var module, request, exports;
-  module = resolve(identifier, root || 0);
+  module = resolve(identifier);
   if (cache[module.uri] === undefined) {
     request = new XMLHttpRequest();
     request.open('GET', module.uri, false);
@@ -111,11 +107,11 @@ function require(identifier, root) {
 //      values are returned as a module descriptor, which can be passed to
 //      `fetch` to load a module.
 
-function resolve(identifier, root) {
+function resolve(identifier) {
   var m, base, url;
   // NOTE Matches [[.]/path/to/][file][.js]
   m = identifier.match(/^((\.)?.*\/|)(.[^\.]*)?(\..*)?$/);
-  base = m[2] && pwd[0] ? pwd[0] : path[root];
+  base = m[2] && pwd[0] ? pwd[0] : root;
   url = new URL(m[1] + (m[3] || "index") + (m[4] || ".js"), base);
   return {
     id: url.pathname,
@@ -129,5 +125,9 @@ if (self.require !== undefined)
   throw new Error("Tarp: '\'require\' already defined in global scope");
 self.require = require;
 self.require.resolve = resolve;
+Object.defineProperty(self.require, 'root', {
+  get: function() { return root; },
+  set: function(r) { root = (new URL(r, location.href)).href; }
+});
 
 })();
