@@ -23,12 +23,6 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
 
 <head>
   <title>Tarp Require test page</title>
-  
-  <script type="text/javascript">
-    var Tarp = {
-      requirePath: ["./", "./alternative/"],
-    };
-  </script>
   <script type="text/javascript" src="../require.js"></script>
 </head>
 
@@ -38,39 +32,43 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     <h2>Identifier => Module</h2>
     <pre><script type="text/javascript">
     mname = 'module';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
     mname = './module';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
     mname = '../module';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
     mname = 'module.js';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0))); 
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
     var mname = '/module.js';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
     mname = './module.js';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0))); 
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
     mname = './boo/../foo/bar/./././baz///moo/maa/../../../mee/gee';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
     mname = 'foo/bar//baz///moo////maa/mee';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
     mname = '/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname, 0)));
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
     mname = '/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
-    document.writeln('require.resolve('+mname+', 1) -> '+JSON.stringify(require.resolve(mname, 1)));
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
     </script></pre>
   </div>
   <div class="Box Green">
     <h2>Simple</h2>
     <pre><script type="text/javascript">
-    var mod = require('module');
-    document.writeln(mod.greet());
-    mod.greetstr = 'HELLO WORLD';
+    var mod1 = require('module1');
+    document.writeln(mod1.greet());
+    mod1.greetstr = 'HELLO WORLD';
+    var mod2 = require('module2');
+    document.writeln(mod2.greet());
+    var mod3 = require('module3');
+    document.writeln(mod3.greet());
     </script></pre>
   </div>
   <div class="Box Green">
     <h2>Cached</h2>
     <pre><script type="text/javascript">
-    var mod = require('module');
+    var mod = require('module1');
     document.writeln(mod.greet());
     </script></pre>
   </div>
@@ -78,13 +76,6 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     <h2>Relative path</h2>
     <pre><script type="text/javascript">
     var mod = require('relative/main');
-    document.writeln(mod.greet());
-    </script></pre>
-  </div>
-  <div class="Box Green">
-    <h2>Alternative root</h2>
-    <pre><script type="text/javascript">
-    var mod = require('module1', 1);
     document.writeln(mod.greet());
     </script></pre>
   </div>

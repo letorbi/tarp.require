@@ -16,6 +16,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-exports.greet = function() {
-  return " ...and from " + module.id;
+'use strict';
+
+var fromstr = 'from';
+
+module.exports = {
+  greetstr: 'hello world',
+  greet: function() {
+    return module.exports.greetstr+' '+fromstr+' '+module.id+'!';
+  }
 };

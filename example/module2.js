@@ -16,9 +16,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-var mod = require('module', 0);
-var mod2 = require('./module2');
+'use strict';
 
-exports.greet = function() {
-  return "Hello from " + module.id + mod2.greet()+ "!\n" + mod.greet();
+var fromstr = 'from';
+
+exports = {
+  greetstr: 'hello world',
+  greet: function() {
+    return exports.greetstr+' '+fromstr+' '+module.id+'!';
+  }
 };
