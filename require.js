@@ -48,11 +48,20 @@ if (typeof (new Error()).fileName == "string") {
   }, false);
 }
 
-var pwd, cache, root;
+var root, pwd, cache;
 
-// INFO Current module descriptors
-//      pwd[0] contains the descriptor of the currently loaded module,
-//      pwd[1] contains the descriptor its parent module and so on.
+// INFO Module root
+//      Module identifiers starting with neither '/' nor '.' are resolved
+//      from the module root. The module root can be changed at any time
+//      by setting require.root. Already loaded modules won't be affected
+//      from the change. Relative and absolute root paths are accepted, the
+//      default value is the URI of the document that loaded require.
+
+root = location.href;
+
+// INFO Current module path
+//      pwd[0] contains the URI of the currently loaded module,
+//      pwd[1] contains the URI its parent module and so on.
 
 pwd = Array();
 
@@ -63,14 +72,6 @@ pwd = Array();
 //      module has been pre-loaded in a bundle).
 
 cache = Object.create(null);
-
-// INFO Tarp options
-//      The values can be set by defining a object called Tarp. The
-//      Tarp object has to be defined before this script here is loaded
-//      and changing the values in the Tarp object will have no effect
-//      afterwards!
-
-root = location.href;
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
