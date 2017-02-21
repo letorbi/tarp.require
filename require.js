@@ -57,13 +57,11 @@ var root, pwd, cache;
 //      from the change. Relative and absolute root paths are accepted, the
 //      default value is the URI of the document that loaded require.
 
-root = location.href;
-
 // INFO Current module path
 //      pwd[0] contains the URI of the currently loaded module,
 //      pwd[1] contains the URI its parent module and so on.
 
-pwd = Array();
+pwd = [location.href];
 
 // INFO Module cache
 //      Contains getter functions for the exports objects of all the loaded
@@ -112,7 +110,7 @@ function resolve(identifier) {
   var m, base, url;
   // NOTE Matches [[.]/path/to/][file][.js]
   m = identifier.match(/^((\.)?.*\/|)(.[^\.]*)?(\..*)?$/);
-  base = m[2] && pwd[0] ? pwd[0] : root;
+  base = m[2] ? pwd[0] : root;
   url = new URL(m[1] + (m[3] || "index") + (m[4] || ".js"), base);
   return {
     id: url.pathname,
@@ -130,5 +128,7 @@ Object.defineProperty(self.require, 'root', {
   get: function() { return root; },
   set: function(r) { root = (new URL(r, location.href)).href; }
 });
+
+self.require.root = "./node_modules/";
 
 })();
