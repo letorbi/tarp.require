@@ -30,19 +30,13 @@
 if (typeof (new Error()).fileName == "string") {
   self.addEventListener("error", function(evt) {
     if (evt.error instanceof Error) {
-      if (pwd[0]) {
-        evt.preventDefault();
-        throw new evt.error.constructor(evt.error.message, pwd[0].uri, evt.error.lineNumber);
+      var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
+      if (m === null) {
+        console.warn("Tarp: unable to read file name from stack");
       }
-      else {
-        var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
-        if (m === null) {
-          console.warn("Tarp: unable to read file name from stack");
-        }
-        else if (evt.error.fileName != m[1]) {
-          evt.preventDefault();
-          throw new evt.error.constructor(evt.error.message, m[1], evt.error.lineNumber);
-        }
+      else if (evt.error.fileName != m[1]) {
+        evt.preventDefault();
+        throw new evt.error.constructor(evt.error.message, m[1], evt.error.lineNumber);
       }
     }
   }, false);
