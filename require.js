@@ -89,8 +89,8 @@ function require(identifier, pwd) {
     exports = Object.create(null);
     Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
     Object.defineProperty(cache, module.uri, {'get':function(){return exports;}});
-    (new Function("module, exports, require", request.responseText + "\n//# sourceURL=" + module.uri))
-      .call(self, module, exports, rfunc);
+    (new Function("exports, require, module, __filename, __dirname", request.responseText + "\n//# sourceURL=" + module.uri))
+      .call(self, exports, rfunc, module, module.uri, module.uri.substr(0, module.uri.lastIndexOf("/")));
   }
   return cache[module.uri];
 }
