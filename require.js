@@ -76,7 +76,7 @@ cache = Object.create(null);
 //      module has been loaded.
 
 function require(identifier, parent) {
-  var module, request, exports;
+  var module, request;
   module = resolve(identifier, parent);
   if (cache[module.uri] === undefined) {
     request = new XMLHttpRequest();
@@ -84,15 +84,14 @@ function require(identifier, parent) {
     request.send();
     if (request.status != 200)
       throw new Error("Tarp: Loading "+module.uri+" returned: "+request.status+" "+request.statusText);
-    exports = Object.create(null);
-    Object.defineProperty(cache, module.uri, {'get':function(){return exports;}});
-    Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
+    module.exports = Object.create(null);
     module.require = function(identifier) {return require(identifier, module);};
     module.require.resolve = function(identifier) {return resolve(identifier, module);};
     if (module.parent)
       module.parent.children.push(module);
+    Object.defineProperty(cache, module.uri, {'get':function(){return module.exports;}});
     (new Function("exports, require, module, __filename, __dirname", request.responseText + "\n//# sourceURL=" + module.uri))
-      .call(self, exports, module.require, module, module.uri, module.uri.substr(0, module.uri.lastIndexOf("/")));
+      .call(self, module.exports, module.require, module, module.uri, module.uri.substr(0, module.uri.lastIndexOf("/")));
   }
   return cache[module.uri];
 }
@@ -115,6 +114,7 @@ function resolve(identifier, parent) {
     children: [],
     loaded: false,
     parent: parent || null
+    // exports: will be set later
     // require: will be set later
   };
 }
