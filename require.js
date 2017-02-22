@@ -75,22 +75,24 @@ cache = Object.create(null);
 //      and the mpdule exports are passed to the callback function after the
 //      module has been loaded.
 
-function require(identifier, pwd) {
-  var module, request, exports, rfunc;
-  module = resolve(identifier, pwd);
+function require(identifier, parent) {
+  var module, request, exports;
+  module = resolve(identifier, parent);
   if (cache[module.uri] === undefined) {
     request = new XMLHttpRequest();
     request.open('GET', module.uri, false);
     request.send();
     if (request.status != 200)
       throw new Error("Tarp: Loading "+module.uri+" returned: "+request.status+" "+request.statusText);
-    rfunc = function(identifier) {return require(identifier, module.uri);};
-    rfunc.resolve = function(identifier) {return resolve(identifier, module.uri);};
     exports = Object.create(null);
-    Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
     Object.defineProperty(cache, module.uri, {'get':function(){return exports;}});
+    Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
+    module.require = function(identifier) {return require(identifier, module);};
+    module.require.resolve = function(identifier) {return resolve(identifier, module);};
+    if (module.parent)
+      module.parent.children.push(module);
     (new Function("exports, require, module, __filename, __dirname", request.responseText + "\n//# sourceURL=" + module.uri))
-      .call(self, exports, rfunc, module, module.uri, module.uri.substr(0, module.uri.lastIndexOf("/")));
+      .call(self, exports, module.require, module, module.uri, module.uri.substr(0, module.uri.lastIndexOf("/")));
   }
   return cache[module.uri];
 }
@@ -100,15 +102,20 @@ function require(identifier, pwd) {
 //      values are returned as a module descriptor, which can be passed to
 //      `fetch` to load a module.
 
-function resolve(identifier, pwd) {
+function resolve(identifier, parent) {
   var m, base, url;
   // NOTE Matches [[.]/path/to/][file][.js]
   m = identifier.match(/^((\.)?.*\/|)(.[^\.]*)?(\..*)?$/);
-  base = m[2] ? pwd : root;
+  base = m[2] ? (parent ? parent.uri : location.href) : root;
   url = new URL(m[1] + (m[3] || "index") + (m[4] || ".js"), base);
   return {
     id: url.pathname,
-    uri: url.href
+    uri: url.href,
+    filename: url.href,
+    children: [],
+    loaded: false,
+    parent: parent || null
+    // require: will be set later
   };
 }
 
@@ -116,8 +123,8 @@ function resolve(identifier, pwd) {
 
 if (self.require !== undefined)
   throw new Error("Tarp: '\'require\' already defined in global scope");
-self.require = function(identifier) {return require(identifier, location.href);};
-self.require.resolve = function(identifier) {return resolve(identifier, location.href);};
+self.require = require;
+self.require.resolve = resolve;
 Object.defineProperty(self.require, 'root', {
   get: function() { return root; },
   set: function(r) { root = (new URL(r, location.href)).href; }
