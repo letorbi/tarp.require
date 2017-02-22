@@ -69,48 +69,39 @@ cache = Object.create(null);
 //      and the mpdule exports are passed to the callback function after the
 //      module has been loaded.
 
-function require(identifier, parent) {
+function require(identifier, parent, resolve) {
   var module, request;
-  module = resolve(identifier, parent);
-  if (cache[module.uri] === undefined) {
+  var m, base, url;
+  // NOTE Matches [[.]/path/to/][file][.js]
+  m = identifier.match(/^((\.)?.*\/|)(.[^\.]*)?(\..*)?$/);
+  base = m[2] ? (parent ? parent.uri : location.href) : root;
+  url = new URL(m[1] + (m[3] || "index") + (m[4] || ".js"), base);
+  if (resolve)
+    return url.href;
+  if (cache[url.href] === undefined) {
     request = new XMLHttpRequest();
-    request.open('GET', module.uri, false);
+    request.open('GET', url.href, false);
     request.send();
     if (request.status != 200)
       throw new Error("Tarp: Loading "+module.uri+" returned: "+request.status+" "+request.statusText);
-    module.exports = Object.create(null);
-    module.require = function(identifier) {return require(identifier, module);};
-    module.require.resolve = function(identifier) {return resolve(identifier, module);};
+    module = {
+      id: url.pathname,
+      uri: url.href,
+      filename: url.href,
+      children: [],
+      loaded: false,
+      parent: parent || null,
+      exports: Object.create(null),
+      require: function(identifier) {return require(identifier, module);}
+    };
+    module.require.resolve = function(identifier) {return require(identifier, module, true);};
     if (module.parent)
       module.parent.children.push(module);
     Object.defineProperty(cache, module.uri, {'get':function(){return module.exports;}});
     (new Function("exports, require, module, __filename, __dirname", request.responseText + "\n//# sourceURL=" + module.uri))
       .call(self, module.exports, module.require, module, module.uri, module.uri.substr(0, module.uri.lastIndexOf("/")));
   }
-  return cache[module.uri];
-}
-
-// INFO Module resolver
-//      Takes a module identifier and resolves it to a module id and URI. Both
-//      values are returned as a module descriptor, which can be passed to
-//      `fetch` to load a module.
-
-function resolve(identifier, parent) {
-  var m, base, url;
-  // NOTE Matches [[.]/path/to/][file][.js]
-  m = identifier.match(/^((\.)?.*\/|)(.[^\.]*)?(\..*)?$/);
-  base = m[2] ? (parent ? parent.uri : location.href) : root;
-  url = new URL(m[1] + (m[3] || "index") + (m[4] || ".js"), base);
-  return {
-    id: url.pathname,
-    uri: url.href,
-    filename: url.href,
-    children: [],
-    loaded: false,
-    parent: parent || null
-    // exports: will be set later
-    // require: will be set later
-  };
+  return cache[url.href];
 }
 
 // NOTE Export require to global scope
@@ -118,7 +109,7 @@ function resolve(identifier, parent) {
 if (self.require !== undefined)
   throw new Error("Tarp: '\'require\' already defined in global scope");
 self.require = require;
-self.require.resolve = resolve;
+self.require.resolve = function(identifier) { return require(identifier, undefined, true); };
 Object.defineProperty(self.require, 'root', {
   get: function() { return root; },
   set: function(r) { root = (new URL(r, location.href)).href; }
