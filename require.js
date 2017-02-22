@@ -48,7 +48,7 @@ if (typeof (new Error()).fileName == "string") {
   }, false);
 }
 
-var root, pwd, cache;
+var root, cache;
 
 // INFO Module root
 //      Module identifiers starting with neither '/' nor '.' are resolved
@@ -56,12 +56,6 @@ var root, pwd, cache;
 //      by setting require.root. Already loaded modules won't be affected
 //      from the change. Relative and absolute root paths are accepted, the
 //      default value is the URI of the document that loaded require.
-
-// INFO Current module path
-//      pwd[0] contains the URI of the currently loaded module,
-//      pwd[1] contains the URI its parent module and so on.
-
-pwd = [location.href];
 
 // INFO Module cache
 //      Contains getter functions for the exports objects of all the loaded
@@ -81,22 +75,22 @@ cache = Object.create(null);
 //      and the mpdule exports are passed to the callback function after the
 //      module has been loaded.
 
-function require(identifier) {
-  var module, request, exports;
-  module = resolve(identifier);
+function require(identifier, pwd) {
+  var module, request, exports, rfunc;
+  module = resolve(identifier, pwd);
   if (cache[module.uri] === undefined) {
     request = new XMLHttpRequest();
     request.open('GET', module.uri, false);
     request.send();
     if (request.status != 200)
       throw new Error("Tarp: Loading "+module.uri+" returned: "+request.status+" "+request.statusText);
+    rfunc = function(identifier) {return require(identifier, module.uri);};
+    rfunc.resolve = function(identifier) {return resolve(identifier, module.uri);};
     exports = Object.create(null);
     Object.defineProperty(module, 'exports', {'get':function(){return exports;},'set':function(e){exports=e;}});
     Object.defineProperty(cache, module.uri, {'get':function(){return exports;}});
-    pwd.unshift(module.uri);
-    (new Function("module, exports, global", request.responseText + "\n//# sourceURL=" + module.uri))
-      .call(self, module, exports, self);
-    pwd.shift();
+    (new Function("module, exports, global, require", request.responseText + "\n//# sourceURL=" + module.uri))
+      .call(self, module, exports, self, rfunc);
   }
   return cache[module.uri];
 }
@@ -106,11 +100,11 @@ function require(identifier) {
 //      values are returned as a module descriptor, which can be passed to
 //      `fetch` to load a module.
 
-function resolve(identifier) {
+function resolve(identifier, pwd) {
   var m, base, url;
   // NOTE Matches [[.]/path/to/][file][.js]
   m = identifier.match(/^((\.)?.*\/|)(.[^\.]*)?(\..*)?$/);
-  base = m[2] ? pwd[0] : root;
+  base = m[2] ? pwd : root;
   url = new URL(m[1] + (m[3] || "index") + (m[4] || ".js"), base);
   return {
     id: url.pathname,
@@ -122,8 +116,8 @@ function resolve(identifier) {
 
 if (self.require !== undefined)
   throw new Error("Tarp: '\'require\' already defined in global scope");
-self.require = require;
-self.require.resolve = resolve;
+self.require = function(identifier) {return require(identifier, location.href);};
+self.require.resolve = function(identifier) {return resolve(identifier, location.href);};
 Object.defineProperty(self.require, 'root', {
   get: function() { return root; },
   set: function(r) { root = (new URL(r, location.href)).href; }
