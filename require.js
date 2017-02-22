@@ -69,12 +69,12 @@ cache = Object.create(null);
 //      and the mpdule exports are passed to the callback function after the
 //      module has been loaded.
 
-function require(identifier, parent, resolve) {
+function require(identifier, resolve) {
   var module, request;
   var m, base, url;
   // NOTE Matches [[.]/path/to/][file][.js]
   m = identifier.match(/^((\.)?.*\/|)(.[^\.]*)?(\..*)?$/);
-  base = m[2] ? (parent ? parent.uri : location.href) : root;
+  base = m[2] ? (this ? this.uri : location.href) : root;
   url = new URL(m[1] + (m[3] || "index") + (m[4] || ".js"), base);
   if (resolve)
     return url.href;
@@ -90,13 +90,13 @@ function require(identifier, parent, resolve) {
       filename: url.href,
       children: [],
       loaded: false,
-      parent: parent || null,
+      parent: this,
       exports: Object.create(null),
-      require: function(identifier) {return require(identifier, module);}
     };
-    module.require.resolve = function(identifier) {return require(identifier, module, true);};
-    if (module.parent)
-      module.parent.children.push(module);
+    module.require = require.bind(module);
+    module.require.resolve = resolve;
+    if (this)
+      this.children.push(module);
     Object.defineProperty(cache, module.uri, {'get':function(){return module.exports;}});
     (new Function("exports, require, module, __filename, __dirname", request.responseText + "\n//# sourceURL=" + module.uri))
       .call(self, module.exports, module.require, module, module.uri, module.uri.substr(0, module.uri.lastIndexOf("/")));
@@ -104,12 +104,16 @@ function require(identifier, parent, resolve) {
   return cache[url.href];
 }
 
+function resolve(identifier) {
+  return this(identifier, true);
+}
+
 // NOTE Export require to global scope
 
 if (self.require !== undefined)
   throw new Error("Tarp: '\'require\' already defined in global scope");
-self.require = require;
-self.require.resolve = function(identifier) { return require(identifier, undefined, true); };
+self.require = require.bind(null);
+self.require.resolve = resolve;
 Object.defineProperty(self.require, 'root', {
   get: function() { return root; },
   set: function(r) { root = (new URL(r, location.href)).href; }
