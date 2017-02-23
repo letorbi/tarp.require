@@ -31,10 +31,7 @@ if (typeof (new Error()).fileName == "string") {
   self.addEventListener("error", function(evt) {
     if (evt.error instanceof Error) {
       var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
-      if (m === null) {
-        console.warn("Tarp: unable to read file name from stack");
-      }
-      else if (evt.error.fileName != m[1]) {
+      if (m && evt.error.fileName != m[1]) {
         evt.preventDefault();
         throw new evt.error.constructor(evt.error.message, m[1], evt.error.lineNumber);
       }
@@ -85,7 +82,7 @@ function factory(parent) {
       request.open('GET', url.href, false);
       request.send();
       if (request.status != 200)
-        throw new Error("Tarp: Loading "+module.uri+" returned: "+request.status+" "+request.statusText);
+        throw new Error(url.href+ " " + request.status + " " + request.statusText);
       module = {
         id: url.pathname,
         uri: url.href,
@@ -119,7 +116,7 @@ function factory(parent) {
 // NOTE Export require to global scope
 
 if (self.require !== undefined)
-  throw new Error("Tarp: '\'require\' already defined in global scope");
+  throw new Error("'\'require\' already defined");
 self.require = factory(null);
 self.require.root = "./node_modules/";
 
