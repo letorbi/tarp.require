@@ -97,7 +97,7 @@ function factory(parent) {
         parent.children.push(module);
       Object.defineProperty(cache, href, {'get':function(){return module.exports;}});
       (new Function("exports, require, module, __filename, __dirname", request.responseText + "\n//# sourceURL=" + href))(
-        module.exports, module.require, module, href, href.substr(0, href.lastIndexOf("/"))
+        module.exports, module.require, module, href, href.match(/.*\//)[0]
       );
     }
     return cache[href];
@@ -109,9 +109,9 @@ function factory(parent) {
   });
 
   require.resolve = require;
+  require.cache = cache;
   return require;
 }
-
 
 // NOTE Export require to global scope
 
