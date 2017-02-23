@@ -70,7 +70,7 @@ cache = Object.create(null);
 //      module has been loaded.
 
 function factory(parent) {
-  function require(identifier, resolve) {
+  function require(identifier) {
     var m, url, module, request;
     // NOTE Matches [[.]/path/to/][file][.js]
     m = identifier.match(/^((\.)?.*\/|)(.[^\.]*)?(\..*)?$/);
@@ -78,7 +78,7 @@ function factory(parent) {
       m[1] + (m[3] || "index") + (m[4] || ".js"),
       m[2] ? (parent ? parent.uri : location.href) : root
     );
-    if (resolve)
+    if (this == require)
       return url.href;
     if (cache[url.href] === undefined) {
       request = new XMLHttpRequest();
@@ -111,7 +111,7 @@ function factory(parent) {
     set: function(r) { root = (new URL(r, location.href)).href; }
   });
 
-  require.resolve = function(identifier) { return require(identifier, true); };
+  require.resolve = require;
   return require;
 }
 
