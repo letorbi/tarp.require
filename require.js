@@ -69,57 +69,58 @@ cache = Object.create(null);
 //      and the mpdule exports are passed to the callback function after the
 //      module has been loaded.
 
-function require(identifier, resolve) {
-  var module, request;
-  var m, base, url;
-  // NOTE Matches [[.]/path/to/][file][.js]
-  m = identifier.match(/^((\.)?.*\/|)(.[^\.]*)?(\..*)?$/);
-  base = m[2] ? (this ? this.uri : location.href) : root;
-  url = new URL(m[1] + (m[3] || "index") + (m[4] || ".js"), base);
-  if (resolve)
-    return url.href;
-  if (cache[url.href] === undefined) {
-    request = new XMLHttpRequest();
-    request.open('GET', url.href, false);
-    request.send();
-    if (request.status != 200)
-      throw new Error("Tarp: Loading "+module.uri+" returned: "+request.status+" "+request.statusText);
-    module = {
-      id: url.pathname,
-      uri: url.href,
-      filename: url.href,
-      children: [],
-      loaded: false,
-      parent: this,
-      exports: Object.create(null),
-    };
-    module.require = require.bind(module);
-    module.require.resolve = resolve;
-    if (this)
-      this.children.push(module);
-    Object.defineProperty(cache, module.uri, {'get':function(){return module.exports;}});
-    (new Function("exports, require, module, __filename, __dirname", request.responseText + "\n//# sourceURL=" + module.uri))(
-      module.exports, module.require, module, module.uri, module.uri.substr(0, module.uri.lastIndexOf("/"))
+function factory(parent) {
+  function require(identifier, resolve) {
+    var m, url, module, request;
+    // NOTE Matches [[.]/path/to/][file][.js]
+    m = identifier.match(/^((\.)?.*\/|)(.[^\.]*)?(\..*)?$/);
+    url = new URL(
+      m[1] + (m[3] || "index") + (m[4] || ".js"),
+      m[2] ? (parent ? parent.uri : location.href) : root
     );
+    if (resolve)
+      return url.href;
+    if (cache[url.href] === undefined) {
+      request = new XMLHttpRequest();
+      request.open('GET', url.href, false);
+      request.send();
+      if (request.status != 200)
+        throw new Error("Tarp: Loading "+module.uri+" returned: "+request.status+" "+request.statusText);
+      module = {
+        id: url.pathname,
+        uri: url.href,
+        filename: url.href,
+        children: new Array(),
+        loaded: false,
+        parent: parent,
+        exports: Object.create(null),
+      };
+      module.require = factory(module);
+      if (parent)
+        parent.children.push(module);
+      Object.defineProperty(cache, module.uri, {'get':function(){return module.exports;}});
+      (new Function("exports, require, module, __filename, __dirname", request.responseText + "\n//# sourceURL=" + module.uri))(
+        module.exports, module.require, module, module.uri, module.uri.substr(0, module.uri.lastIndexOf("/"))
+      );
+    }
+    return cache[url.href];
   }
-  return cache[url.href];
+  
+  Object.defineProperty(require, 'root', {
+    get: function() { return root; },
+    set: function(r) { root = (new URL(r, location.href)).href; }
+  });
+
+  require.resolve = function(identifier) { return require(identifier, true); };
+  return require;
 }
 
-function resolve(identifier) {
-  return this(identifier, true);
-}
 
 // NOTE Export require to global scope
 
 if (self.require !== undefined)
   throw new Error("Tarp: '\'require\' already defined in global scope");
-self.require = require.bind(null);
-self.require.resolve = resolve;
-Object.defineProperty(self.require, 'root', {
-  get: function() { return root; },
-  set: function(r) { root = (new URL(r, location.href)).href; }
-});
-
+self.require = factory(null);
 self.require.root = "./node_modules/";
 
 })();
