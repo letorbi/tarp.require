@@ -68,25 +68,25 @@ cache = Object.create(null);
 
 function factory(parent) {
   function require(identifier) {
-    var m, url, module, request;
+    var m, url, href, module, request;
     // NOTE Matches [[.]/path/to/][file][.js]
     m = identifier.match(/^((\.)?.*\/|)(.[^\.]*)?(\..*)?$/);
-    url = new URL(
+    href = (url = new URL(
       m[1] + (m[3] || "index") + (m[4] || ".js"),
       m[2] ? (parent ? parent.uri : location.href) : root
-    );
+    )).href;
     if (this == require)
-      return url.href;
-    if (cache[url.href] === undefined) {
+      return href;
+    if (cache[href] === undefined) {
       request = new XMLHttpRequest();
-      request.open('GET', url.href, false);
+      request.open('GET', href, false);
       request.send();
       if (request.status != 200)
-        throw new Error(url.href+ " " + request.status + " " + request.statusText);
+        throw new Error(href+ " " + request.status + " " + request.statusText);
       module = {
         id: url.pathname,
-        uri: url.href,
-        filename: url.href,
+        uri: href,
+        filename: href,
         children: new Array(),
         loaded: false,
         parent: parent,
@@ -95,12 +95,12 @@ function factory(parent) {
       module.require = factory(module);
       if (parent)
         parent.children.push(module);
-      Object.defineProperty(cache, module.uri, {'get':function(){return module.exports;}});
-      (new Function("exports, require, module, __filename, __dirname", request.responseText + "\n//# sourceURL=" + module.uri))(
-        module.exports, module.require, module, module.uri, module.uri.substr(0, module.uri.lastIndexOf("/"))
+      Object.defineProperty(cache, href, {'get':function(){return module.exports;}});
+      (new Function("exports, require, module, __filename, __dirname", request.responseText + "\n//# sourceURL=" + href))(
+        module.exports, module.require, module, href, href.substr(0, href.lastIndexOf("/"))
       );
     }
-    return cache[url.href];
+    return cache[href];
   }
   
   Object.defineProperty(require, 'root', {
