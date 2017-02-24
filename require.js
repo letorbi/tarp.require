@@ -86,11 +86,10 @@ function factory(parent) {
       module.require = factory(module);
       if (parent)
         parent.children.push(module);
-      // NOTE The following line is a bit hacky, but it's the shortest way to
-      //      define a getter and a setter for the module object in the cache object.
-      // WARN We're owerwriting m here, but that doesn;t matte since we won't need
-      //      it anymore.
-      (m = {})[href] = module; Object.assign(cache, m);
+      Object.defineProperty(cache, href, {
+        get: function() { return module; },
+        set: function(m) { module = m; }
+      });
       (new Function("exports, require, module, __filename, __dirname", request.responseText + "\n//# sourceURL=" + href))(
         module.exports, module.require, module, href, href.match(/.*\//)[0]
       );
