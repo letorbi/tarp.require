@@ -46,15 +46,13 @@ if (typeof (new Error()).fileName == "string") {
 //      from the change. Relative and absolute root paths are accepted, the
 //      default value is the URI of the document that loaded require.
 
-var root;
-
 // INFO Module cache
 //      Contains getter functions for the exports objects of all the loaded
 //      modules. As long as a module has not been loaded the getter is either
 //      undefined or contains the module code as a string (in case the
 //      module has been pre-loaded in a bundle).
 
-var cache = Object.create(null);
+var root, cache = Object.create(null);
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -116,11 +114,15 @@ function factory(parent) {
   return require;
 }
 
-// NOTE Export require to global scope
+// NOTE Add require to the tarp namespace and set the default root
+((self.tarp = self.tarp || new Object())
+  .require = factory(null))
+  .root = "./node_modules/";
 
-if (self.require !== undefined)
-  throw new Error("'\'require\' already defined");
-self.require = factory(null);
-self.require.root = "./node_modules/";
+// NOTE Export require to global scope
+if (self.require)
+  console.warn("'\'require\' already defined");
+else
+  self.require = self.tarp.require;
 
 })();
