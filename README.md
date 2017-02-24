@@ -1,12 +1,7 @@
-Tarp - a lightweight and modular JavaScript library
-=======================================================
+//\ Tarp.require - a lightweight JavaScript module loader
+=========================================================
 
-Well, I guess it will still take some time until this repository here contains
-a whole library, but I'm working on it ;)
+Tarp.require is a CommonJS and Node.js compatible module loader licensed as open source under the LGPL v3. It aims to be
+as lightweight as possible while not missing any features. It's minified version is less than 1kB right now.
 
-Right now it only contains my implementation of the CommonJS module
-specification. More information can be found in my post at Pixel vs. Bytes:
-http://pixelsvsbytes.com/blog/2013/02/js-require-for-browsers-better-faster-stronger/
-
-Tarp is licensed as open source under the LGPL v3.
-Copyright 2013 Torben Haase <http://pixelsvsbytes.com/>.
+Copyright 2013-2017 Torben Haase [\<https://pixelsvsbytes.com/\>](https://pixelsvsbytes.com/).
