@@ -39,22 +39,13 @@ if (typeof (new Error()).fileName == "string") {
   }, false);
 }
 
-var root, cache;
-
-// INFO Module root
-//      Module identifiers starting with neither '/' nor '.' are resolved
-//      from the module root. The module root can be changed at any time
-//      by setting require.root. Already loaded modules won't be affected
-//      from the change. Relative and absolute root paths are accepted, the
-//      default value is the URI of the document that loaded require.
-
 // INFO Module cache
 //      Contains getter functions for the exports objects of all the loaded
 //      modules. As long as a module has not been loaded the getter is either
 //      undefined or contains the module code as a string (in case the
 //      module has been pre-loaded in a bundle).
 
-cache = Object.create(null);
+var cache = Object.create(null);
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -73,7 +64,7 @@ function factory(parent) {
     m = identifier.match(/^((\.)?.*\/|)(.[^\.]*)?(\..*)?$/);
     href = (url = new URL(
       m[1] + (m[3] || "index") + (m[4] || ".js"),
-      m[2] ? (parent ? parent.uri : location.href) : root
+      m[2] ? (parent ? parent.uri : location.href) : require.root
     )).href;
     if (this == require)
       return href;
@@ -106,14 +97,18 @@ function factory(parent) {
     }
     return cache[href].exports;
   }
-  
-  Object.defineProperty(require, 'root', {
-    get: function() { return root; },
-    set: function(r) { root = (new URL(r, location.href)).href; }
-  });
 
+  // INFO Module root
+  //      Module identifiers starting with neither '/' nor '.' are resolved
+  //      from the module root. The module root can be changed at any time
+  //      by setting require.root. Already loaded modules won't be affected
+  //      from the change. Relative and absolute root paths are accepted, the
+  //      default value is the URI of the document that loaded require.
+
+  require.root = require.root || (new URL("./node_modules/", location.href)).href;
   require.resolve = require;
   require.cache = cache;
+
   return require;
 }
 
@@ -122,6 +117,5 @@ function factory(parent) {
 if (self.require !== undefined)
   throw new Error("'\'require\' already defined");
 self.require = factory(null);
-self.require.root = "./node_modules/";
 
 })();
