@@ -39,6 +39,8 @@ if (typeof (new Error()).fileName == "string") {
   }, false);
 }
 
+var Object_ = Object, Object_create = Object_.create, Object_defineProperty = Object_.defineProperty, location_href = location.href;
+
 // INFO Module root
 //      Module identifiers starting with neither '/' nor '.' are resolved
 //      from the module root. The module root can be changed at any time
@@ -52,7 +54,7 @@ if (typeof (new Error()).fileName == "string") {
 //      undefined or contains the module code as a string (in case the
 //      module has been pre-loaded in a bundle).
 
-var root, cache = Object.create(null);
+var root, cache = Object_create(null);
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -71,7 +73,7 @@ function factory(parent) {
     id = id.match(/^((\.)?.*\/|)(.[^\.]*)?(\..*)?$/);
     href = (url = new URL(
       id[1] + (id[3] || "index") + (id[4] || ".js"),
-      id[2] ? (parent ? parent.uri : location.href) : root
+      id[2] ? (parent ? parent.uri : location_href) : root
     )).href;
     if (this == require)
       return href;
@@ -88,12 +90,12 @@ function factory(parent) {
         children: new Array(),
         loaded: false,
         parent: parent,
-        exports: Object.create(null),
+        exports: Object_create(null),
       };
       module.require = factory(module);
       if (parent)
         parent.children.push(module);
-      Object.defineProperty(cache, href, {
+      Object_defineProperty(cache, href, {
         get: function() { return module; },
         set: function(m) { module = m; }
       });
@@ -104,9 +106,9 @@ function factory(parent) {
     return cache[href].exports;
   }
 
-  Object.defineProperty(require, "root", {
+  Object_defineProperty(require, "root", {
     get: function() { return root; },
-    set: function(r) { root = new URL(r, location.href); }
+    set: function(r) { root = new URL(r, location_href); }
   });
   require.resolve = require;
   require.cache = cache;
