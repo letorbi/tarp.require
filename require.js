@@ -54,7 +54,7 @@ var Object_ = Object, Object_create = Object_.create, Object_defineProperty = Ob
 //      undefined or contains the module code as a string (in case the
 //      module has been pre-loaded in a bundle).
 
-var root, cache = Object_create(null);
+var rfunc, root, cache = Object_create(null);
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -116,15 +116,16 @@ function factory(parent) {
   return require;
 }
 
-// NOTE Add require to the tarp namespace and set the default root
-((self.tarp = self.tarp || new Object())
-  .require = factory(null))
-  .root = "./node_modules/";
+// NOTE Create the global require function and set the default root
+(rfunc = factory(null)).root = "./node_modules/";
 
-// NOTE Export require to global scope
+// NOTE Add the global require to the tarp namespace
+(self.tarp = self.tarp || new Object()).require = rfunc;
+
+// NOTE Add the global require to the global namespace (if possible)
 if (self.require)
-  console.warn("'\'require\' already defined");
+  console.warn("'\'self.require\' already exists");
 else
-  self.require = self.tarp.require;
+  self.require = rfunc;
 
 })();
