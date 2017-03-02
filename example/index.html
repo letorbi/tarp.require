@@ -23,7 +23,7 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
 
 <head>
   <title>Tarp Require test page</title>
-  <script type="text/javascript" src="../require.js"></script>
+  <script type="text/javascript" src="../require.min.js"></script>
 </head>
 
 <body>
@@ -43,11 +43,11 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
     mname = './module.js';
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
+    mname = 'directory/';
+    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
     mname = './boo/../foo/bar/./././baz///moo/maa/../../../mee/gee';
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
     mname = 'foo/bar//baz///moo////maa/mee';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-    mname = '/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
     mname = '/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
@@ -77,6 +77,13 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     <pre><script type="text/javascript">
     var mod = require('relative/main');
     document.writeln(mod.greet());
+    </script></pre>
+  </div>
+  <div class="Box Green">
+    <h2>NPM Package</h2>
+    <pre><script type="text/javascript">
+    var mod = require('pkgtest/');
+    document.writeln(JSON.stringify(mod));
     </script></pre>
   </div>
   <div class="Box Blue">
