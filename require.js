@@ -68,7 +68,7 @@ var rfunc, root, cache = Object_create(null);
 
 function factory(parent) {
   function require(id) {
-    var url, href, module, request;
+    var url, href, request;
     // NOTE Matches [[.]/path/to/][file][.js]
     id = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
     if (!id[3])
@@ -79,13 +79,13 @@ function factory(parent) {
     )).href;
     if (this == require)
       return href;
-    if (cache[href] === undefined) {
+    if (!cache[href]) {
       request = new XMLHttpRequest();
       request.open('GET', href, false);
       request.send();
       if (request.status != 200)
         throw new Error(href+ " " + request.status + " " + request.statusText);
-      module = {
+      cache[href] = {
         id: url.pathname,
         uri: href,
         filename: href,
@@ -94,17 +94,13 @@ function factory(parent) {
         parent: parent,
       };
       if (parent)
-        parent.children.push(module);
-      Object_defineProperty(cache, href, {
-        get: function() { return module; },
-        set: function(m) { module = m; }
-      });
-      module.require = factory(module);
+        parent.children.push(cache[href]);
+      cache[href].require = factory(cache[href]);
       if (id[4] == ".json")
-        module.exports = JSON.parse(request.responseText);
+        cache[href].exports = JSON.parse(request.responseText);
       else
-        (new Function("exports, require, module, __filename, __dirname", request.responseText + "\n//# sourceURL=" + href))(
-          module.exports = Object_create(null), module.require, module, href, href.match(/.*\//)[0]
+        (new Function("exports,require,module,__filename,__dirname", request.responseText + "\n//# sourceURL=" + href))(
+          cache[href].exports = Object_create(null), cache[href].require, cache[href], href, href.match(/.*\//)[0]
         );
     }
     return cache[href].exports;
