@@ -68,7 +68,7 @@ var rfunc, root, cache = Object_create(null);
 
 function factory(parent) {
   function require(id) {
-    var url, href, request;
+    var url, href, request, module;
     // NOTE Matches [[.]/path/to/][file][.js]
     id = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
     href = (url = new URL(
@@ -83,7 +83,7 @@ function factory(parent) {
       request.send();
       if (request.status != 200)
         throw new Error(href+ " " + request.status + " " + request.statusText);
-      cache[href] = {
+      module = cache[href] = {
         id: url.pathname,
         uri: href,
         filename: href,
@@ -92,13 +92,13 @@ function factory(parent) {
         parent: parent,
       };
       if (parent)
-        parent.children.push(cache[href]);
-      cache[href].require = factory(cache[href]);
+        parent.children.push(module);
+      module.require = factory(module);
       if (request.getResponseHeader("Content-Type") == "application/json")
-        cache[href].exports = JSON.parse(request.responseText);
+        module.exports = JSON.parse(request.responseText);
       else
         (new Function("exports,require,module,__filename,__dirname", request.responseText + "\n//# sourceURL=" + href))(
-          cache[href].exports = Object_create(null), cache[href].require, cache[href], href, href.match(/.*\//)[0]
+          module.exports = Object_create(null), module.require, module, href, href.match(/.*\//)[0]
         );
     }
     return cache[href].exports;
@@ -122,7 +122,7 @@ function factory(parent) {
 
 // NOTE Add the global require to the global namespace (if possible)
 if (self.require)
-  console.warn("'\'self.require\' already exists");
+  console.warn("'self.require' already exists");
 else
   self.require = rfunc;
 
