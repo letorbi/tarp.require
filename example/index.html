@@ -23,7 +23,7 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
 
 <head>
   <title>Tarp Require test page</title>
-  <script type="text/javascript" src="../require.min.js"></script>
+  <script type="text/javascript" src="../require.js"></script>
 </head>
 
 <body>
@@ -82,7 +82,7 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
   <div class="Box Green">
     <h2>NPM Package</h2>
     <pre><script type="text/javascript">
-    var mod = require('pkgtest/');
+    var mod = require('pkgtest/package.json');
     document.writeln(JSON.stringify(mod));
     </script></pre>
   </div>

@@ -71,10 +71,8 @@ function factory(parent) {
     var url, href, request;
     // NOTE Matches [[.]/path/to/][file][.js]
     id = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
-    if (!id[3])
-      return require.call(this, id[1] + "package.json");
     href = (url = new URL(
-      id[1] + id[3] + (id[4] || ".js"),
+      id[1] + id[3] + (id[3] && (id[4] || ".js")),
       id[2] ? (parent ? parent.uri : location_href) : root
     )).href;
     if (this == require)
@@ -96,7 +94,7 @@ function factory(parent) {
       if (parent)
         parent.children.push(cache[href]);
       cache[href].require = factory(cache[href]);
-      if (id[4] == ".json")
+      if (request.getResponseHeader("Content-Type") == "application/json")
         cache[href].exports = JSON.parse(request.responseText);
       else
         (new Function("exports,require,module,__filename,__dirname", request.responseText + "\n//# sourceURL=" + href))(
