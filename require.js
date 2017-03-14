@@ -75,14 +75,16 @@ function factory(parent) {
       id[1] + id[3] + (id[3] && (id[4] || ".js")),
       id[2] ? (parent ? parent.uri : location_href) : root
     )).href;
-    if (this == require)
-      return href;
     if (!cache[href]) {
       request = new XMLHttpRequest();
       request.open('GET', href, false);
       request.send();
       if (request.status != 200)
         throw new Error(href+ " " + request.status + " " + request.statusText);
+    }
+    if (this == require)
+      return href;
+    if (request.responseText) {
       module = cache[href] = {
         id: url.pathname,
         uri: href,
