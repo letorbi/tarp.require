@@ -106,6 +106,7 @@ function factory(parent) {
         (new Function("exports,require,module,__filename,__dirname", precache[href].text + "\n//# sourceURL=" + href))(
           module.exports = Object_create(null), module.require, module, href, href.match(/.*\//)[0]
         );
+      module.loaded = true;
     }
     return cache[href].exports;
   }
