@@ -54,7 +54,7 @@ var Object_ = Object, Object_create = Object_.create, Object_defineProperty = Ob
 //      undefined or contains the module code as a string (in case the
 //      module has been pre-loaded in a bundle).
 
-var rfunc, root, cache = Object_create(null);
+var rfunc, root, precache = Object_create(null), cache = Object_create(null);
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -81,10 +81,14 @@ function factory(parent) {
       request.send();
       if (request.status != 200)
         throw new Error(href+ " " + request.status + " " + request.statusText);
+      precache[href] = {
+        text: request.responseText,
+        type: request.getResponseHeader("Content-Type")
+      };
     }
     if (this == require)
       return href;
-    if (request.responseText) {
+    if (precache[href].text) {
       module = cache[href] = {
         id: url.pathname,
         uri: href,
@@ -96,10 +100,10 @@ function factory(parent) {
       if (parent)
         parent.children.push(module);
       module.require = factory(module);
-      if (request.getResponseHeader("Content-Type") == "application/json")
-        module.exports = JSON.parse(request.responseText);
+      if (precache[href].type == "application/json")
+        module.exports = JSON.parse(precache[href].text);
       else
-        (new Function("exports,require,module,__filename,__dirname", request.responseText + "\n//# sourceURL=" + href))(
+        (new Function("exports,require,module,__filename,__dirname", precache[href].text + "\n//# sourceURL=" + href))(
           module.exports = Object_create(null), module.require, module, href, href.match(/.*\//)[0]
         );
     }
