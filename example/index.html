@@ -31,26 +31,27 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
   <div class="Box Red">
     <h2>Identifier => Module</h2>
     <pre><script type="text/javascript">
-    mname = 'module';
+    mname = 'module1';
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-    mname = './module';
+    mname = './node_modules/module1';
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-    mname = '../module';
+    mname = '../example/node_modules/module1';
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-    mname = 'module.js';
+    mname = 'module1.js';
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
-    var mname = '/module.js';
+    var mname = 'pkgtest/package.json';
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-    mname = './module.js';
+    mname = './//module.js';
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
-    mname = 'directory/';
+    mname = './/../module.js';
     document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
     mname = './boo/../foo/bar/./././baz///moo/maa/../../../mee/gee';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-    mname = 'foo/bar//baz///moo////maa/mee';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-    mname = '/home/torben/PixelsVsBytes/Repositories///Jay/../../../';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+    try {
+      require.resolve(mname)
+    }
+    catch (e) {
+      document.writeln('require.resolve('+mname+') -> ' + e);
+    }
     </script></pre>
   </div>
   <div class="Box Green">
