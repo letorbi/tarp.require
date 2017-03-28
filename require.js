@@ -67,7 +67,7 @@ var rfunc, root, precache = Object_create(null), cache = Object_create(null);
 //      module has been loaded.
 
 function factory(parent) {
-  function require(id) {
+  function require(id, callback) {
     var url, href, request, module;
     // NOTE Matches [[.]/path/to/][file][.js]
     id = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
@@ -75,40 +75,47 @@ function factory(parent) {
       id[1] + id[3] + (id[3] && (id[4] || ".js")),
       id[2] ? (parent ? parent.uri : location_href) : root
     )).href;
-    if (!cache[href]) {
-      request = new XMLHttpRequest();
-      request.open('GET', href, false);
+    if (!precache[href]) {
+      request = precache[href] = new XMLHttpRequest();
+      request.callbacks = new Array();
+      request.open('GET', href, this && callback);
+      request.onload = function() {
+        var cb;
+        if (request.status) {
+          if (request.status != 200)
+            throw new Error(href + " " + request.status + " " + request.statusText);
+          while (cb = request.callbacks.shift()) // eslint-disable-line no-cond-assign
+            cb();
+          if (this == require)
+            return href;
+          if (!cache[href]) {
+            module = cache[href] = {
+              id: url.pathname,
+              uri: href,
+              filename: href,
+              children: new Array(),
+              loaded: false,
+              parent: parent
+            };
+            if (parent)
+              parent.children.push(module);
+            module.require = factory(module);
+            if (request.getResponseHeader("Content-Type") == "application/json")
+              module.exports = JSON.parse(request.response);
+            else
+              (new Function("exports,require,module,__filename,__dirname", request.responseText + "\n//# sourceURL=" + href))(
+                module.exports = Object_create(null), module.require, module, href, href.match(/.*\//)[0]
+              );
+            module.loaded = true;
+          }
+          return cache[href].exports;
+        }
+      };
       request.send();
-      if (request.status != 200)
-        throw new Error(href+ " " + request.status + " " + request.statusText);
-      precache[href] = {
-        text: request.responseText,
-        type: request.getResponseHeader("Content-Type")
-      };
     }
-    if (this == require)
-      return href;
-    if (precache[href].text) {
-      module = cache[href] = {
-        id: url.pathname,
-        uri: href,
-        filename: href,
-        children: new Array(),
-        loaded: false,
-        parent: parent,
-      };
-      if (parent)
-        parent.children.push(module);
-      module.require = factory(module);
-      if (precache[href].type == "application/json")
-        module.exports = JSON.parse(precache[href].text);
-      else
-        (new Function("exports,require,module,__filename,__dirname", precache[href].text + "\n//# sourceURL=" + href))(
-          module.exports = Object_create(null), module.require, module, href, href.match(/.*\//)[0]
-        );
-      module.loaded = true;
-    }
-    return cache[href].exports;
+    if (callback)
+      precache[href].callbacks.push(callback);
+    return precache[href].onload.call(this);
   }
 
   Object_defineProperty(require, "root", {

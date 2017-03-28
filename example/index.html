@@ -59,8 +59,11 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     var mod1 = require('module1');
     document.writeln(mod1.greet());
     mod1.greetstr = 'HELLO WORLD';
-    //var mod2 = require('module2');
-    //document.writeln(mod2.greet());
+    require.resolve('module2', function() {
+      console.log('callback!');
+      mod2 = require('module2');
+      console.log(mod2.greet());
+    });
     var mod3 = require('module3');
     document.writeln(mod3.greet());
     </script></pre>
