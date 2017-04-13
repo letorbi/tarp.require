@@ -55,6 +55,7 @@ var Object_ = Object, Object_create = Object_.create, Object_defineProperty = Ob
 //      module has been pre-loaded in a bundle).
 
 var rfunc, root, precache = Object_create(null), cache = Object_create(null);
+var requireCallbacks = Object_create(null), resolveCallbacks = Object_create(null);
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -68,27 +69,32 @@ var rfunc, root, precache = Object_create(null), cache = Object_create(null);
 
 function factory(parent) {
   function require(id, callback) {
-    var url, href, request, module;
+    var url, href, prerequest, request, module, cb;
     // NOTE Matches [[.]/path/to/][file][.js]
     id = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
     href = (url = new URL(
       id[1] + id[3] + (id[3] && (id[4] || ".js")),
       id[2] ? (parent ? parent.uri : location_href) : root
     )).href;
-    if (!precache[href]) {
+    resolveCallbacks[href] = resolveCallbacks[href] || new Array();
+    requireCallbacks[href] = requireCallbacks[href] || new Array();
+    if (callback) {
+      if (this == require)
+        resolveCallbacks[href].push(callback);
+      else
+        requireCallbacks[href].push(callback);
+    }
+    if (!precache[href] || (!precache[href].status && !callback)) {
+      if (prerequest = precache[href]) // eslint-disable-line no-cond-assign
+        prerequest.abort();
       request = precache[href] = new XMLHttpRequest();
-      request.callbacks = new Array();
-      request.open('GET', href, this && callback);
+      request.execModule = prerequest ? prerequest.execModule : (this != request);
+      request.open('GET', href, !!callback);
       request.onload = function() {
-        var cb;
         if (request.status) {
           if (request.status != 200)
             throw new Error(href + " " + request.status + " " + request.statusText);
-          while (cb = request.callbacks.shift()) // eslint-disable-line no-cond-assign
-            cb();
-          if (this == require)
-            return href;
-          if (!cache[href]) {
+          if (request.execModule && !cache[href]) {
             module = cache[href] = {
               id: url.pathname,
               uri: href,
@@ -108,14 +114,21 @@ function factory(parent) {
               );
             module.loaded = true;
           }
-          return cache[href].exports;
+          while (cb = resolveCallbacks[href].shift()) // eslint-disable-line no-cond-assign
+            cb(href);
+          while (cache[href] && (cb = requireCallbacks[href].shift())) // eslint-disable-line no-cond-assign
+            cb(cache[href].exports);
         }
       };
       request.send();
     }
-    if (callback)
-      precache[href].callbacks.push(callback);
-    return precache[href].onload.call(this);
+    else {
+      while (cb = resolveCallbacks[href].shift()) // eslint-disable-line no-cond-assign
+        cb(href);
+      while (cache[href] && (cb = requireCallbacks[href].shift())) // eslint-disable-line no-cond-assign
+        cb(cache[href].exports);
+    }
+    return (this == require) ? href : cache[href] && cache[href].exports;
   }
 
   Object_defineProperty(require, "root", {

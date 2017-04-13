@@ -23,7 +23,7 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
 
 <head>
   <title>Tarp Require test page</title>
-  <script type="text/javascript" src="../require.js"></script>
+  <script type="text/javascript" src="../require.min.js"></script>
 </head>
 
 <body>
@@ -31,27 +31,34 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
   <div class="Box Red">
     <h2>Identifier => Module</h2>
     <pre><script type="text/javascript">
-    mname = 'module1';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-    mname = './node_modules/module1';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-    mname = '../example/node_modules/module1';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-    mname = 'module1.js';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
-    var mname = 'pkgtest/package.json';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-    mname = './//module.js';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
-    mname = './/../module.js';
-    document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
-    mname = './boo/../foo/bar/./././baz///moo/maa/../../../mee/gee';
-    try {
-      require.resolve(mname)
-    }
-    catch (e) {
-      document.writeln('require.resolve('+mname+') -> ' + e);
-    }
+      mname = 'module1';
+      document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+      mname = './node_modules/module1';
+      document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+      mname = '../example/node_modules/module1';
+      document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+      mname = 'module1.js';
+      document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
+      var mname = 'pkgtest/package.json';
+      document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+      mname = './//module.js';
+      document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname))); 
+      mname = './/../module.js';
+      document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
+      mname = './boo/../foo/bar/./././baz///moo/maa/../../../mee/gee';
+      try {
+        require.resolve(mname)
+      }
+      catch (e) {
+        document.writeln('require.resolve('+mname+') -> ' + e);
+      }
+
+      require.resolve('module2', function(mod2Href) {
+        console.log('href callback: ' + mod2Href);
+      });
+      require('module3', function(mod3) {
+        console.log('require callback: ' + mod3.greet());
+      });
     </script></pre>
   </div>
   <div class="Box Green">
@@ -60,13 +67,6 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     var mod1 = require('module1');
     document.writeln(mod1.greet());
     mod1.greetstr = 'HELLO WORLD';
-    require.resolve('module2', function() {
-      console.log('callback!');
-      mod2 = require('module2');
-      console.log(mod2.greet());
-    });
-    var mod3 = require('module3');
-    document.writeln(mod3.greet());
     </script></pre>
   </div>
   <div class="Box Green">
