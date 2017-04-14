@@ -54,8 +54,8 @@ var Object_ = Object, Object_create = Object_.create, Object_defineProperty = Ob
 //      undefined or contains the module code as a string (in case the
 //      module has been pre-loaded in a bundle).
 
-var rfunc, root, precache = Object_create(null), cache = Object_create(null);
-var requireCallbacks = Object_create(null), resolveCallbacks = Object_create(null);
+var rfunc, root, precache = Object_create(null), cache = Object_create(null),
+    requireCallbacks = Object_create(null), resolveCallbacks = Object_create(null);
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -69,66 +69,60 @@ var requireCallbacks = Object_create(null), resolveCallbacks = Object_create(nul
 
 function factory(parent) {
   function require(id, callback) {
-    var url, href, prerequest, request, module, cb;
+    var url, href, request, module, cb;
     // NOTE Matches [[.]/path/to/][file][.js]
     id = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
     href = (url = new URL(
       id[1] + id[3] + (id[3] && (id[4] || ".js")),
       id[2] ? (parent ? parent.uri : location_href) : root
     )).href;
-    resolveCallbacks[href] = resolveCallbacks[href] || new Array();
-    requireCallbacks[href] = requireCallbacks[href] || new Array();
-    if (callback) {
-      if (this == require)
+    if (this == require) {
+      resolveCallbacks[href] = resolveCallbacks[href] || new Array();
+      if (callback)
         resolveCallbacks[href].push(callback);
-      else
+    } else {
+      requireCallbacks[href] = requireCallbacks[href] || new Array();
+      if (callback)
         requireCallbacks[href].push(callback);
     }
-    if (!precache[href] || (!precache[href].status && !callback)) {
-      if (prerequest = precache[href]) // eslint-disable-line no-cond-assign
-        prerequest.abort();
+    request = precache[href];
+    if (!request || (!request.status && !callback)) {
+      if (request)
+        request.abort();
       request = precache[href] = new XMLHttpRequest();
-      request.execModule = prerequest ? prerequest.execModule : (this != request);
       request.open('GET', href, !!callback);
       request.onload = function() {
-        if (request.status) {
-          if (request.status != 200)
-            throw new Error(href + " " + request.status + " " + request.statusText);
-          if (request.execModule && !cache[href]) {
-            module = cache[href] = {
-              id: url.pathname,
-              uri: href,
-              filename: href,
-              children: new Array(),
-              loaded: false,
-              parent: parent
-            };
-            if (parent)
-              parent.children.push(module);
-            module.require = factory(module);
-            if (request.getResponseHeader("Content-Type") == "application/json")
-              module.exports = JSON.parse(request.response);
-            else
-              (new Function("exports,require,module,__filename,__dirname", request.responseText + "\n//# sourceURL=" + href))(
-                module.exports = Object_create(null), module.require, module, href, href.match(/.*\//)[0]
-              );
-            module.loaded = true;
-          }
-          while (cb = resolveCallbacks[href].shift()) // eslint-disable-line no-cond-assign
-            cb(href);
-          while (cache[href] && (cb = requireCallbacks[href].shift())) // eslint-disable-line no-cond-assign
-            cb(cache[href].exports);
+        if (request.status != 200)
+          throw new Error(href + " " + request.status + " " + request.statusText);
+        if (requireCallbacks[href] && !cache[href]) {
+          module = cache[href] = {
+            id: url.pathname,
+            uri: href,
+            filename: href,
+            children: new Array(),
+            loaded: false,
+            parent: parent
+          };
+          if (parent)
+            parent.children.push(module);
+          module.require = factory(module);
+          if (request.getResponseHeader("Content-Type") == "application/json")
+            module.exports = JSON.parse(request.response);
+          else
+            (new Function("exports,require,module,__filename,__dirname", request.responseText + "\n//# sourceURL=" + href))(
+              module.exports = Object_create(null), module.require, module, href, href.match(/.*\//)[0]
+            );
+          module.loaded = true;
         }
+        while (cb = resolveCallbacks[href] && resolveCallbacks[href].shift()) // eslint-disable-line no-cond-assign
+          cb(href);
+        while (cb = requireCallbacks[href] && requireCallbacks[href].shift()) // eslint-disable-line no-cond-assign
+          cb(module.exports);
+        return (this == require) ? href : module && module.exports;
       };
       request.send();
     }
-    else {
-      while (cb = resolveCallbacks[href].shift()) // eslint-disable-line no-cond-assign
-        cb(href);
-      while (cache[href] && (cb = requireCallbacks[href].shift())) // eslint-disable-line no-cond-assign
-        cb(cache[href].exports);
-    }
-    return (this == require) ? href : cache[href] && cache[href].exports;
+    return !callback && request.onload.call(this);
   }
 
   Object_defineProperty(require, "root", {
