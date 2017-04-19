@@ -52,9 +52,8 @@ if (typeof (new Error()).fileName == "string") {
 //      undefined or contains the module code as a string (in case the
 //      module has been pre-loaded in a bundle).
 
-var Object_create = Object.create,
-    precache = Object_create(null), cache = Object_create(null),
-    requireCallbacks = Object_create(null), resolveCallbacks = Object_create(null);
+var Object_create = Object.create, precache = Object_create(null),
+    cache = Object_create(null), callbacks = Object_create(null);
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -68,21 +67,18 @@ var Object_create = Object.create,
 
 function factory(parent) {
   function require(id, callback) {
-    var url, href, request, module, cb;
+    var url, href, request, module, cbs, cb;
     // NOTE Matches [[.]/path/to/][file][.js]
     id = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
     href = (url = new URL(
       id[1] + id[3] + (id[3] && (id[4] || ".js")),
       new URL(id[2] ? (parent ? parent.uri : "") : self.require.root, location.href)
     )).href;
-    if (this == require) {
-      resolveCallbacks[href] = resolveCallbacks[href] || new Array();
-      if (callback)
-        resolveCallbacks[href].push(callback);
-    } else {
-      requireCallbacks[href] = requireCallbacks[href] || new Array();
-      if (callback)
-        requireCallbacks[href].push(callback);
+    cbs = callbacks[href] = callbacks[href] || new Array();
+    cbs.$ = cbs.$ || (cb = this != require);
+    if (callback) {
+      callback.$ = cb;
+      cbs.push(callback);
     }
     request = precache[href];
     if (!request || (!request.status && !callback)) {
@@ -93,7 +89,7 @@ function factory(parent) {
       request.onload = function() {
         if (request.status != 200)
           throw new Error(href + " " + request.status + " " + request.statusText);
-        if (requireCallbacks[href] && !cache[href]) {
+        if (cbs.$ && !cache[href]) {
           module = cache[href] = {
             id: url.pathname,
             uri: href,
@@ -113,10 +109,8 @@ function factory(parent) {
             );
           module.loaded = true;
         }
-        while (cb = resolveCallbacks[href] && resolveCallbacks[href].shift()) // eslint-disable-line no-cond-assign
-          cb(href);
-        while (cb = requireCallbacks[href] && requireCallbacks[href].shift()) // eslint-disable-line no-cond-assign
-          cb(module.exports);
+        while (cb = cbs.shift()) // eslint-disable-line no-cond-assign
+          cb(cb.$ ? module.exports : href);
         return (this == require) ? href : module && module.exports;
       };
       request.send();
