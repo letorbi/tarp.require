@@ -39,8 +39,6 @@ if (typeof (new Error()).fileName == "string") {
   }, false);
 }
 
-var Object_ = Object, Object_create = Object_.create, Object_defineProperty = Object_.defineProperty, location_href = location.href;
-
 // INFO Module root
 //      Module identifiers starting with neither '/' nor '.' are resolved
 //      from the module root. The module root can be changed at any time
@@ -54,7 +52,8 @@ var Object_ = Object, Object_create = Object_.create, Object_defineProperty = Ob
 //      undefined or contains the module code as a string (in case the
 //      module has been pre-loaded in a bundle).
 
-var rfunc, root, precache = Object_create(null), cache = Object_create(null),
+var rfunc, Object_create = Object.create,
+    precache = Object_create(null), cache = Object_create(null),
     requireCallbacks = Object_create(null), resolveCallbacks = Object_create(null);
 
 // INFO Module getter
@@ -74,7 +73,7 @@ function factory(parent) {
     id = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
     href = (url = new URL(
       id[1] + id[3] + (id[3] && (id[4] || ".js")),
-      id[2] ? (parent ? parent.uri : location_href) : root
+      new URL(id[2] ? (parent ? parent.uri : "") : rfunc.root, location.href)
     )).href;
     if (this == require) {
       resolveCallbacks[href] = resolveCallbacks[href] || new Array();
@@ -125,13 +124,8 @@ function factory(parent) {
     return !callback && request.onload.call(this);
   }
 
-  Object_defineProperty(require, "root", {
-    get: function() { return root; },
-    set: function(r) { root = new URL(r, location_href); }
-  });
   require.resolve = require;
   require.cache = cache;
-
   return require;
 }
 
