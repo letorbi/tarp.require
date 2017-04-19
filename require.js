@@ -52,7 +52,7 @@ if (typeof (new Error()).fileName == "string") {
 //      undefined or contains the module code as a string (in case the
 //      module has been pre-loaded in a bundle).
 
-var rfunc, Object_create = Object.create,
+var Object_create = Object.create,
     precache = Object_create(null), cache = Object_create(null),
     requireCallbacks = Object_create(null), resolveCallbacks = Object_create(null);
 
@@ -73,7 +73,7 @@ function factory(parent) {
     id = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
     href = (url = new URL(
       id[1] + id[3] + (id[3] && (id[4] || ".js")),
-      new URL(id[2] ? (parent ? parent.uri : "") : rfunc.root, location.href)
+      new URL(id[2] ? (parent ? parent.uri : "") : self.require.root, location.href)
     )).href;
     if (this == require) {
       resolveCallbacks[href] = resolveCallbacks[href] || new Array();
@@ -129,16 +129,11 @@ function factory(parent) {
   return require;
 }
 
-// NOTE Create the global require function and set the default root
-(rfunc = factory(null)).root = "./node_modules/";
-
-// NOTE Add the global require to the tarp namespace
-(self.tarp = self.tarp || new Object()).require = rfunc;
-
 // NOTE Add the global require to the global namespace (if possible)
 if (self.require)
   console.warn("'self.require' already exists");
-else
-  self.require = rfunc;
+
+// NOTE Create the global require function and set the default root
+(self.require = factory(null)).root = "./node_modules/";
 
 })();
