@@ -82,7 +82,7 @@ function factory(parent) {
       if (request)
         request.abort();
       request = precache[href] = new XMLHttpRequest();
-      request.open('GET', href, !!callback);
+      request.open('GET', href, callback);
       request.onload = function() {
         if (request.status != 200)
           throw new Error(href + " " + request.status + " " + request.statusText);
@@ -113,7 +113,10 @@ function factory(parent) {
       request.send();
     }
     else if (request.status) {
-      request.onload();
+      if (callback)
+        Promise.resolve.then(request.onload);
+      else
+        request.onload();
     }
     return result;
   }
