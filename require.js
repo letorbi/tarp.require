@@ -67,7 +67,7 @@ var Object_create = Object.create, precache = Object_create(null),
 
 function factory(parent) {
   function require(id, callback) {
-    var url, href, request, module, cbs, cb, result;
+    var url, href, cb, request, module, result;
     // NOTE Matches [[.]/path/to/][file][.js]
     id = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
     href = (url = new URL(
@@ -76,9 +76,7 @@ function factory(parent) {
     )).href;
     cb = callback || function(r) {result = r;};
     cb.$ = this != require;
-    cbs = callbacks[href] = callbacks[href] || new Array();
-    cbs.$ = cbs.$ || cb.$;
-    cbs.push(cb);
+    (callbacks[href] = callbacks[href] || new Array()).push(cb);
     request = precache[href];
     if (!request || (!request.status && !callback)) {
       if (request)
@@ -88,28 +86,29 @@ function factory(parent) {
       request.onload = function() {
         if (request.status != 200)
           throw new Error(href + " " + request.status + " " + request.statusText);
-        if (cbs.$ && !cache[href]) {
-          module = cache[href] = {
-            id: url.pathname,
-            uri: href,
-            filename: href,
-            children: new Array(),
-            loaded: false,
-            parent: parent
-          };
-          if (parent)
-            parent.children.push(module);
-          module.require = factory(module);
-          if (request.getResponseHeader("Content-Type") == "application/json")
-            module.exports = JSON.parse(request.response);
-          else
-            (new Function("exports,require,module,__filename,__dirname", request.responseText + "\n//# sourceURL=" + href))(
-              module.exports = Object_create(null), module.require, module, href, href.match(/.*\//)[0]
-            );
-          module.loaded = true;
-        }
-        while (cb = cbs.shift()) // eslint-disable-line no-cond-assign
+        while (cb = callbacks[href].shift()) { // eslint-disable-line no-cond-assign
+          if (cb.$ && !cache[href]) {
+            module = cache[href] = {
+              id: url.pathname,
+              uri: href,
+              filename: href,
+              children: new Array(),
+              loaded: false,
+              parent: parent
+            };
+            if (parent)
+              parent.children.push(module);
+            module.require = factory(module);
+            if (request.getResponseHeader("Content-Type") == "application/json")
+              module.exports = JSON.parse(request.response);
+            else
+              (new Function("exports,require,module,__filename,__dirname", request.responseText + "\n//# sourceURL=" + href))(
+                module.exports = Object_create(null), module.require, module, href, href.match(/.*\//)[0]
+              );
+            module.loaded = true;
+          }
           cb(cb.$ ? module.exports : href);
+        }
       };
       request.send();
     }
