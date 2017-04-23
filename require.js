@@ -67,19 +67,18 @@ var Object_create = Object.create, precache = Object_create(null),
 
 function factory(parent) {
   function require(id, callback) {
-    var url, href, request, module, cbs, cb;
+    var url, href, request, module, cbs, cb, result;
     // NOTE Matches [[.]/path/to/][file][.js]
     id = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
     href = (url = new URL(
       id[1] + id[3] + (id[3] && (id[4] || ".js")),
       new URL(id[2] ? (parent ? parent.uri : "") : self.require.root, location.href)
     )).href;
+    cb = callback || function(r) {result = r;};
+    cb.$ = this != require;
     cbs = callbacks[href] = callbacks[href] || new Array();
-    cbs.$ = cbs.$ || (cb = this != require);
-    if (callback) {
-      callback.$ = cb;
-      cbs.push(callback);
-    }
+    cbs.$ = cbs.$ || cb.$;
+    cbs.push(cb);
     request = precache[href];
     if (!request || (!request.status && !callback)) {
       if (request)
@@ -111,11 +110,13 @@ function factory(parent) {
         }
         while (cb = cbs.shift()) // eslint-disable-line no-cond-assign
           cb(cb.$ ? module.exports : href);
-        return (this == require) ? href : module && module.exports;
       };
       request.send();
     }
-    return !callback && request.onload.call(this);
+    else if (request.status) {
+      request.onload();
+    }
+    return result;
   }
 
   require.resolve = require;
