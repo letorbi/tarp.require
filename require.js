@@ -52,7 +52,7 @@ if (typeof (new Error()).fileName == "string") {
 //      undefined or contains the module code as a string (in case the
 //      module has been pre-loaded in a bundle).
 
-var Object_create = Object.create, precache = Object_create(null),
+var Object_create = Object.create, requests = Object_create(null),
     cache = Object_create(null), promises = Object_create(null);
 
 // INFO Module getter
@@ -67,59 +67,70 @@ var Object_create = Object.create, precache = Object_create(null),
 
 function factory(parent) {
   function require(id, async) {
-    var url, href, isReq, promise, request, module, result;
+    var noLoad, url, href, promise, request, module;
+
+    noLoad = this == require ? 1 : 0;
     // NOTE Matches [[.]/path/to/][file][.js]
     id = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
     href = (url = new URL(
       id[1] + id[3] + (id[3] && (id[4] || ".js")),
       new URL(id[2] ? (parent ? parent.uri : "") : self.require.root, location.href)
     )).href;
-    isReq = this != require;
-    promise = promises[href];
-    if (!promise) {
-      promise = promises[href] = new Promise(function(resolve) {
-        request = precache[href] = new XMLHttpRequest();
+    promise = (promises[href] || (promises[href] = {}))[noLoad];
+    if (!promise) 
+      promise = promises[href][noLoad] = new Promise(resolver);
+    else if (!async) 
+      resolver();
+
+    function resolver(resolve) {
+      request = requests[href];
+      if (!request) {
+        request = requests[href] = new XMLHttpRequest();
         request.open('GET', href, async);
-        request.onload = function() {
-          if (request.status != 200)
-            throw new Error(href + " " + request.status + " " + request.statusText);
-          if (isReq && !cache[href]) {
-            module = cache[href] = {
-              id: url.pathname,
-              uri: href,
-              filename: href,
-              children: new Array(),
-              loaded: false,
-              parent: parent
-            };
-            if (parent)
-              parent.children.push(module);
-            module.require = factory(module);
-            if (request.getResponseHeader("Content-Type") == "application/json")
-              module.exports = JSON.parse(request.response);
-            else
-              (new Function("exports,require,module,__filename,__dirname", request.responseText + "\n//# sourceURL=" + href))(
-                module.exports = Object_create(null), module.require, module, href, href.match(/.*\//)[0]
-              );
-            module.loaded = true;
-          }
-          resolve(isReq ? cache[href].exports : href);
-        };
+        request.addEventListener("load", loader);
         request.send();
-      });
-    }
-    else if (!async) {
-      request = precache[href];
-      if (request.status) {
-        request.onload();
+      }
+      else if (!request.status) {
+        if (resolve)
+          request.addEventListener("load", loader);
+        if (!async)
+          request.abort();
+          request.open('GET', href);
+          request.send();
       }
       else {
-        request.abort();
-        request.open('GET', href);
-        request.send();
+        loader();
+      }
+
+      function loader() {
+        if (request.status != 200)
+          throw new Error(href + " " + request.status + " " + request.statusText);
+        if (!noLoad && !cache[href]) {
+          module = cache[href] = {
+            id: url.pathname,
+            uri: href,
+            filename: href,
+            children: new Array(),
+            loaded: false,
+            parent: parent
+          };
+          if (parent)
+            parent.children.push(module);
+          module.require = factory(module);
+          if (request.getResponseHeader("Content-Type") == "application/json")
+            module.exports = JSON.parse(request.response);
+          else
+            (new Function("exports,require,module,__filename,__dirname", request.responseText + "\n//# sourceURL=" + href))(
+              module.exports = Object_create(null), module.require, module, href, href.match(/.*\//)[0]
+            );
+          module.loaded = true;
+        }
+        if (resolve)
+          resolve(noLoad ? href : cache[href].exports);
       }
     }
-    return async ? promise : (isReq ? cache[href].exports : href);
+
+    return async ? promise : (noLoad ? href : cache[href].exports);
   }
 
   require.resolve = require;
