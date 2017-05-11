@@ -31,7 +31,7 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
   <div class="Box Red">
     <h2>Identifier => Module</h2>
     <pre><script type="text/javascript">
-      mname = 'module1';
+      /*mname = 'module1';
       document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
       mname = './node_modules/module1';
       document.writeln('require.resolve('+mname+') -> '+JSON.stringify(require.resolve(mname)));
@@ -51,12 +51,12 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
       }
       catch (e) {
         document.writeln('require.resolve('+mname+') -> ' + e);
-      }
+      }*/
 
-      require.resolve('module2', function(mod2Href) {
+      require.resolve('module2', true).then(function(mod2Href) {
         console.log('href callback: ' + mod2Href);
       });
-      require('module3', function(mod3) {
+      require('module3', true).then(function(mod3) {
         console.log('require callback: ' + mod3.greet());
       });
     </script></pre>

@@ -53,7 +53,7 @@ if (typeof (new Error()).fileName == "string") {
 //      module has been pre-loaded in a bundle).
 
 var Object_create = Object.create, precache = Object_create(null),
-    cache = Object_create(null), callbacks = Object_create(null);
+    cache = Object_create(null), promises = Object_create(null);
 
 // INFO Module getter
 //      Takes a module identifier, resolves it and gets the module code via an
@@ -66,28 +66,24 @@ var Object_create = Object.create, precache = Object_create(null),
 //      module has been loaded.
 
 function factory(parent) {
-  function require(id, callback) {
-    var url, href, cb, request, module, result;
+  function require(id, async) {
+    var url, href, isReq, promise, request, module, result;
     // NOTE Matches [[.]/path/to/][file][.js]
     id = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
     href = (url = new URL(
       id[1] + id[3] + (id[3] && (id[4] || ".js")),
       new URL(id[2] ? (parent ? parent.uri : "") : self.require.root, location.href)
     )).href;
-    cb = callback || function(r) {result = r;};
-    cb.$ = this != require;
-    (callbacks[href] = callbacks[href] || new Array()).push(cb);
-    request = precache[href];
-    if (!request || (!request.status && !callback)) {
-      if (request)
-        request.abort();
-      request = precache[href] = new XMLHttpRequest();
-      request.open('GET', href, callback);
-      request.onload = function() {
-        if (request.status != 200)
-          throw new Error(href + " " + request.status + " " + request.statusText);
-        while (cb = callbacks[href].shift()) { // eslint-disable-line no-cond-assign
-          if (cb.$ && !cache[href]) {
+    isReq = this != require;
+    promise = promises[href];
+    if (!promise) {
+      promise = promises[href] = new Promise(function(resolve) {
+        request = precache[href] = new XMLHttpRequest();
+        request.open('GET', href, async);
+        request.onload = function() {
+          if (request.status != 200)
+            throw new Error(href + " " + request.status + " " + request.statusText);
+          if (isReq && !cache[href]) {
             module = cache[href] = {
               id: url.pathname,
               uri: href,
@@ -107,18 +103,23 @@ function factory(parent) {
               );
             module.loaded = true;
           }
-          cb(cb.$ ? module.exports : href);
-        }
-      };
-      request.send();
+          resolve(isReq ? cache[href].exports : href);
+        };
+        request.send();
+      });
     }
-    else if (request.status) {
-      if (callback)
-        Promise.resolve.then(request.onload);
-      else
+    else if (!async) {
+      request = precache[href];
+      if (request.status) {
         request.onload();
+      }
+      else {
+        request.abort();
+        request.open('GET', href);
+        request.send();
+      }
     }
-    return result;
+    return async ? promise : (isReq ? cache[href].exports : href);
   }
 
   require.resolve = require;
