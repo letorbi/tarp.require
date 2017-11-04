@@ -80,17 +80,21 @@ function factory(parent) {
     if (!promise) 
       promise = promises[href][noLoad] = new Promise(resolver);
     else if (!async) 
-      resolver();
+      resolver(); // TODO Shouldn't we pass the promise-resolver in any case?
 
     function resolver(resolve) {
       request = requests[href];
+      // NOTE First request for module
       if (!request) {
         request = requests[href] = new XMLHttpRequest();
         request.open('GET', href, async);
         request.addEventListener("load", loader);
         request.send();
       }
+      // NOTE Pending request for module
       else if (!request.status) {
+        // NOTE We have to add a event handler for each `require()` call,
+        //      since `noload` could be different.
         if (resolve)
           request.addEventListener("load", loader);
         if (!async)
@@ -98,13 +102,19 @@ function factory(parent) {
           request.open('GET', href);
           request.send();
       }
+      // NOTE Finished request for module
       else {
         loader();
       }
 
       function loader() {
+        // NOTE Abort if the request has failed
+        // TODO We should reject if a promise exists
         if (request.status != 200)
           throw new Error(href + " " + request.status + " " + request.statusText);
+        // NOTE Load the module
+        // TODO This should be done in the first `then` of the `require` promise.
+        //      (If `then` is not always called asynchronously)
         if (!noLoad && !cache[href]) {
           module = cache[href] = {
             id: url.pathname,
@@ -125,6 +135,9 @@ function factory(parent) {
             );
           module.loaded = true;
         }
+        // NOTE Resolve the promise
+        // TODO Resolve also the `resolve` promise if the `reqire` resolves.
+        //      And vice versa, but don't forget to load the module first.
         if (resolve)
           resolve(noLoad ? href : cache[href].exports);
       }
