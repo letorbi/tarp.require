@@ -31,7 +31,7 @@
               }
               if (asyn) {
                 done = function() { if (--loaded <= 0) res(cached); };
-                pattern = /require\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
+                pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
                 while((match = pattern.exec(request.responseText)) !== null) {
                   loaded++;
                   load(resolve(match[1]||match[2], url.href), true).then(done, done);
@@ -84,7 +84,7 @@
       }
 
       function factory(parent) {
-        return function(id, asyn) {
+        var require = function(id, asyn) {
           var pwd = parent ? parent.uri : location.href;
           return asyn ? new Promise(function(res, rej) {
             load(resolve(id, pwd), asyn)
@@ -92,7 +92,17 @@
                 res(evaluate(cached, parent).exports);
               }, rej);
           }) : evaluate(load(resolve(id, pwd), asyn), parent).exports;
-        }
+        };
+        require.resolve = function(id, asyn) {
+          var pwd = parent ? parent.uri : location.href;
+          return asyn ? new Promise(function(res, rej) {
+            load(resolve(id, pwd), asyn)
+              .then(function(cached) {
+                res(cached.url.href);
+              }, rej);
+          }) : load(resolve(id, pwd), asyn).url.href;
+        };
+        return require;
       }
 
       self.require = factory(null);
@@ -103,15 +113,20 @@
 <body>
   <script>
     /*
+    var uri = require.resolve("node_modules/relative/main");
+    document.writeln(uri);
+    //*/
+    //*
+    require.resolve("node_modules/relative/main", true).then(console.log, console.error);
+    //*/
+    /*
     var mod = require("node_modules/relative/main");
     document.writeln(mod.greet());
     //*/
-    //*
+    /*
     require("node_modules/relative/main", true).then((mod) => {
       console.log(mod.greet());
-    }, (err) => {
-      console.error(err);
-    });
+    }, console.error);
     //*/
   </script>
 </body>
