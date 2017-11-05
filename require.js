@@ -45,7 +45,7 @@
         request = cached.request = new XMLHttpRequest();
         request.addEventListener("load", function() {
           var done, error, loaded = 0, match, pattern;
-          if (request.status >= 300) {
+          if (request.status >= 400) {
             error = new Error(url + " " + request.status + " " + request.statusText);
             rej(error);
             throw error;
