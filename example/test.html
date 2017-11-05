@@ -8,7 +8,10 @@
 
       function resolve(id, pwd) {
         var matches = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
-        return new URL(matches[1] + matches[3] + (matches[3] && (matches[4] || ".js")), pwd);
+        return new URL(
+          matches[1] + matches[3] + (matches[3] && (matches[4] || ".js")),
+          matches[2] ? pwd : self.require.root
+        );
       }
 
       function load(url, asyn) {
@@ -105,7 +108,7 @@
         return require;
       }
 
-      self.require = factory(null);
+      (self.require = factory(null)).root = (new URL("./node_modules/", location.href)).href;
     })();
   </script>
 </head>
@@ -113,18 +116,18 @@
 <body>
   <script>
     /*
-    var uri = require.resolve("node_modules/relative/main");
+    var uri = require.resolve("relative/main");
     document.writeln(uri);
     //*/
     //*
-    require.resolve("node_modules/relative/main", true).then(console.log, console.error);
+    require.resolve("relative/main", true).then(console.log, console.error);
     //*/
     /*
-    var mod = require("node_modules/relative/main");
+    var mod = require("relative/main");
     document.writeln(mod.greet());
     //*/
-    /*
-    require("node_modules/relative/main", true).then((mod) => {
+    //*
+    require("relative/main", true).then((mod) => {
       console.log(mod.greet());
     }, console.error);
     //*/
