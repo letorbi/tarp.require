@@ -19,143 +19,112 @@
 // NOTE The load parameter points to the function, which prepares the
 //      environment for each module and runs its code. Scroll down to the end of
 //      the file to see the function definition.
-(function() { 'use strict';
+(function() {
+  'use strict';
 
-// NOTE Mozilla still sets the wrong fileName property for errors that occur
-//      inside an eval call (even with sourceURL). However, the stack
-//      contains the correct source, so it can be used to re-threw the error
-//      with the correct fileName property.
-// WARN Re-throwing an error object will mess up the stack trace and the
-//      column number.
-if (typeof (new Error()).fileName == "string") {
-  self.addEventListener("error", function(evt) {
-    if (evt.error instanceof Error) {
-      var m = evt.error.stack.match(/^[^\n@]*@([^\n]+):\d+:\d+/);
-      if (m && evt.error.fileName != m[1]) {
-        evt.preventDefault();
-        throw new evt.error.constructor(evt.error.message, m[1], evt.error.lineNumber);
-      }
-    }
-  }, false);
-}
+  var cache = {};
 
-// INFO Module root
-//      Module identifiers starting with neither '/' nor '.' are resolved
-//      from the module root. The module root can be changed at any time
-//      by setting require.root. Already loaded modules won't be affected
-//      from the change. Relative and absolute root paths are accepted, the
-//      default value is the URI of the document that loaded require.
-
-// INFO Module cache
-//      Contains getter functions for the exports objects of all the loaded
-//      modules. As long as a module has not been loaded the getter is either
-//      undefined or contains the module code as a string (in case the
-//      module has been pre-loaded in a bundle).
-
-var Object_create = Object.create, requests = Object_create(null),
-    cache = Object_create(null), promises = Object_create(null);
-
-// INFO Module getter
-//      Takes a module identifier, resolves it and gets the module code via an
-//      AJAX request from the module URI. If this was successful the code and
-//      some environment variables are passed to the load function. The return
-//      value is the module's `exports` object. If the cache already
-//      contains an object for the module id, this object is returned directly.
-// NOTE If a callback function has been passed, the AJAX request is asynchronous
-//      and the mpdule exports are passed to the callback function after the
-//      module has been loaded.
-
-function factory(parent) {
-  function require(id, async) {
-    var noLoad, url, href, promise, request, module;
-
-    noLoad = this == require ? 1 : 0;
-    // NOTE Matches [[.]/path/to/][file][.js]
-    id = id.match(/^((\.)?.*\/|)(.[^\.]*|)(\..*|)$/);
-    href = (url = new URL(
-      id[1] + id[3] + (id[3] && (id[4] || ".js")),
-      new URL(id[2] ? (parent ? parent.uri : "") : self.require.root, location.href)
-    )).href;
-    promise = (promises[href] || (promises[href] = {}))[noLoad];
-    if (!promise) 
-      promise = promises[href][noLoad] = new Promise(resolver);
-    else if (!async) 
-      resolver(); // TODO Shouldn't we pass the promise-resolver in any case?
-
-    function resolver(resolve) {
-      request = requests[href];
-      // NOTE First request for module
-      if (!request) {
-        request = requests[href] = new XMLHttpRequest();
-        request.open('GET', href, async);
-        request.addEventListener("load", loader);
-        request.send();
-      }
-      // NOTE Pending request for module
-      else if (!request.status) {
-        // NOTE We have to add a event handler for each `require()` call,
-        //      since `noload` could be different.
-        if (resolve)
-          request.addEventListener("load", loader);
-        if (!async)
-          request.abort();
-          request.open('GET', href);
-          request.send();
-      }
-      // NOTE Finished request for module
-      else {
-        loader();
-      }
-
-      function loader() {
-        // NOTE Abort if the request has failed
-        // TODO We should reject if a promise exists
-        if (request.status != 200)
-          throw new Error(href + " " + request.status + " " + request.statusText);
-        // NOTE Load the module
-        // TODO This should be done in the first `then` of the `require` promise.
-        //      (If `then` is not always called asynchronously)
-        if (!noLoad && !cache[href]) {
-          module = cache[href] = {
-            id: url.pathname,
-            uri: href,
-            filename: href,
-            children: new Array(),
-            loaded: false,
-            parent: parent
-          };
-          if (parent)
-            parent.children.push(module);
-          module.require = factory(module);
-          if (request.getResponseHeader("Content-Type") == "application/json")
-            module.exports = JSON.parse(request.response);
-          else
-            (new Function("exports,require,module,__filename,__dirname", request.responseText + "\n//# sourceURL=" + href))(
-              module.exports = Object_create(null), module.require, module, href, href.match(/.*\//)[0]
-            );
-          module.loaded = true;
-        }
-        // NOTE Resolve the promise
-        // TODO Resolve also the `resolve` promise if the `reqire` resolves.
-        //      And vice versa, but don't forget to load the module first.
-        if (resolve)
-          resolve(noLoad ? href : cache[href].exports);
-      }
-    }
-
-    return async ? promise : (noLoad ? href : cache[href].exports);
+  function resolve(id, pwd) {
+    var matches = id.match(/^((\.)?.*\/|)(.[^.]*|)(\..*|)$/);
+    return new URL(
+      matches[1] + matches[3] + (matches[3] && (matches[4] || ".js")),
+      matches[2] ? pwd : self.require.root
+    );
   }
 
-  require.resolve = require;
-  require.cache = cache;
-  return require;
-}
+  function load(url, asyn) {
+    var cached, request;
+    cached = cache[url.href] = cache[url.href] || {
+      module: undefined,
+      promise: undefined,
+      request: undefined,
+      url: url
+    };
+    if (!cached.promise) {
+      cached.promise = new Promise(function(res, rej) {
+        request = cached.request = new XMLHttpRequest();
+        request.addEventListener("load", function() {
+          var done, error, loaded = 0, match, pattern;
+          if (request.status >= 300) {
+            error = new Error(url + " " + request.status + " " + request.statusText);
+            rej(error);
+            throw error;
+          }
+          if (asyn) {
+            done = function() { if (--loaded <= 0) res(cached); };
+            pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
+            while((match = pattern.exec(request.responseText)) !== null) {
+              loaded++;
+              load(resolve(match[1]||match[2], url.href), true).then(done, done);
+            }
+          }
+          if (loaded <= 0)
+            res(cached);
+        });
+        request.addEventListener("error", function(evt) {
+          rej(evt.details.error);
+          throw evt.details.error;
+        });
+      });
+    }
+    // NOTE `request` is only defined if the module is requested for the first time.
+    if (request || (!asyn && cached.request.status == 0)) {
+      cached.request.abort();
+      cached.request.open('GET', url.href, asyn);
+      cached.request.send();
+    }
+    return asyn ? cached.promise : cached;
+  }
 
-// NOTE Add the global require to the global namespace (if possible)
-if (self.require)
-  console.warn("'self.require' already exists");
+  function evaluate(cached, parent) {
+    var module;
+    if (!cached.module) {
+      module = cached.module = {
+        children: new Array(),
+        exports: Object.create(null),
+        filename: cached.url.href,
+        id: cached.url.pathname,
+        loaded: false,
+        parent: parent,
+        require: undefined,
+        uri: cached.url.href
+      };
+      module.require = factory(module);
+      if (parent)
+        parent.children.push(module);
+      if (cached.request.getResponseHeader("Content-Type") == "application/json")
+        module.exports = JSON.parse(cached.request.responseText);
+      else
+        (new Function(
+          "exports,require,module,__filename,__dirname",
+          cached.request.responseText + "\n//# sourceURL=" + cached.url.href
+        ))(module.exports, module.require, module, cached.url.href, cached.url.href.match(/.*\//)[0]);
+      module.loaded = true;
+    }
+    return cached.module;
+  }
 
-// NOTE Create the global require function and set the default root
-(self.require = factory(null)).root = "./node_modules/";
+  function factory(parent) {
+    var require = function(id, asyn) {
+      var pwd = parent ? parent.uri : location.href;
+      return asyn ? new Promise(function(res, rej) {
+        load(resolve(id, pwd), asyn)
+          .then(function(cached) {
+            res(evaluate(cached, parent).exports);
+          }, rej);
+      }) : evaluate(load(resolve(id, pwd), asyn), parent).exports;
+    };
+    require.resolve = function(id, asyn) {
+      var pwd = parent ? parent.uri : location.href;
+      return asyn ? new Promise(function(res, rej) {
+        load(resolve(id, pwd), asyn)
+          .then(function(cached) {
+            res(cached.url.href);
+          }, rej);
+      }) : load(resolve(id, pwd), asyn).url.href;
+    };
+    return require;
+  }
 
+  (self.require = factory(null)).root = (new URL("./node_modules/", location.href)).href;
 })();
