@@ -2,8 +2,8 @@
 =========================================================
 
 Tarp.require is a CommonJS and Node.js compatible module loader licensed as open source under the LGPL v3. It aims to be
-as lightweight as possible while not missing any features. It consists of about 130 lines of code (incl. comments) and
-its minified version is about 1.7kB right now.
+as lightweight as possible while not missing any features. It consists of about 140 lines of code (incl. comments) and
+its minified version is about 1.9kB right now.
 
 **Important notice:** Tarp.require is still work in progress. This means that even though the code that has been pushed
 to GitHub should work in general, some issues might slip through. Also the implementation itself might go though bigger
