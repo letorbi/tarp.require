@@ -29,22 +29,22 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
 <body>
   <h1>Tarp Require asynchronous test page</h1>
   <script>
-    /*
-    var uri = require.resolve("relative/main");
-    document.writeln(uri);
-    //*/
-    //*
-    require.resolve("relative/main", true).then(console.log, console.error);
-    //*/
-    /*
-    var mod = require("relative/main");
-    document.writeln(mod.greet());
-    //*/
-    //*
+    // Resolve a simple module
+    require.resolve("module1", true).then(console.log, console.error);
+    // Redirection (preloaded)
+    require.resolve("fake1/", true).then(console.log, console.error);
+    // Redirection (unloaded)
+    require.resolve("fake2/", true).then(console.log, console.error);
+    // Resolve a module that is already pending
+    require.resolve("module2", true).then(console.log, console.error);
+    // Execute a simple module
+    require("module3", true).then((mod) => {
+      console.log(mod.greet());
+    }, console.error);
+    // Execute a complex module with submodules
     require("relative/main", true).then((mod) => {
       console.log(mod.greet());
     }, console.error);
-    //*/
   </script>
 </body>
 

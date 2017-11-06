@@ -76,6 +76,20 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     document.writeln(mod.greet());
     </script></pre>
   </div>
+  <div class="Box Blue">
+    <h2>Redirection (preloaded)</h2>
+    <pre><script type="text/javascript">
+      // NOTE The server is configured to redirect "fake1/" to "module1"
+      document.writeln(require.resolve("fake1/"));
+    </script></pre>
+  </div>
+  <div class="Box Blue">
+    <h2>Redirection (unloaded)</h2>
+    <pre><script type="text/javascript">
+      // NOTE The server is configured to redirect "fake2/" to "module2"
+      document.writeln(require.resolve("fake2/"));
+    </script></pre>
+  </div>
   <div class="Box Green">
     <h2>Relative path</h2>
     <pre><script type="text/javascript">
