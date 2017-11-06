@@ -45,21 +45,33 @@
         request = cached.request = new XMLHttpRequest();
         request.addEventListener("load", function() {
           var done, error, loaded = 0, match, pattern;
-          if (request.status >= 400) {
-            error = new Error(url + " " + request.status + " " + request.statusText);
-            rej(error);
-            throw error;
+          if ((url.href != request.responseURL) && cache[request.responseURL]) {
+            cached = cache[url.href] = cache[request.responseURL];
+            // NOTE The original promise might already have been returned, so
+            //      this has to be resolved as well.
+            cached.promise.then(res, rej);
           }
-          if (asyn) {
-            done = function() { if (--loaded <= 0) res(cached); };
-            pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
-            while((match = pattern.exec(request.responseText)) !== null) {
-              loaded++;
-              load(match[1]||match[2], url.href, true).then(done, done);
+          else {
+            if (url.href != request.responseURL) {
+                cache[request.responseURL] = cached;
+                url = cached.url = new URL(request.responseURL);
             }
+            if (request.status >= 400) {
+              error = new Error(url + " " + request.status + " " + request.statusText);
+              rej(error);
+              throw error;
+            }
+            if (asyn) {
+              done = function() { if (--loaded <= 0) res(cached); };
+              pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
+              while((match = pattern.exec(request.responseText)) !== null) {
+                loaded++;
+                load(match[1]||match[2], url.href, true).then(done, done);
+              }
+            }
+            if (loaded <= 0)
+              res(cached);
           }
-          if (loaded <= 0)
-            res(cached);
         });
         request.addEventListener("error", function(evt) {
           rej(evt.details.error);
