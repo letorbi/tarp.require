@@ -24,15 +24,15 @@
 
   var cache = {};
 
-  function resolve(id, pwd) {
-    var matches = id.match(/^((\.)?.*\/|)(.[^.]*|)(\..*|)$/);
-    return new URL(
+  function load(id, pwd, asyn) {
+    // NOTE resolve url from id
+    var matches, url;
+    matches = id.match(/^((\.)?.*\/|)(.[^.]*|)(\..*|)$/);
+    url = new URL(
       matches[1] + matches[3] + (matches[3] && (matches[4] || ".js")),
       matches[2] ? pwd : self.require.root
     );
-  }
-
-  function load(url, asyn) {
+    // NOTE load url into cache
     var cached, request;
     cached = cache[url.href] = cache[url.href] || {
       module: undefined,
@@ -55,7 +55,7 @@
             pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
             while((match = pattern.exec(request.responseText)) !== null) {
               loaded++;
-              load(resolve(match[1]||match[2], url.href), true).then(done, done);
+              load(match[1]||match[2], url.href, true).then(done, done);
             }
           }
           if (loaded <= 0)
@@ -108,20 +108,20 @@
     var require = function(id, asyn) {
       var pwd = parent ? parent.uri : location.href;
       return asyn ? new Promise(function(res, rej) {
-        load(resolve(id, pwd), asyn)
+        load(id, pwd, asyn)
           .then(function(cached) {
             res(evaluate(cached, parent).exports);
           }, rej);
-      }) : evaluate(load(resolve(id, pwd), asyn), parent).exports;
+      }) : evaluate(load(id, pwd, asyn), parent).exports;
     };
     require.resolve = function(id, asyn) {
       var pwd = parent ? parent.uri : location.href;
       return asyn ? new Promise(function(res, rej) {
-        load(resolve(id, pwd), asyn)
+        load(id, pwd, asyn)
           .then(function(cached) {
             res(cached.url.href);
           }, rej);
-      }) : load(resolve(id, pwd), asyn).url.href;
+      }) : load(id, pwd, asyn).url.href;
     };
     return require;
   }
