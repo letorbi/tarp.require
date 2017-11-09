@@ -114,37 +114,25 @@
 
   function factory(parent) {
     var require = function(id, asyn) {
-      var pwd = parent ? parent.uri : location.href;
-      if (asyn) {
-        return new Promise(function(res, rej) {
-          load(id, pwd, asyn)
-            .then(function(cached) {
-              return cached.redirect ? require(cached.redirect, asyn) : evaluate(cached, parent).exports;
-            }, rej) // TODO Is `rej` required hre or will errors handled by the second `rej`?
-            .then(res, rej);
-        });
-      }
-      else {
-        var cached = load(id, pwd, asyn);
-        return cached.redirect ? require(cached.redirect, asyn) : evaluate(cached, parent).exports;
-      }
-    };
-    require.resolve = function(id, asyn) {
-      var pwd = parent ? parent.uri : location.href;
-      if (asyn) {
-        return new Promise(function(res, rej) {
-          load(id, pwd, asyn)
-            .then(function(cached) {
-              return cached.redirect ? require.resolve(cached.redirect, asyn) : cached.url.href;
-            }, rej) // TODO Is `rej` required hre or will errors handled by the second `rej`?
-            .then(res, rej);
-        });
-      }
-      else {
-        var cached = load(id, pwd, asyn);
-        return cached.redirect ? require.resolve(cached.redirect, asyn) : cached.url.href;
+      var pwd, resolveOnly;
+      resolveOnly = this === require;
+      pwd = parent ? parent.uri : location.href;
+      return asyn ? new Promise(function(res, rej) {
+        load(id, pwd, asyn)
+          .then(afterLoad)
+          .then(res, rej);
+      }) : afterLoad(load(id, pwd, asyn));
+
+      function afterLoad(cached) {
+        if (resolveOnly)
+          return cached.redirect ? require.resolve(cached.redirect, asyn) : cached.url.href;
+        else
+          return cached.redirect ? require(cached.redirect, asyn) : evaluate(cached, parent).exports;
       }
     };
+    // NOTE If `require` is called as a property of its own, `this` equals `require`.
+    //      So `resolveOnly` is `true` in the function above.
+    require.resolve = require;
     return require;
   }
 
