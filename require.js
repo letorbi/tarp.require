@@ -35,6 +35,7 @@
     // NOTE load url into cache
     var cached, request;
     cached = cache[url.href] = cache[url.href] || {
+      redirect: undefined,
       module: undefined,
       promise: undefined,
       request: undefined,
@@ -45,33 +46,28 @@
         request = cached.request = new XMLHttpRequest();
         request.addEventListener("load", function() {
           var done, error, loaded = 0, match, pattern;
-          if ((url.href != request.responseURL) && cache[request.responseURL]) {
-            cached = cache[url.href] = cache[request.responseURL];
-            // NOTE The original promise might already have been returned, so
-            //      this has to be resolved as well.
-            cached.promise.then(res, rej);
+          if (request.status >= 400) {
+            error = new Error(url + " " + request.status + " " + request.statusText);
+            rej(error);
+            throw error;
           }
-          else {
-            if (url.href != request.responseURL) {
-                cache[request.responseURL] = cached;
-                url = cached.url = new URL(request.responseURL);
+          if ((url.href != request.responseURL)) {
+            if (/package\.json$/.test(request.responseURL)) {
+              cached.redirect = (new URL(JSON.parse(request.responseText).main, url.href)).href;
             }
-            if (request.status >= 400) {
-              error = new Error(url + " " + request.status + " " + request.statusText);
-              rej(error);
-              throw error;
-            }
-            if (asyn) {
-              done = function() { if (--loaded <= 0) res(cached); };
-              pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
-              while((match = pattern.exec(request.responseText)) !== null) {
-                loaded++;
-                load(match[1]||match[2], url.href, true).then(done, done);
-              }
-            }
-            if (loaded <= 0)
-              res(cached);
+            else
+              cached.redirect = request.responseURL;
           }
+          if (asyn && !cached.redirect) {
+            done = function() { if (--loaded <= 0) res(cached); };
+            pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
+            while((match = pattern.exec(request.responseText)) !== null) {
+              loaded++;
+              load(match[1]||match[2], url.href, true).then(done, done);
+            }
+          }
+          if (loaded <= 0)
+            res(cached);
         });
         request.addEventListener("error", function(evt) {
           rej(evt.details.error);
@@ -119,21 +115,35 @@
   function factory(parent) {
     var require = function(id, asyn) {
       var pwd = parent ? parent.uri : location.href;
-      return asyn ? new Promise(function(res, rej) {
-        load(id, pwd, asyn)
-          .then(function(cached) {
-            res(evaluate(cached, parent).exports);
-          }, rej);
-      }) : evaluate(load(id, pwd, asyn), parent).exports;
+      if (asyn) {
+        return new Promise(function(res, rej) {
+          load(id, pwd, asyn)
+            .then(function(cached) {
+              return cached.redirect ? require(cached.redirect, asyn) : evaluate(cached, parent).exports;
+            }, rej) // TODO Is `rej` required hre or will errors handled by the second `rej`?
+            .then(res, rej);
+        });
+      }
+      else {
+        var cached = load(id, pwd, asyn);
+        return cached.redirect ? require(cached.redirect, asyn) : evaluate(cached, parent).exports;
+      }
     };
     require.resolve = function(id, asyn) {
       var pwd = parent ? parent.uri : location.href;
-      return asyn ? new Promise(function(res, rej) {
-        load(id, pwd, asyn)
-          .then(function(cached) {
-            res(cached.url.href);
-          }, rej);
-      }) : load(id, pwd, asyn).url.href;
+      if (asyn) {
+        return new Promise(function(res, rej) {
+          load(id, pwd, asyn)
+            .then(function(cached) {
+              return cached.redirect ? require.resolve(cached.redirect, asyn) : cached.url.href;
+            }, rej) // TODO Is `rej` required hre or will errors handled by the second `rej`?
+            .then(res, rej);
+        });
+      }
+      else {
+        var cached = load(id, pwd, asyn);
+        return cached.redirect ? require.resolve(cached.redirect, asyn) : cached.url.href;
+      }
     };
     return require;
   }

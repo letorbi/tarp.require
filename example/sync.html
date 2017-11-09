@@ -100,8 +100,10 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
   <div class="Box Green">
     <h2>NPM Package</h2>
     <pre><script type="text/javascript">
-    var mod = require('pkgtest/package.json');
-    document.writeln(JSON.stringify(mod));
+    var pkg = require('pkgtest/package.json');
+    document.writeln(JSON.stringify(pkg));
+    var main = require('pkgtest/');
+    document.writeln(main.greet());
     </script></pre>
   </div>
   <div class="Box Blue">
