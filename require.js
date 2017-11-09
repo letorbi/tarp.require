@@ -94,6 +94,7 @@
         id: cached.url.pathname,
         loaded: false,
         parent: parent,
+        paths: [self.require.root],
         require: undefined,
         uri: cached.url.href
       };
