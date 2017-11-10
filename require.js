@@ -36,7 +36,17 @@
     var cached, request;
     cached = cache[url.href] = cache[url.href] || {
       redirect: undefined,
-      module: undefined,
+      module: {
+        children: undefined,
+        exports: undefined,
+        filename: url.href,
+        id: url.pathname,
+        loaded: false,
+        parent: undefined,
+        paths: [self.require.root],
+        require: undefined,
+        uri: url.href
+      },
       promise: undefined,
       request: undefined,
       url: url
@@ -86,18 +96,11 @@
 
   function evaluate(cached, parent) {
     var module;
-    if (!cached.module) {
-      module = cached.module = {
-        children: new Array(),
-        exports: Object.create(null),
-        filename: cached.url.href,
-        id: cached.url.pathname,
-        loaded: false,
-        parent: parent,
-        paths: [self.require.root],
-        require: undefined,
-        uri: cached.url.href
-      };
+    if (!cached.module.exports) {
+      module = cached.module;
+      module.children = new Array(),
+      module.exports = Object.create(null),
+      module.parent = parent;
       module.require = factory(module);
       if (parent)
         parent.children.push(module);
@@ -141,8 +144,6 @@
 
     var require = requireEngine.bind(undefined, 0);
     require.resolve = requireEngine.bind(require, 1);
-    // TODO Works only if the module has already been loaded before.
-    //      Move module object initialization into `load()`.
     require.resolve.paths = requireEngine.bind(require.resolve, 2);
     return require;
   }
