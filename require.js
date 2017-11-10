@@ -25,31 +25,30 @@
   var cache = {};
 
   function load(id, pwd, asyn) {
-    // NOTE resolve url from id
-    var matches, url;
+    // NOTE resolve href from id
+    var matches, href;
     matches = id.match(/^((\.)?.*\/|)(.[^.]*|)(\..*|)$/);
-    url = new URL(
+    href = (new URL(
       matches[1] + matches[3] + (matches[3] && (matches[4] || ".js")),
       matches[2] ? pwd : self.require.root
-    );
+    )).href;
     // NOTE load url into cache
     var cached, request;
-    cached = cache[url.href] = cache[url.href] || {
-      redirect: undefined,
+    cached = cache[href] = cache[href] || {
       module: {
         children: undefined,
         exports: undefined,
-        filename: url.href,
-        id: url.pathname,
+        filename: href,
+        id: href,
         loaded: false,
         parent: undefined,
         paths: [self.require.root],
         require: undefined,
-        uri: url.href
+        uri: href
       },
       promise: undefined,
-      request: undefined,
-      url: url
+      redirect: undefined,
+      request: undefined
     };
     if (!cached.promise) {
       cached.promise = new Promise(function(res, rej) {
@@ -57,13 +56,13 @@
         request.addEventListener("load", function() {
           var done, error, loaded = 0, match, pattern;
           if (request.status >= 400) {
-            error = new Error(url + " " + request.status + " " + request.statusText);
+            error = new Error(href + " " + request.status + " " + request.statusText);
             rej(error);
             throw error;
           }
-          if ((url.href != request.responseURL)) {
+          if ((href != request.responseURL)) {
             if (/package\.json$/.test(request.responseURL)) {
-              cached.redirect = (new URL(JSON.parse(request.responseText).main, url.href)).href;
+              cached.redirect = (new URL(JSON.parse(request.responseText).main, href)).href;
             }
             else
               cached.redirect = request.responseURL;
@@ -73,7 +72,7 @@
             pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
             while((match = pattern.exec(request.responseText)) !== null) {
               loaded++;
-              load(match[1]||match[2], url.href, true).then(done, done);
+              load(match[1]||match[2], href, true).then(done, done);
             }
           }
           if (loaded <= 0)
@@ -88,7 +87,7 @@
     // NOTE `request` is only defined if the module is requested for the first time.
     if (request || (!asyn && cached.request.status == 0)) {
       cached.request.abort();
-      cached.request.open('GET', url.href, asyn);
+      cached.request.open('GET', href, asyn);
       cached.request.send();
     }
     return asyn ? cached.promise : cached;
@@ -109,8 +108,8 @@
       else
         (new Function(
           "exports,require,module,__filename,__dirname",
-          cached.request.responseText + "\n//# sourceURL=" + cached.url.href
-        ))(module.exports, module.require, module, cached.url.href, cached.url.href.match(/.*\//)[0]);
+          cached.request.responseText + "\n//# sourceURL=" + module.uri
+        ))(module.exports, module.require, module, module.id, module.id.match(/.*\//)[0]);
       module.loaded = true;
     }
     return cached.module;
@@ -125,7 +124,7 @@
         else {
           switch (mode) {
             case 1:
-              return cached.url.href;
+              return cached.module.uri;
             case 2:
               return cached.module.paths;
             default:
