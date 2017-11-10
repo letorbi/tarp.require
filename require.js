@@ -114,26 +114,36 @@
   }
 
   function factory(parent) {
-    var require = function(id, asyn) {
-      var pwd, resolveOnly;
-      resolveOnly = this === require;
-      pwd = parent ? parent.uri : location.href;
+    function requireEngine(mode, id, asyn) {
+      function afterLoad(cached) {
+        if (cached.redirect) {
+          return requireEngine(mode, cached.redirect, asyn);
+        }
+        else {
+          switch (mode) {
+            case 1:
+              return cached.url.href;
+            case 2:
+              return cached.module.paths;
+            default:
+              return evaluate(cached, parent).exports;
+          }
+        }
+      }
+
+      var pwd = parent ? parent.uri : location.href;
       return asyn ? new Promise(function(res, rej) {
         load(id, pwd, asyn)
           .then(afterLoad)
           .then(res, rej);
       }) : afterLoad(load(id, pwd, asyn));
+    }
 
-      function afterLoad(cached) {
-        if (resolveOnly)
-          return cached.redirect ? require.resolve(cached.redirect, asyn) : cached.url.href;
-        else
-          return cached.redirect ? require(cached.redirect, asyn) : evaluate(cached, parent).exports;
-      }
-    };
-    // NOTE If `require` is called as a property of its own, `this` equals `require`.
-    //      So `resolveOnly` is `true` in the function above.
-    require.resolve = require;
+    var require = requireEngine.bind(undefined, 0);
+    require.resolve = requireEngine.bind(require, 1);
+    // TODO Works only if the module has already been loaded before.
+    //      Move module object initialization into `load()`.
+    require.resolve.paths = requireEngine.bind(require.resolve, 2);
     return require;
   }
 

@@ -76,6 +76,12 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     document.writeln(mod.greet());
     </script></pre>
   </div>
+  <div class="Box Green">
+    <h2>Paths</h2>
+    <pre><script type="text/javascript">
+    document.writeln(JSON.stringify(require.resolve.paths('module1')));
+    </script></pre>
+  </div>
   <div class="Box Blue">
     <h2>Redirection (preloaded)</h2>
     <pre><script type="text/javascript">
