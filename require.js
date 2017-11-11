@@ -23,6 +23,7 @@
   'use strict';
 
   var cache = {};
+  var root = (new URL("./node_modules/", location.href)).href;
 
   function load(id, pwd, asyn) {
     // NOTE resolve href from id
@@ -30,7 +31,7 @@
     matches = id.match(/^((\.)?.*\/|)(.[^.]*|)(\..*|)$/);
     href = (new URL(
       matches[1] + matches[3] + (matches[3] && (matches[4] || ".js")),
-      matches[2] ? pwd : self.require.root
+      matches[2] ? pwd : root
     )).href;
     // NOTE load url into cache
     var cached, request;
@@ -42,7 +43,7 @@
         id: href,
         loaded: false,
         parent: undefined,
-        paths: [self.require.root],
+        paths: [root],
         require: undefined,
         uri: href
       },
@@ -147,5 +148,5 @@
     return require;
   }
 
-  (self.require = factory(null)).root = (new URL("./node_modules/", location.href)).href;
+  self.require = factory(null);
 })();
