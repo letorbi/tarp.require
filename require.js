@@ -22,7 +22,7 @@
 (function() {
   'use strict';
 
-  var cache = {};
+  var cache = Object.create(null);
   var root = (new URL("./node_modules/", location.href)).href;
 
   function load(id, pwd, asyn) {
