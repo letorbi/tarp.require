@@ -36,26 +36,26 @@
     // NOTE load url into cache
     var cached, request;
     cached = cache[href] = cache[href] || {
-      module: {
-        children: undefined,
-        exports: undefined,
+      // d: undefined, // deviation
+      m: { // module
+        // children: undefined,
+        // exports: undefined,
         filename: href,
         id: href,
         loaded: false,
-        parent: undefined,
+        // parent: undefined,
         paths: [root],
-        require: undefined,
+        // require: undefined,
         uri: href
-      },
-      promise: undefined,
-      redirect: undefined,
-      request: undefined
+      }
+      // p: undefined, // promise
+      // r: undefined // request
     };
-    if (!cached.promise) {
-      cached.promise = new Promise(function(res, rej) {
-        request = cached.request = new XMLHttpRequest();
+    if (!cached.p) {
+      cached.p = new Promise(function(res, rej) {
+        request = cached.r = new XMLHttpRequest();
         request.addEventListener("load", function() {
-          var done, error, loaded = 0, match, pattern;
+          var error, done, pattern, match, loaded = 0;
           if (request.status >= 400) {
             error = new Error(href + " " + request.status + " " + request.statusText);
             rej(error);
@@ -63,12 +63,12 @@
           }
           if ((href != request.responseURL)) {
             if (/package\.json$/.test(request.responseURL)) {
-              cached.redirect = (new URL(JSON.parse(request.responseText).main, href)).href;
+              cached.d = (new URL(JSON.parse(request.responseText).main, href)).href;
             }
             else
-              cached.redirect = request.responseURL;
+              cached.d = request.responseURL;
           }
-          if (asyn && !cached.redirect) {
+          if (asyn && !cached.d) {
             done = function() { if (--loaded <= 0) res(cached); };
             pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
             while((match = pattern.exec(request.responseText)) !== null) {
@@ -86,48 +86,48 @@
       });
     }
     // NOTE `request` is only defined if the module is requested for the first time.
-    if (request || (!asyn && cached.request.status == 0)) {
-      cached.request.abort();
-      cached.request.open('GET', href, asyn);
-      cached.request.send();
+    if (request || (!asyn && cached.r.status == 0)) {
+      cached.r.abort();
+      cached.r.open('GET', href, asyn);
+      cached.r.send();
     }
-    return asyn ? cached.promise : cached;
+    return asyn ? cached.p : cached;
   }
 
   function evaluate(cached, parent) {
     var module;
-    if (!cached.module.exports) {
-      module = cached.module;
+    if (!cached.m.exports) {
+      module = cached.m;
       module.children = new Array(),
       module.exports = Object.create(null),
       module.parent = parent;
       module.require = factory(module);
       if (parent)
         parent.children.push(module);
-      if (cached.request.getResponseHeader("Content-Type") == "application/json")
-        module.exports = JSON.parse(cached.request.responseText);
+      if (cached.r.getResponseHeader("Content-Type") == "application/json")
+        module.exports = JSON.parse(cached.r.responseText);
       else
         (new Function(
           "exports,require,module,__filename,__dirname",
-          cached.request.responseText + "\n//# sourceURL=" + module.uri
+          cached.r.responseText + "\n//# sourceURL=" + module.uri
         ))(module.exports, module.require, module, module.id, module.id.match(/.*\//)[0]);
       module.loaded = true;
     }
-    return cached.module;
+    return cached.m;
   }
 
   function factory(parent) {
     function requireEngine(mode, id, asyn) {
       function afterLoad(cached) {
-        if (cached.redirect) {
-          return requireEngine(mode, cached.redirect, asyn);
+        if (cached.d) {
+          return requireEngine(mode, cached.d, asyn);
         }
         else {
           switch (mode) {
             case 1:
-              return cached.module.uri;
+              return cached.m.uri;
             case 2:
-              return cached.module.paths;
+              return cached.m.paths;
             default:
               return evaluate(cached, parent).exports;
           }
