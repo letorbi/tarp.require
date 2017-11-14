@@ -54,6 +54,8 @@
     if (!cached.p) {
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
+        if (asyn)
+          request.timeout = 10000; // 10s
         request.onload = function() {
           var error, done, pattern, match, loaded = 0;
           if (request.status >= 400) {
@@ -77,9 +79,10 @@
           if (loaded <= 0)
             res(cached);
         };
-        request.onerror = function(evt) {
-          rej(evt.details.error);
-          throw evt.details.error;
+        request.ontimeout = request.onerror = function(evt) {
+          var error = evt.details.error ? evt.details.error : new Error(href + "TIMEOUT");
+          rej(error);
+          throw error;
         };
       });
     }
