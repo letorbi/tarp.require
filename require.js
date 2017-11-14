@@ -36,38 +36,36 @@
     // NOTE load url into cache
     var cached, request;
     cached = cache[href] = cache[href] || {
-      // d: undefined, // deviation
+      d: undefined, // deviation
       m: { // module
-        // children: undefined,
-        // exports: undefined,
+        children: undefined,
+        exports: undefined,
         filename: href,
         id: href,
         loaded: false,
-        // parent: undefined,
+        parent: undefined,
         paths: [root],
-        // require: undefined,
+        require: undefined,
         uri: href
-      }
-      // p: undefined, // promise
-      // r: undefined // request
+      },
+      p: undefined, // promise
+      r: undefined // request
     };
     if (!cached.p) {
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
-        request.addEventListener("load", function() {
+        request.onload = function() {
           var error, done, pattern, match, loaded = 0;
           if (request.status >= 400) {
             error = new Error(href + " " + request.status + " " + request.statusText);
             rej(error);
             throw error;
           }
-          if ((href != request.responseURL)) {
-            if (/package\.json$/.test(request.responseURL)) {
-              cached.d = (new URL(JSON.parse(request.responseText).main, href)).href;
-            }
-            else
-              cached.d = request.responseURL;
-          }
+          // NOTE Check for redirects and load package main, if it's defined.
+          // TODO Duplicate or re-use cache entries if possible (see older version).
+          if ((href = request.responseURL) != cached.m.uri)
+            cached.d = /package\.json$/.test(href) ? (new URL(JSON.parse(request.responseText).main, href)).href: href;
+          // NOTE Pre-load submodules if the request is asynchronous.
           if (asyn && !cached.d) {
             done = function() { if (--loaded <= 0) res(cached); };
             pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
@@ -78,11 +76,11 @@
           }
           if (loaded <= 0)
             res(cached);
-        });
-        request.addEventListener("error", function(evt) {
+        };
+        request.onerror = function(evt) {
           rej(evt.details.error);
           throw evt.details.error;
-        });
+        };
       });
     }
     // NOTE `request` is only defined if the module is requested for the first time.
