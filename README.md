@@ -34,19 +34,19 @@ have to add the following line to your HTML to load Tarp.require:
 <script src"/tarp-require/require.min.js"></script>
 ```
 
-It is recommended move the JavaScript for your page into a main-module to have a proper environment. Just move any
-existing scripts into a file */scripts/main.js* (or anything else) and load this main-module with:
+It is recommended move the JavaScript of your page into a main-module to have a proper environment. Just move any
+existing scripts into a file */main.js* (or anything else) and load this main-module with:
 
 ```
-Tarp.require("/scripts/main", true); // 'true' tells require to load the module asynchronously
+Tarp.require("/main", true); // 'true' tells require to load the module asynchronously
 ```
 
-Inside your main-module you can then use `require()` as you know it from NodeJS:
+Inside any module you can use `require()` as you know it from NodeJS. Assuming you're in the module */scripts/someModule* the module-IDs will be resolved to the following paths:
 
 ```
-var myModule1 = require("myModule1");   // loads /node_modules/myModule.js
-var myModule2 = require("/myModule2");  // loads /myModule2.js
-var myModule2 = require("./myModule2"); // loads /scripts/myModule2.js
+var myModule1 = require("anotherModule1");   // loads /node_modules/anotherModule1.js
+var myModule2 = require("/anotherModule2");  // loads /anotherModule2.js
+var myModule2 = require("./anotherModule3"); // loads /scripts/anotherModule3.js
 
 ```
 
