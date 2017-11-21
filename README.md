@@ -71,24 +71,24 @@ require("anotherModule", true).then(function(anotherModule) {
 Please note that thanks to the asynchronous preloading feature of tarp.require you will usually need the asynchronous
 loading pattern only once per page.
 
-### Asynchronous preloading
+### Asynchronous pre-loading
 
-An asynchronous call of `require()` will not only try to load the module itself, but also any required submodules
-asynchronously. Even though the code of a submodule has been downloaded, it will not be executed, until the
+An asynchronous call of `require()` will not only try to load the module itself, but will also try to pre-load any
+required submodules asynchronously. This way it is usually enough to load the main-module of a page asynchronously
+and all other modules required for that page will be loaded asynchronously as well.
+
+Pre-loading means, that even though the code of a submodule has been downloaded, it will not be executed, until the
 require-call for that submodule is actually reached. So the execution-order is the same as if the modules were loaded
 asynchronously.
-
-This way it is usually enough to load the main-module of a page asynchronously and all other modules required for that
-page will be loaded asynchronously as well.
 
 Right now only plain require-calls are pre-loaded. This means that the ID of the module has to be one simple string.
 Also require-calls with more than one parameter are ignored (since they are usually asynchronous calls by themselves).
 
 **Example:** If *Module1* is required asynchronously and contains the require calls `require("Submodule1")`,
-`require("Submodule2", true)` and `require("Submodule" + "3")` somehwere in its code, only *Submodule1* will be
-pre-loaded, since the require-call for *Submodule2* has more than one parameter and the ID in the require-call  for
+`require("Submodule2", true)` and `require("Submodule" + "3")` somewhere in its code, only *Submodule1* will be
+pre-loaded, since the require-call for *Submodule2* has more than one parameter and the ID in the require-call for
 *Submodule3* is not one simple string.
 
-
+----
 
 Copyright 2013-2017 Torben Haase [\<https://pixelsvsbytes.com/\>](https://pixelsvsbytes.com/).
