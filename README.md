@@ -48,7 +48,6 @@ Inside any module you can use `require()` as you know it from NodeJS. Assuming y
 var myModule1 = require("anotherModule1");   // loads /node_modules/anotherModule1.js
 var myModule2 = require("/anotherModule2");  // loads /anotherModule2.js
 var myModule2 = require("./anotherModule3"); // loads /scripts/anotherModule3.js
-
 ```
 
 ## Synchronous and asynchronous loading
@@ -68,7 +67,7 @@ require("anotherModule", true).then(function(anotherModule) {
 });
 ```
 
-Please note that thanks to the asynchronous preloading feature of tarp.require you will usually need the asynchronous
+Please note that thanks to the asynchronous pre-loading feature of Tarp.require you will usually need the asynchronous
 loading pattern only once per page.
 
 ### Asynchronous pre-loading
