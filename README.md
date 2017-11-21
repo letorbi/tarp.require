@@ -8,7 +8,7 @@ should work in general, some issues might slip through. The plan is to have a st
 tarp-branch will then become the new master-branch of this repository. Until then I would recommend to use the current
 "Smoothie" master-branch, if you need a more stable version.
 
-##Features
+## Features
 
 * **Compatible** NodeJS 9.2.0 and CommonJS modules 1.1
 * **Plain** No dependencies, no need to compile/bundle/etc the modules
@@ -16,7 +16,7 @@ tarp-branch will then become the new master-branch of this repository. Until the
 * **Modern** Makes use of promises and other features (support for older browsers via polyfills)
 * **Lightweight** Just 150 lines of code, minified version is about 1.7kB
 
-##Installation
+## Installation
 
 NPM and bower packages will be available once the first stable version has been released. For now just clone the
 repository directly or add it to your git repository as a submodule:
@@ -25,7 +25,7 @@ repository directly or add it to your git repository as a submodule:
 $ git submodule add -b tarp https://github.com/letorbi/smoothie.git tarp-require
 ```
 
-##Usage
+## Usage
 
 Assuming you've installed Tarp.require in the folder */tarp-require* (*/* is the root-folder of your website), you only
 have to add the following line to your HTML to load Tarp.require:
@@ -50,7 +50,7 @@ var myModule2 = require("./myModule2"); // loads /scripts/myModule2.js
 
 ```
 
-##Synchronous and asynchronous loading
+## Synchronous and asynchronous loading
 
 Tarp.require supports synchronous and asynchronous loading of modules. The default mode is synchronous loading to ensure
 compatibility with NodeJS and CommonJS. However, asynchronous loading can be easily activated by adding a second
@@ -70,7 +70,7 @@ require("anotherModule", true).then(function(anotherModule) {
 Please note that thanks to the asynchronous preloading feature of tarp.require you will usually need the asynchronous
 loading pattern only once per page.
 
-###Asynchronous preloading
+### Asynchronous preloading
 
 An asynchronous call of `require()` will not only try to load the module itself, but also any required submodules
 asynchronously. Even though the code of a submodule has been downloaded, it will not be executed, until the
@@ -83,7 +83,7 @@ page will be loaded asynchronously as well.
 Right now only plain require-calls are pre-loaded. This means that the ID of the module has to be one simple string.
 Also require-calls with more than one parameter are ignored (since they are usually asynchronous calls by themselves).
 
-**For example:** If *Module1* is required asynchronously and contains the require calls `require("Submodule1")`,
+**Example:** If *Module1* is required asynchronously and contains the require calls `require("Submodule1")`,
 `require("Submodule2", true)` and `require("Submodule" + "3")` somehwere in its code, only *Submodule1* will be
 pre-loaded, since the require-call for *Submodule2* has more than one parameter and the ID in the require-call  for
 *Submodule3* is not one simple string.
