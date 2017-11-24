@@ -85,8 +85,51 @@ Also require-calls with more than one parameter are ignored (since they are usua
 
 **Example:** If *Module1* is required asynchronously and contains the require calls `require("Submodule1")`,
 `require("Submodule2", true)` and `require("Submodule" + "3")` somewhere in its code, only *Submodule1* will be
-pre-loaded, since the require-call for *Submodule2* has more than one parameter and the ID in the require-call for
+pre-loaded, since the require-call for *Submodule2* has more than one parameter and the module-ID in the require-call for
 *Submodule3* is not one simple string.
+
+## Path resolving
+
+Unlike the Node.js implementation Tarp.require will not search through a number of paths, if a module-file cannot be
+found, but will simply fail with an error. This is due to the fact that Tarp.require usually tries to load files from a
+remote location and searching through remote paths by requesting each probable location of a file would be very
+time-consuming. Tarp.require relies on the server to resolve unknown files instead.
+
+The only occation when Tarp.require executes a redirect on its own is, when the module-ID points to a path that is
+redirected to a *package.json* file that conatins a `main` field. See the following sections for details.
+
+### HTTP redirects
+
+Tarp.require is able to handle temporary (301) and permanent (303) HTTP redirects. A common case where redirects might
+be handy is to use *package.json* as the default file if an ID without a filename is requested. To achieve that you
+could use the following NGINX redirect rule:
+
+``
+rewrite /node_modules/.*/$ package.json redirect;
+``
+
+This will redirect all requests like */node_modules/path/* to */node_modules/path/package.json*. Keep in
+mind that you have to extend the rule, if you also want to redirect requests like */node_modules/path* (no trailing
+slash) to */node_modules/path/package.json*.
+
+### NPM packages
+
+Tarp.require loads module-IDs specified the `main` field of a *package.json* file, if the following things are true:
+
+ 1. The *package.json* file is laoded via a redirect (like explained in the section above)
+ 2. The respone contains a valid JSON object 
+ 3. The object has a perperty called `main`
+ 
+If that is the case a seconds request will be triggered to load the modules specidief in `main` and the exports of
+that module will be returned. Otherwise simply the content of *package.json* is returned.
+
+### The `paths` property
+
+Tarp.require supports the `module.paths` property that contains an editable array of paths and the
+`require.resolve.paths(id)` function that return the `module.paths` property for the given module-ID.
+
+However, adding more items to the `paths` array won't make Tarp.require to request multiple locations. Only `paths[0]` will be used to resolve module-IDs. Changing `paths[0]` will change resolving-behaviour for that
+module, but all other modules will not be affected.
 
 ----
 
