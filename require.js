@@ -49,7 +49,8 @@
         uri: href
       },
       p: undefined, // promise
-      r: undefined // request
+      r: undefined, // request
+      s: undefined // source
     };
     if (!cached.p) {
       cached.p = new Promise(function(res, rej) {
@@ -58,6 +59,7 @@
           request.timeout = 10000; // 10s
         request.onload = function() {
           var error, done, pattern, match, loaded = 0;
+          cached.s = request.responseText;
           if (request.status >= 400) {
             error = new Error(href + " " + request.status + " " + request.statusText);
             rej(error);
@@ -66,12 +68,12 @@
           // NOTE Check for redirects and load package main, if it's defined.
           // TODO Re-use response-data to create or update cache entry of response-URL to prevent nunecessary requests.
           if ((href = request.responseURL) != cached.m.uri)
-            cached.d = /package\.json$/.test(href) ? (new URL(JSON.parse(request.responseText).main, href)).href: href;
+            cached.d = /package\.json$/.test(href) ? (new URL(JSON.parse(cached.s).main, href)).href: href;
           // NOTE Pre-load submodules if the request is asynchronous.
           if (asyn && !cached.d) {
             done = function() { if (--loaded <= 0) res(cached); };
             pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
-            while((match = pattern.exec(request.responseText)) !== null) {
+            while((match = pattern.exec(cached.s)) !== null) {
               loaded++;
               load(match[1]||match[2], href, true).then(done, done);
             }
@@ -87,7 +89,7 @@
       });
     }
     // NOTE `request` is only defined if the module is requested for the first time.
-    if (request || (!asyn && cached.r.status == 0)) {
+    if (request || !(asyn || cached.r.status)) {
       cached.r.abort();
       cached.r.open('GET', href, asyn);
       cached.r.send();
@@ -106,11 +108,11 @@
       if (parent)
         parent.children.push(module);
       if (cached.r.getResponseHeader("Content-Type") == "application/json")
-        module.exports = JSON.parse(cached.r.responseText);
+        module.exports = JSON.parse(cached.s);
       else
         (new Function(
           "exports,require,module,__filename,__dirname",
-          cached.r.responseText + "\n//# sourceURL=" + module.uri
+          cached.s + "\n//# sourceURL=" + module.uri
         ))(module.exports, module.require, module, module.id, module.id.match(/.*\//)[0]);
       module.loaded = true;
     }
