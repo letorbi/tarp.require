@@ -64,7 +64,7 @@
             throw error;
           }
           // NOTE Check for redirects and load package main, if it's defined.
-          // TODO Duplicate or re-use cache entries if possible (see older version).
+          // TODO Re-use response-data to create or update cache entry of response-URL to prevent nunecessary requests.
           if ((href = request.responseURL) != cached.m.uri)
             cached.d = /package\.json$/.test(href) ? (new URL(JSON.parse(request.responseText).main, href)).href: href;
           // NOTE Pre-load submodules if the request is asynchronous.
