@@ -58,19 +58,31 @@
         if (asyn)
           request.timeout = 10000; // 10s
         request.onload = function() {
-          var error, done, pattern, match, loaded = 0;
-          cached.s = request.responseText;
+          var req, error, done, pattern, match, loaded = 0;
+          if ((href = request.responseURL) != cached.m.uri) {
+            if (cache[href]) {
+              cached = cache[cached.m.uri] = cache[href];
+              cached.p.then(res, rej);
+              // NOTE Replace pending request of actual module with this already completed request.
+              if (cached.r.status < 4) {
+                req = cached.r;
+                cached.r = request;
+                req.abort();
+              }
+              return;
+            }
+            else {
+              cache[href] = cached;
+            }
+          }
           if (request.status >= 400) {
             error = new Error(href + " " + request.status + " " + request.statusText);
             rej(error);
             throw error;
           }
-          // NOTE Check for redirects and load package main, if it's defined.
-          // TODO Re-use response-data to create or update cache entry of response-URL to prevent nunecessary requests.
-          if ((href = request.responseURL) != cached.m.uri)
-            cached.d = /package\.json$/.test(href) ? (new URL(JSON.parse(cached.s).main, href)).href: href;
+          cached.s = request.responseText;
           // NOTE Pre-load submodules if the request is asynchronous.
-          if (asyn && !cached.d) {
+          if (asyn) {
             done = function() { if (--loaded <= 0) res(cached); };
             pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
             while((match = pattern.exec(cached.s)) !== null) {
@@ -81,6 +93,12 @@
           if (loaded <= 0)
             res(cached);
         };
+        request.onabort = function() {
+          // NOTE Call load-handler on a "successful" abort (see line 70ff)
+          request = cached.r;
+          if (request.status == 4)
+            request.onload();
+        };
         request.ontimeout = request.onerror = function(evt) {
           var error = evt.details.error ? evt.details.error : new Error(href + "TIMEOUT");
           rej(error);
@@ -89,7 +107,7 @@
       });
     }
     // NOTE `request` is only defined if the module is requested for the first time.
-    if (request || !(asyn || cached.r.status)) {
+    if (request || !(asyn || cached.s)) {
       cached.r.abort();
       cached.r.open('GET', href, asyn);
       cached.r.send();
@@ -122,27 +140,30 @@
   function factory(parent) {
     function requireEngine(mode, id, asyn) {
       function afterLoad(cached) {
-        if (cached.d) {
-          return requireEngine(mode, cached.d, asyn);
-        }
-        else {
-          switch (mode) {
-            case 1:
-              return cached.m.uri;
-            case 2:
-              return cached.m.paths;
-            default:
-              return evaluate(cached, parent).exports;
-          }
+        var exports, href, regex;
+        href = cached.m.uri;
+        switch (mode) {
+          case 1:
+            return href;
+          case 2:
+            return cached.m.paths;
+          default:
+            exports = evaluate(cached, parent).exports;
+            regex = /package\.json$/;
+            return (regex.test(href) && !regex.test(id)) ?
+              requireEngine(mode, (new URL(exports.main, href)).href, asyn):
+              exports;
         }
       }
 
       var pwd = parent ? parent.uri : location.href;
-      return asyn ? new Promise(function(res, rej) {
-        load(id, pwd, asyn)
-          .then(afterLoad)
-          .then(res, rej);
-      }) : afterLoad(load(id, pwd, asyn));
+      return asyn ?
+        new Promise(function(res, rej) {
+          load(id, pwd, asyn)
+            .then(afterLoad)
+            .then(res, rej);
+        }):
+        afterLoad(load(id, pwd, asyn));
     }
 
     var require = requireEngine.bind(undefined, 0);
