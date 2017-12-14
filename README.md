@@ -52,8 +52,8 @@ var myModule2 = require("./anotherModule3"); // loads /scripts/anotherModule3.js
 
 ## Synchronous and asynchronous loading
 
-Tarp.require supports synchronous and asynchronous loading of modules. The default mode is synchronous loading to ensure
-compatibility with NodeJS and CommonJS. However, asynchronous loading can be easily activated by adding a second
+Tarp.require supports synchronous and asynchronous loading of modules. The default mode is synchronous loading to
+ensure compatibility with NodeJS and CommonJS. However, asynchronous loading can be easily activated by adding a second
 parameter that resolves to `true` to the call:
 
 ```
@@ -85,8 +85,8 @@ Also require-calls with more than one parameter are ignored (since they are usua
 
 **Example:** If *Module1* is required asynchronously and contains the require calls `require("Submodule1")`,
 `require("Submodule2", true)` and `require("Submodule" + "3")` somewhere in its code, only *Submodule1* will be
-pre-loaded, since the require-call for *Submodule2* has more than one parameter and the module-ID in the require-call for
-*Submodule3* is not one simple string.
+pre-loaded, since the require-call for *Submodule2* has more than one parameter and the module-ID in the require-call
+for *Submodule3* is not one simple string.
 
 ## Path resolving
 
@@ -116,11 +116,11 @@ slash) to */node_modules/path/package.json*.
 
 Tarp.require loads module-IDs specified the `main` field of a *package.json* file, if the following things are true:
 
- 1. The *package.json* file is laoded via a redirect (like explained in the section above)
- 2. The respone contains a valid JSON object 
- 3. The object has a perperty called `main`
+ 1. The *package.json* file is loaded via a redirect (like explained in the section above)
+ 2. The response contains a valid JSON object 
+ 3. The object has a property called `main`
  
-If that is the case a seconds request will be triggered to load the modules specidief in `main` and the exports of
+If that is the case a second request will be triggered to load the modules specified in `main` and the exports of
 that module will be returned. Otherwise simply the content of *package.json* is returned.
 
 ### The `paths` property
@@ -128,8 +128,9 @@ that module will be returned. Otherwise simply the content of *package.json* is 
 Tarp.require supports the `module.paths` property that contains an editable array of paths and the
 `require.resolve.paths(id)` function that return the `module.paths` property for the given module-ID.
 
-However, adding more items to the `paths` array won't make Tarp.require to request multiple locations. Only `paths[0]` will be used to resolve module-IDs. Changing `paths[0]` will change resolving-behaviour for that
-module, but all other modules will not be affected.
+However, adding more items to the `paths` array won't make Tarp.require to request multiple locations. Only `paths[0]`
+will be used to resolve module-IDs. Changing `paths[0]` will change resolving-behaviour for that module, but all other
+modules will not be affected.
 
 ----
 
