@@ -96,7 +96,7 @@
         request.onabort = function() {
           // NOTE Call load-handler on a "successful" abort (see line 70ff)
           request = cached.r;
-          if (request.status == 4)
+          if (request.status)
             request.onload();
         };
         request.ontimeout = request.onerror = function(evt) {
@@ -107,7 +107,7 @@
       });
     }
     // NOTE `request` is only defined if the module is requested for the first time.
-    if (request || !(asyn || cached.s)) {
+    if (request || !(asyn || cached.r.status)) {
       cached.r.abort();
       cached.r.open('GET', href, asyn);
       cached.r.send();
