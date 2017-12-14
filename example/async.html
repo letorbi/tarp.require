@@ -45,6 +45,14 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     require("relative/main", true).then((mod) => {
       console.log(mod.greet());
     }, console.error);
+    // Load a package
+    require('pkgtest/package.json', true).then(function(pkg) {
+      console.log(JSON.stringify(pkg));
+    });
+    // Load the main module of a package
+    require('pkgtest/', true).then(function(main) {
+      console.log(main.greet());
+    });
   </script>
 </body>
 
