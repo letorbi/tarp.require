@@ -59,15 +59,18 @@
           request.timeout = 10000; // 10s
         request.onload = function() {
           var req, error, done, pattern, match, loaded = 0;
+          // `request` might have been changed by line 69ff
+          request = cached.r;
           if ((href = request.responseURL) != cached.m.uri) {
             if (cache[href]) {
               cached = cache[cached.m.uri] = cache[href];
               cached.p.then(res, rej);
-              // NOTE Replace pending request of actual module with this already completed request.
-              if (cached.r.status < 4) {
+              // NOTE Replace pending request of actual module with the already completed request (required by Chrome).
+              if (!cached.r.status) {
                 req = cached.r;
                 cached.r = request;
                 req.abort();
+                req.onload();
               }
               return;
             }
@@ -92,12 +95,6 @@
           }
           if (loaded <= 0)
             res(cached);
-        };
-        request.onabort = function() {
-          // NOTE Call load-handler on a "successful" abort (see line 70ff)
-          request = cached.r;
-          if (request.status)
-            request.onload();
         };
         request.ontimeout = request.onerror = function(evt) {
           var error = evt.details.error ? evt.details.error : new Error(href + "TIMEOUT");
