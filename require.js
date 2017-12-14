@@ -138,7 +138,7 @@
   }
 
   function factory(parent) {
-    function requireEngine(mode, id, asyn) {
+    function requireEngine(mode, id, asyn, pwd) {
       function afterLoad(cached) {
         var exports, href, regex;
         href = cached.m.uri;
@@ -151,12 +151,13 @@
             exports = evaluate(cached, parent).exports;
             regex = /package\.json$/;
             return (regex.test(href) && !regex.test(id)) ?
-              requireEngine(mode, (new URL(exports.main, href)).href, asyn):
+              requireEngine(mode, exports.main, asyn, href):
               exports;
         }
       }
 
-      var pwd = parent ? parent.uri : location.href;
+      if (!pwd)
+        pwd = parent ? parent.uri : location.href;
       return asyn ?
         new Promise(function(res, rej) {
           load(id, pwd, asyn)
