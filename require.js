@@ -140,20 +140,17 @@
   function factory(parent) {
     function requireEngine(mode, id, asyn, pwd) {
       function afterLoad(cached) {
-        var exports, href, regex;
+        var href, regex;
         href = cached.m.uri;
-        switch (mode) {
-          case 1:
-            return href;
-          case 2:
-            return cached.m.paths;
-          default:
-            exports = evaluate(cached, parent).exports;
-            regex = /package\.json$/;
-            return (regex.test(href) && !regex.test(id)) ?
-              requireEngine(mode, exports.main, asyn, href):
-              exports;
-        }
+        regex = /package\.json$/;
+        if (regex.test(href) && !regex.test(id))
+          return requireEngine(mode, evaluate(cached, parent).exports.main, asyn, href);
+        else if (mode == 1)
+          return href;
+        else if (mode == 2)
+          return cached.m.paths;
+        else
+          return evaluate(cached, parent).exports;
       }
 
       if (!pwd)

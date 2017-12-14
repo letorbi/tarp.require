@@ -110,6 +110,8 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
     document.writeln(JSON.stringify(pkg));
     var main = require('pkgtest/');
     document.writeln(main.greet());
+    document.writeln(require.resolve('pkgtest/'));
+    document.writeln(JSON.stringify(require.resolve.paths('pkgtest/')));
     </script></pre>
   </div>
   <div class="Box Blue">
