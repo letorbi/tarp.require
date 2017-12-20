@@ -37,6 +37,7 @@
     var cached, request;
     cached = cache[href] = cache[href] || {
       d: undefined, // deviation
+      e: undefined, // errorhandler
       m: { // module
         children: undefined,
         exports: undefined,
@@ -54,11 +55,16 @@
     };
     if (!cached.p) {
       cached.p = new Promise(function(res, rej) {
+        var errorhandler;
+        errorhandler = cached.e = function(error) {
+          rej(error);
+          throw error;
+        };
         request = cached.r = new XMLHttpRequest();
         if (asyn)
           request.timeout = 10000; // 10s
         request.onload = function() {
-          var req, error, done, pattern, match, loaded = 0;
+          var req, done, pattern, match, loaded = 0;
           // `request` might have been changed by line 69ff
           request = cached.r;
           if ((href = request.responseURL) != cached.m.uri) {
@@ -78,11 +84,8 @@
               cache[href] = cached;
             }
           }
-          if (request.status >= 400) {
-            error = new Error(href + " " + request.status + " " + request.statusText);
-            rej(error);
-            throw error;
-          }
+          if (request.status >= 400)
+            errorhandler(new Error(href + " " + request.status));
           cached.s = request.responseText;
           // NOTE Pre-load submodules if the request is asynchronous.
           if (asyn) {
@@ -96,18 +99,22 @@
           if (loaded <= 0)
             res(cached);
         };
-        request.ontimeout = request.onerror = function(evt) {
-          var error = evt.details.error ? evt.details.error : new Error(href + "TIMEOUT");
-          rej(error);
-          throw error;
-        };
+        if (asyn)
+          request.onerror = request.ontimeout = function(evt) {
+            errorhandler(new Error(href + " " + evt.type));
+          };
       });
     }
     // NOTE `request` is only defined if the module is requested for the first time.
     if (request || !(asyn || cached.r.status)) {
-      cached.r.abort();
-      cached.r.open('GET', href, asyn);
-      cached.r.send();
+      try {
+        cached.r.abort();
+        cached.r.open('GET', href, asyn);
+        cached.r.send();
+      }
+      catch(e) {
+        cached.e(e);
+      }
     }
     return asyn ? cached.p : cached;
   }
