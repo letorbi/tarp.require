@@ -15,7 +15,7 @@ will then become the new master-branch of this repository. Until then I would re
 * **Plain** No dependencies, no need to compile/bundle/etc the modules
 * **Asynchronous** Non-blocking loading of module files
 * **Modern** Makes use of promises and other features (support for older browsers via polyfills)
-* **Lightweight** Just 170 lines of code (incl. comments), minified version is about 1.8kB
+* **Lightweight** Just about 170 lines of code (incl. comments), minified version is about 1.7kB
 
 ## Installation
 
