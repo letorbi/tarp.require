@@ -26,17 +26,17 @@
   var root = (new URL("./node_modules/", location.href)).href;
 
   function load(id, pwd, asyn) {
+    var matches, href, cached, request;
     // NOTE resolve href from id
-    var matches, href;
     matches = id.match(/^((\.)?.*\/|)(.[^.]*|)(\..*|)$/);
     href = (new URL(
       matches[1] + matches[3] + (matches[3] && (matches[4] || ".js")),
       matches[2] ? pwd : root
     )).href;
-    // NOTE load url into cache
-    var cached, request;
+    // NOTE create cache item if required
     cached = cache[href] = cache[href] || {
       d: undefined, // deviation
+      e: undefined, // error
       m: { // module
         children: undefined,
         exports: undefined,
@@ -57,68 +57,63 @@
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
         if (asyn)
-          request.timeout = 10000; // 10s
+          request.timeout = 10000;
         request.onloadend = function() {
-          var error, req, done, pattern, match, loaded = 0;
-          // `request` might have been changed by line 69ff
-          request = cached.r;
-          if (!request)
-            return;
-          cached.r = null;
-          cached.s = request.responseText;
-          cached.t = request.getResponseHeader("Content-Type");
-          if (request.status <= 0) {
-            error = new Error(href + " network error");
-            rej(error);
-            throw error;
-          }
-          if ((href = request.responseURL) != cached.m.uri) {
-            if (cache[href]) {
-              cached = cache[cached.m.uri] = cache[href];
-              cached.p.then(res, rej);
-              // NOTE Replace pending request of actual module with the already completed request (required by Chrome).
-              if (cached.r) {
-                req = cached.r;
-                cached.r = request;
-                req.abort();
+          var req, done, pattern, match, loaded = 0;
+          // `request` might have been changed by line 74ff
+          if (request = cached.r) {
+            cached.r = null;
+            if ((request.status > 99) && ((href = request.responseURL) != cached.m.uri)) {
+              if (cache[href]) {
+                cached = cache[cached.m.uri] = cache[href];
+                cached.p.then(res, rej);
+                // NOTE Replace pending request of actual module with the already completed request and abort the
+                //      pending request. This will call onloadend of the pending request, which will load the module.
+                if (cached.r) {
+                  req = cached.r;
+                  cached.r = request;
+                  req.abort();
+                }
+                return;
               }
-              return;
+              else {
+                cache[href] = cached;
+              }
+            }
+            if ((request.status > 99) && (request.status < 400)) {
+              cached.s = request.responseText;
+              cached.t = request.getResponseHeader("Content-Type");
+              done = function() { if (--loaded <= 0) res(cached); };
+              // NOTE Pre-load submodules if the request is asynchronous.
+              if (asyn) {
+                pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
+                while((match = pattern.exec(cached.s)) !== null) {
+                  loaded++;
+                  load(match[1]||match[2], href, true).then(done, done);
+                }
+              }
+              done();
             }
             else {
-              cache[href] = cached;
+              rej(cached.e = new Error(href + " " + request.status));
             }
           }
-          if (request.status >= 400) {
-            error = new Error(href + " " + request.status);
-            rej(error);
-            throw error;
-          }
-          // NOTE Pre-load submodules if the request is asynchronous.
-          if (asyn) {
-            done = function() { if (--loaded <= 0) res(cached); };
-            pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
-            while((match = pattern.exec(cached.s)) !== null) {
-              loaded++;
-              load(match[1]||match[2], href, true).then(done, done);
-            }
-          }
-          if (loaded <= 0)
-            res(cached);
         };
       });
     }
     // NOTE `request` is only defined if the module is requested for the first time.
-    request = request || (!asyn && cached.r);
-    if (request) {
+    if (request = request || (!asyn && cached.r)) {
       try {
         request.abort();
         request.open('GET', href, asyn);
         request.send();
       }
-      catch(e) {
+      catch (e) {
         request.onloadend(e);
       }
     }
+    if (cached.e)
+      throw cached.e;
     return asyn ? cached.p : cached;
   }
 
@@ -164,9 +159,7 @@
         pwd = parent ? parent.uri : location.href;
       return asyn ?
         new Promise(function(res, rej) {
-          load(id, pwd, asyn)
-            .then(afterLoad)
-            .then(res, rej);
+          load(id, pwd, asyn).then(afterLoad).then(res, rej);
         }):
         afterLoad(load(id, pwd, asyn));
     }
