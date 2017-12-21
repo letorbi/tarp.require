@@ -37,7 +37,6 @@
     var cached, request;
     cached = cache[href] = cache[href] || {
       d: undefined, // deviation
-      e: undefined, // errorhandler
       m: { // module
         children: undefined,
         exports: undefined,
@@ -51,32 +50,37 @@
       },
       p: undefined, // promise
       r: undefined, // request
-      s: undefined // source
+      s: undefined, // source
+      t: undefined // type
     };
     if (!cached.p) {
       cached.p = new Promise(function(res, rej) {
-        var errorhandler;
-        errorhandler = cached.e = function(error) {
-          rej(error);
-          throw error;
-        };
         request = cached.r = new XMLHttpRequest();
         if (asyn)
           request.timeout = 10000; // 10s
-        request.onload = function() {
-          var req, done, pattern, match, loaded = 0;
+        request.onloadend = function() {
+          var error, req, done, pattern, match, loaded = 0;
           // `request` might have been changed by line 69ff
           request = cached.r;
+          if (!request)
+            return;
+          cached.r = null;
+          cached.s = request.responseText;
+          cached.t = request.getResponseHeader("Content-Type");
+          if (request.status <= 0) {
+            error = new Error(href + " network error");
+            rej(error);
+            throw error;
+          }
           if ((href = request.responseURL) != cached.m.uri) {
             if (cache[href]) {
               cached = cache[cached.m.uri] = cache[href];
               cached.p.then(res, rej);
               // NOTE Replace pending request of actual module with the already completed request (required by Chrome).
-              if (!cached.r.status) {
+              if (cached.r) {
                 req = cached.r;
                 cached.r = request;
                 req.abort();
-                req.onload();
               }
               return;
             }
@@ -84,9 +88,11 @@
               cache[href] = cached;
             }
           }
-          if (request.status >= 400)
-            errorhandler(new Error(href + " " + request.status));
-          cached.s = request.responseText;
+          if (request.status >= 400) {
+            error = new Error(href + " " + request.status);
+            rej(error);
+            throw error;
+          }
           // NOTE Pre-load submodules if the request is asynchronous.
           if (asyn) {
             done = function() { if (--loaded <= 0) res(cached); };
@@ -99,21 +105,18 @@
           if (loaded <= 0)
             res(cached);
         };
-        if (asyn)
-          request.onerror = request.ontimeout = function(evt) {
-            errorhandler(new Error(href + " " + evt.type));
-          };
       });
     }
     // NOTE `request` is only defined if the module is requested for the first time.
-    if (request || !(asyn || cached.r.status)) {
+    request = request || (!asyn && cached.r);
+    if (request) {
       try {
-        cached.r.abort();
-        cached.r.open('GET', href, asyn);
-        cached.r.send();
+        request.abort();
+        request.open('GET', href, asyn);
+        request.send();
       }
       catch(e) {
-        cached.e(e);
+        request.onloadend(e);
       }
     }
     return asyn ? cached.p : cached;
@@ -129,7 +132,7 @@
       module.require = factory(module);
       if (parent)
         parent.children.push(module);
-      if (cached.r.getResponseHeader("Content-Type") == "application/json")
+      if (cached.t == "application/json")
         module.exports = JSON.parse(cached.s);
       else
         (new Function(
