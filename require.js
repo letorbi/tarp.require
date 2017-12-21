@@ -56,9 +56,7 @@
     if (!cached.p) {
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
-        if (asyn)
-          request.timeout = 10000;
-        request.onloadend = function() {
+        request.onload = request.onerror = request.ontimeout = function() {
           var req, done, pattern, match, loaded = 0;
           // `request` might have been changed by line 74ff
           if (request = cached.r) {
@@ -84,8 +82,8 @@
               cached.s = request.responseText;
               cached.t = request.getResponseHeader("Content-Type");
               done = function() { if (--loaded <= 0) res(cached); };
-              // NOTE Pre-load submodules if the request is asynchronous.
-              if (asyn) {
+              // NOTE Pre-load submodules if the request is asynchronous (timeout > 0).
+              if (request.timeout) {
                 pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
                 while((match = pattern.exec(cached.s)) !== null) {
                   loaded++;
@@ -105,11 +103,12 @@
     if (request = request || (!asyn && cached.r)) {
       try {
         request.abort();
+        request.timeout = asyn ? 10000 : 0;
         request.open('GET', href, asyn);
         request.send();
       }
       catch (e) {
-        request.onloadend(e);
+        request.onerror();
       }
     }
     if (cached.e)
