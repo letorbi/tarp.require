@@ -81,7 +81,7 @@
             if ((request.status > 99) && (request.status < 400)) {
               cached.s = request.responseText;
               cached.t = request.getResponseHeader("Content-Type");
-              done = function() { if (--loaded <= 0) res(cached); };
+              done = function() { if (--loaded < 0) res(cached); };
               // NOTE Pre-load submodules if the request is asynchronous (timeout > 0).
               if (request.timeout) {
                 pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
