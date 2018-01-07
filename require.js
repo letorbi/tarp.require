@@ -57,10 +57,11 @@
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
         request.onload = request.onerror = request.ontimeout = function() {
-          var req, done, pattern, match, loaded = 0;
+          var req, done, pattern, match, promise, loaded = 0;
           // `request` might have been changed by line 74ff
           if (request = cached.r) {
             cached.r = null;
+            cached.p.$loaded = true;
             if ((request.status > 99) && ((href = request.responseURL) != cached.m.uri)) {
               if (cache[href]) {
                 cached = cache[cached.m.uri] = cache[href];
@@ -86,8 +87,10 @@
               if (request.timeout) {
                 pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
                 while((match = pattern.exec(cached.s)) !== null) {
-                  loaded++;
-                  load(match[1]||match[2], href, true).then(done, done);
+                  if (!(promise = load(match[1]||match[2], href, true)).$loaded) {
+                    loaded++;
+                    promise.then(done, done);
+                  }
                 }
               }
               done();
