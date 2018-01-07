@@ -171,5 +171,5 @@
     return require;
   }
 
-  self.require = factory(null);
+  (self.Tarp = self.Tarp || {}).require = factory(null);
 })();
