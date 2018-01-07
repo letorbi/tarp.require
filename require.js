@@ -20,7 +20,7 @@
 //      environment for each module and runs its code. Scroll down to the end of
 //      the file to see the function definition.
 (function() {
-  'use strict';
+  "use strict";
 
   var cache = Object.create(null);
   var root = (new URL("./node_modules/", location.href)).href;
@@ -106,7 +106,7 @@
       try {
         request.abort();
         request.timeout = asyn ? 10000 : 0;
-        request.open('GET', href, asyn);
+        request.open("GET", href, asyn);
         request.send();
       }
       catch (e) {
