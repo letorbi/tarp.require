@@ -29,6 +29,7 @@ License along with Tarp.  If not, see <http://www.gnu.org/licenses/>.
 <body>
   <h1>Tarp Require asynchronous test page</h1>
   <script>
+    var require = Tarp.require;
     // Resolve a simple module
     require.resolve("module1", true).then(console.log, console.error);
     // Redirection (preloaded)
