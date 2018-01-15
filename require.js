@@ -57,7 +57,7 @@
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
         request.onload = request.onerror = request.ontimeout = function() {
-          var tmp, done, pattern, match, loaded = 0;
+          var tmp, done, pattern, match, loading = 0;
           // `request` might have been changed by line 74ff
           if (request = cached.r) {
             cached.r = null;
@@ -81,13 +81,15 @@
             if ((request.status > 99) && (request.status < 400)) {
               cached.s = request.responseText;
               cached.t = request.getResponseHeader("Content-Type");
-              done = function() { if (--loaded < 0) res(cached); };
+              done = function() { if (--loading < 0) res(cached); };
               // NOTE Pre-load submodules if the request is asynchronous (timeout > 0).
               if (request.timeout) {
+                // TODO Write a real parser that returns all modules that are preloadable
                 pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
                 while((match = pattern.exec(cached.s)) !== null) {
-                  if (!(tmp = load(match[1]||match[2], href, true)).r) {
-                    loaded++;
+                  // NOTE Only add modules to the loading-queue that are still pending
+                  if ((tmp = load(match[1]||match[2], href, true)).r) {
+                    loading++;
                     tmp.p.then(done, done);
                   }
                 }
