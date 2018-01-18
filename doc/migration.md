@@ -6,7 +6,7 @@ Smoothie is obsolete and will be replaced by Tarp.require on **January 31 2018**
 
 From that day on the *master* branch will be synced with the *tarp* branch. The *smoothie* branch will continue to exist, but won't be updated anymore.
 
-Also the name of the repository will change from *letorbi/smoothie* to *letorbi/tarp.reguire*. Requests to *https://github.com/letorbi/smoothie.git* will be redirected, but it is recommended to update the remote URL of your repo:
+Also the name of the repository will change from *letorbi/smoothie* to *letorbi/tarp.require*. Requests to *https://github.com/letorbi/smoothie.git* will be redirected, but it is recommended to update the remote URL of your repo:
 
 ```
 git remote set-url origin https://github.com/letorbi/tarp.require.git
