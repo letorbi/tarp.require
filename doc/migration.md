@@ -73,7 +73,7 @@ mightier), but the calls look a bit different:
   * **Smoothie:** `require('module', callbackFunc);`
   * **Tarp.require:** `require('module', true).then(callbackFunc)`
 
-Tarp.require is using [Promise](https://developer.mozilla.org/docs/Web/JavaScript/Guides/Using_promises)
+Tarp.require is using [Promise](https://developer.mozilla.org/docs/Web/JavaScript/Guide/Using_promises)
 to handle asynchronous execution, as you can see from the `.then()` call.
 
 ### How to support older browsers?
