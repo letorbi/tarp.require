@@ -2,10 +2,15 @@
 
 ## What is happening?
 
-TODO
+Smoothie is obsolete and will be replaced by Tarp.require on **January 31 2018**. Tarp.require is a vastly improved version of Smoothie, so I recommend to use this one once the switch has been done.
 
-However, since
-Tarp.require lacks Smoothie's loader code, you might want to continue to use Smoothie.
+From that day on the *master* branch will be synced with the *tarp* branch. The *smoothie* branch will continue to exist, but won't be updated anymore.
+
+Also the name of the repository will change from *letorbi/smoothie* to *letorbi/tarp.reguire*. Requests to *https://github.com/letorbi/smoothie.git* will be redirected, but it is recommended to update the remote URL of your repo:
+
+```
+git remote set-url origin https://github.com/letorbi/tarp.require.git
+```
 
 ## When shall I stick with Smoothie?
 
@@ -68,14 +73,14 @@ mightier), but the calls look a bit different:
   * **Smoothie:** `require('module', callbackFunc);`
   * **Tarp.require:** `require('module', true).then(callbackFunc)`
 
-Tarp.require is using [Promises](https://developer.mozilla.org/docs/Web/JavaScript/Guides/Using_promises)
+Tarp.require is using [Promise](https://developer.mozilla.org/docs/Web/JavaScript/Guides/Using_promises)
 to handle asynchronous execution, as you can see from the `.then()` call.
 
 ### How to support older browsers?
 
 Tarp.require uses modern features of JavaScript, namely Promises and the
-URL API. You have to load some small polyfills to have these features available
-in older browsers.
+[URL interface](https://developer.mozilla.org/en-US/docs/Web/API/URL). You have to
+load some small polyfills to have these features available in older browsers.
 
 Please refer to the *Older browsers* section in the Tarp.require readme for
 further advice.
