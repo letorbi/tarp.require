@@ -20,7 +20,10 @@
 //      environment for each module and runs its code. Scroll down to the end of
 //      the file to see the function definition.
 (function(load) { 'use strict';
- 
+
+console.warn("Smoothie is obsolete and will be replaced by Tarp.require on January 31 2018!\n\n" +
+             "Read https://github.com/letorbi/smoothie/blob/tarp/doc/migration.md for further information.");
+
 var SmoothieError = function(message, fileName, lineNumber) {
   this.name = "SmoothieError";
   this.message = message;
