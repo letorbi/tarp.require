@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
-var fromstr = 'from';
+var fromstr = "from";
 
-exports.greetstr = 'hello world';
+exports.greetstr = "hello world";
 
 exports.greet = function() {
-  return exports.greetstr+' '+fromstr+' '+module.id+'!';
+  return exports.greetstr+" "+fromstr+" "+module.id+"!";
 };

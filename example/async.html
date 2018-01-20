@@ -28,11 +28,11 @@
       console.log(mod.greet());
     }, console.error);
     // Load a package
-    require('pkgtest/package.json', true).then(function(pkg) {
+    require("pkgtest/package.json", true).then(function(pkg) {
       console.log(JSON.stringify(pkg));
     });
     // Load the main module of a package
-    require('pkgtest/', true).then(function(main) {
+    require("pkgtest/", true).then(function(main) {
       console.log(main.greet());
     });
   </script>
