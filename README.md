@@ -134,4 +134,4 @@ modules will not be affected.
 
 ----
 
-Copyright 2013-2017 Torben Haase [\<https://pixelsvsbytes.com/\>](https://pixelsvsbytes.com/).
+Copyright 2013-2018 Torben Haase \<https://pixelsvsbytes.com>
