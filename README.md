@@ -1,11 +1,11 @@
-Smoothie - a lightweight and modular JavaScript library
-=======================================================
-
 **Important notice:** Smoothie is obsolete and will be replaced by [Tarp.require](https://github.com/letorbi/smoothie/tree/tarp)
 on January 31 2018. Tarp.require is a vastly improved version of Smoothie, so I
 recommend to use this one once the switch has been done. Please read [the
 migration documentation](https://github.com/letorbi/smoothie/blob/master/doc/migration.md)
 for further information.
+
+Smoothie - a lightweight and modular JavaScript library
+=======================================================
 
 Well, I guess it will still take some time until this repository here contains
 a whole library, but I'm working on it ;)
