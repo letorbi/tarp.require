@@ -58,12 +58,6 @@
     document.writeln(mod.greet());
     </script></pre>
   </div>
-  <div class="Box Green">
-    <h2>Paths</h2>
-    <pre><script type="text/javascript">
-    document.writeln(JSON.stringify(require.resolve.paths("module1")));
-    </script></pre>
-  </div>
   <div class="Box Blue">
     <h2>Redirection (preloaded)</h2>
     <pre><script type="text/javascript">
@@ -83,6 +77,15 @@
     <pre><script type="text/javascript">
     var mod = require("relative/main");
     document.writeln(mod.greet());
+    </script></pre>
+  </div>
+  <div class="Box Green">
+    <h2>Paths</h2>
+    <pre><script type="text/javascript">
+    document.writeln(JSON.stringify(require.resolve.paths("module1")));
+    document.writeln(JSON.stringify(mod.pathsGlobal()));
+    document.writeln(JSON.stringify(mod.pathsRelative()));
+    document.writeln(JSON.stringify(mod.pathsAbsolute()));
     </script></pre>
   </div>
   <div class="Box Green">

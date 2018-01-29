@@ -35,7 +35,6 @@
     )).href;
     // NOTE create cache item if required
     cached = cache[href] = cache[href] || {
-      d: undefined, // deviation
       e: undefined, // error
       m: { // module
         children: undefined,
@@ -153,7 +152,7 @@
         else if (mode == 1)
           return href;
         else if (mode == 2)
-          return cached.m.paths;
+          return [parent && id[0] == "." ? parent.id.match(/.*\//)[0] : root];
         else
           return evaluate(cached, parent).exports;
       }
