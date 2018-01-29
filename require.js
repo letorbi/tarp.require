@@ -135,7 +135,7 @@
         (new Function(
           "exports,require,module,__filename,__dirname",
           cached.s + "\n//# sourceURL=" + module.uri
-        ))(module.exports, module.require, module, module.id, module.id.match(/.*\//)[0]);
+        ))(module.exports, module.require, module, module.uri, module.uri.match(/.*\//)[0]);
       module.loaded = true;
     }
     return cached.m;
@@ -152,7 +152,7 @@
         else if (mode == 1)
           return href;
         else if (mode == 2)
-          return [parent && id[0] == "." ? parent.id.match(/.*\//)[0] : root];
+          return [id[0] == "." ? pwd.match(/.*\//)[0] : root];
         else
           return evaluate(cached, parent).exports;
       }
