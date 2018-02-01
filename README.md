@@ -8,10 +8,9 @@ information.
 Tarp.require is a CommonJS and Node.js compatible module loader licensed as open source under the LGPL v3. It aims to be
 as lightweight as possible while not missing any features.
 
-*Tarp.require is still work in progress. Its currently in a 'release candidate' state. This means that no
-new features will be added until the release of version 1.0. The main work now is to add and improve the testing
-routines and some bugfixing & refactoring. Please be aware that until the tests are ready some issues might slip
-through.*
+*Tarp.require is still work in progress. It is currently in a 'release candidate' state. This means that no
+new features will be added until the release of version 1.0. The main work now is testing, bugfixing & refactoring.
+Please be aware that some issues might slip through, until the test-routines are ready.*
 
 ## Features
 
