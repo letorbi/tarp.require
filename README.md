@@ -10,7 +10,8 @@ as lightweight as possible while not missing any features.
 
 *Tarp.require is still work in progress. Its currently in a 'release candidate' state. This means that no
 new features will be added until the release of version 1.0. The main work now is to add and improve the testing
-routines and some refactoriung. Please be aware that until the tests are ready some issues might slip through.*
+routines and some bugfixing & refactoring. Please be aware that until the tests are ready some issues might slip
+through.*
 
 ## Features
 
