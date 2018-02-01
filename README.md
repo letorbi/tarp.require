@@ -1,6 +1,6 @@
-**Important notice:** Tarp.require is the replacement of [Smoothie](https://github.com/letorbi/smoothie/tree/smoothie).
+**Important notice:** Tarp.require is the replacement of [Smoothie](https://github.com/letorbi/tarp.require/tree/smoothie).
 It introduces a number of new features and improvments, so it is recommended to use Tarp.require from now on. Please
-read [the migration documentation](https://github.com/letorbi/smoothie/blob/master/doc/migration.md) for further
+read [the migration documentation](https://github.com/letorbi/tarp.require/blob/master/doc/migration.md) for further
 information.
 
 //\ Tarp.require - a lightweight JavaScript module loader
@@ -26,7 +26,7 @@ NPM and bower packages will be available once the first stable version has been 
 repository directly or add it to your git repository as a submodule:
 
 ```
-$ git submodule add -b tarp https://github.com/letorbi/smoothie.git tarp-require
+$ git submodule add -b tarp https://github.com/letorbi/tarp.require.git tarp-require
 ```
 
 ## Usage
