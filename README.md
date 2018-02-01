@@ -1,13 +1,16 @@
+**Important notice:** Tarp.require is the replacement of [Smoothie](https://github.com/letorbi/smoothie/tree/smoothie).
+It introduces a number of new features and improvments, so it is recommended to use Tarp.require from now on. Please
+read [the migration documentation](https://github.com/letorbi/smoothie/blob/master/doc/migration.md) for further
+information.
+
 //\ Tarp.require - a lightweight JavaScript module loader
 =========================================================
 Tarp.require is a CommonJS and Node.js compatible module loader licensed as open source under the LGPL v3. It aims to be
 as lightweight as possible while not missing any features.
 
-**Important notice:** Tarp.require is still work in progress. This means that even though the code that has been pushed
-to GitHub should work in general, some issues might slip through. Also the implementation itself might go though bigger
-changes during the development of new features. The plan is to have a stable version by the end of 2017. The tarp-branch
-will then become the new master-branch of this repository. Until then I would recommend to use the current
-"Smoothie" master-branch, if you need a more stable version.
+*Tarp.require is still work in progress. Its currently in a 'release candidate' state. This means that no
+new features will be added until the release of version 1.0. The main work now is to add and improve the testing
+routines and some refactoriung. Please be aware that until the tests are ready some issues might slip through.*
 
 ## Features
 
@@ -42,7 +45,8 @@ existing scripts into a file */main.js* (or anything else) and load this main-mo
 Tarp.require("/main", true); // 'true' tells require to load the module asynchronously
 ```
 
-Inside any module you can use `require()` as you know it from NodeJS. Assuming you're in the module */scripts/someModule* the module-IDs will be resolved to the following paths:
+Inside any module you can use `require()` as you know it from NodeJS. Assuming you're in the module
+*/scripts/someModule* the module-IDs will be resolved to the following paths:
 
 ```
 var myModule1 = require("anotherModule1");   // loads /node_modules/anotherModule1.js
