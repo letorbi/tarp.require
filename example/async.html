@@ -13,12 +13,14 @@
     var require = Tarp.require;
     // Resolve a simple module
     require.resolve("module1", true).then(console.log, console.error);
+    // Sync request (with redirect) overtakes async loading
+    require.resolve("fake1/");
+    // Resolve a redirect
+    require.resolve("fake2/", true).then(console.log, console.error);
+    // Sync request (without redirect) overtakes async loading
+    require.resolve("module2");
     // Redirection (preloaded)
     require.resolve("fake1/", true).then(console.log, console.error);
-    // Redirection (unloaded)
-    require.resolve("fake2/", true).then(console.log, console.error);
-    // Resolve a module that is already pending
-    require.resolve("module2", true).then(console.log, console.error);
     // Execute a simple module
     require("module3", true).then((mod) => {
       console.log(mod.greet());

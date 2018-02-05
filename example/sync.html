@@ -34,13 +34,6 @@
       catch (e) {
         document.writeln("require.resolve("+mname+") -> " + e);
       }
-
-      require.resolve("module2", true).then(function(mod2Href) {
-        console.log("href callback: " + mod2Href);
-      });
-      require("module3", true).then(function(mod3) {
-        console.log("require callback: " + mod3.greet());
-      });
     </script></pre>
   </div>
   <div class="Box Green">
