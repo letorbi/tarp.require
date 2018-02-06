@@ -55,7 +55,7 @@
     if (!cached.p) {
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
-        request.onloadend = function() {
+        request.onload = request.onerror = request.ontimeout = function() {
           var tmp, done, pattern, match, loading = 0;
           // `request` might have been changed by line 74ff
           if (request = cached.r) {
@@ -65,13 +65,12 @@
                 cached = cache[cached.m.uri] = cache[href];
                 cached.p.then(res, rej);
                 // NOTE Replace pending request of actual module with the already completed request and abort the
-                //      pending request. This will call onloadend of the pending request, which will load the module.
-                //      The onloadend event seems to be executed synchronously here, so the module will be loaded
-                //      completely before this function returns.
+                //      pending request.
                 if (cached.r) {
                   tmp = cached.r;
                   cached.r = request;
                   tmp.abort();
+                  tmp.onload();
                 }
                 return;
               }
