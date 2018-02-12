@@ -36,21 +36,12 @@
     // NOTE create cache item if required
     cached = cache[href] = cache[href] || {
       e: undefined, // error
-      m: { // module
-        children: undefined,
-        exports: undefined,
-        filename: href,
-        id: href,
-        loaded: false,
-        parent: undefined,
-        paths: [root],
-        require: undefined,
-        uri: href
-      },
+      m: undefined, // module
       p: undefined, // promise
       r: undefined, // request
       s: undefined, // source
-      t: undefined // type
+      t: undefined, // type
+      u: href, // url
     };
     if (!cached.p) {
       cached.p = new Promise(function(res, rej) {
@@ -60,9 +51,9 @@
           // `request` might have been changed by line 74ff
           if (request = cached.r) {
             cached.r = null;
-            if ((request.status > 99) && ((href = request.responseURL) != cached.m.uri)) {
+            if ((request.status > 99) && ((href = request.responseURL) != cached.u)) {
               if (cache[href]) {
-                cached = cache[cached.m.uri] = cache[href];
+                cached = cache[cached.u] = cache[href];
                 cached.p.then(res, rej);
                 // NOTE Replace pending request of actual module with the already completed request and abort the
                 //      pending request.
@@ -122,11 +113,18 @@
 
   function evaluate(cached, parent) {
     var module;
-    if (!cached.m.exports) {
-      module = cached.m;
-      module.children = new Array(),
-      module.exports = Object.create(null),
-      module.parent = parent;
+    if (!(module = cached.m)) {
+      module = cached.m = {
+        children: new Array(),
+        exports: Object.create(null),
+        filename: cached.u,
+        id: cached.u,
+        loaded: false,
+        parent: parent,
+        paths: [root],
+        require: undefined,
+        uri: cached.u
+      },
       module.require = factory(module);
       if (parent)
         parent.children.push(module);
@@ -146,7 +144,7 @@
     function requireEngine(mode, id, asyn, pwd) {
       function afterLoad(cached) {
         var href, regex;
-        href = cached.m.uri;
+        href = cached.u;
         regex = /package\.json$/;
         if (regex.test(href) && !regex.test(id))
           return requireEngine(mode, evaluate(cached, parent).exports.main, asyn, href);
