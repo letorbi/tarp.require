@@ -144,28 +144,26 @@
   }
 
   function factory(parent) {
-    function requireEngine(mode, id, asyn, pwd) {
+    function requireEngine(mode, id, asyn) {
       function afterLoad(cached) {
-        var href, regex;
-        href = cached.u;
-        regex = /package\.json$/;
-        if (regex.test(href) && !regex.test(id))
-          return requireEngine(mode, evaluate(cached, parent).exports.main, asyn, href);
+        var regex = /package\.json$/;
+        if (regex.test(cached.u) && !regex.test(id)) {
+          parent = evaluate(cached, parent);
+          return requireEngine(mode, parent.exports.main, asyn);
+        }
         else if (mode == 1)
-          return href;
+          return cached.u;
         else if (mode == 2)
-          return [id[0] == "." ? pwd.match(/.*\//)[0] : root.uri];
+          return [id[0] == "." ? parent.uri.match(/.*\//)[0] : root.uri];
         else
           return evaluate(cached, parent).exports;
       }
 
-      if (!pwd)
-        pwd = parent.uri;
       return asyn ?
         new Promise(function(res, rej) {
-          load(id, pwd, asyn).p.then(afterLoad).then(res, rej);
+          load(id, parent.uri, asyn).p.then(afterLoad).then(res, rej);
         }):
-        afterLoad(load(id, pwd, asyn));
+        afterLoad(load(id, parent.uri, asyn));
     }
 
     var require = requireEngine.bind(undefined, 0);
