@@ -23,7 +23,11 @@
   "use strict";
 
   var cache = Object.create(null);
-  var root = (new URL("./node_modules/", location.href)).href;
+  var root = {
+    children: new Array(),
+    paths: [(new URL("./node_modules/", location.href)).href],
+    uri: location.href
+  };
 
   function load(id, pwd, asyn) {
     var matches, href, cached, request;
@@ -31,7 +35,7 @@
     matches = id.match(/^((\.)?.*\/|)(.[^.]*|)(\..*|)$/);
     href = (new URL(
       matches[1] + matches[3] + (matches[3] && (matches[4] || ".js")),
-      matches[2] ? pwd : root
+      matches[2] ? pwd : root.paths[0]
     )).href;
     // NOTE create cache item if required
     cached = cache[href] = cache[href] || {
@@ -48,7 +52,7 @@
         request = cached.r = new XMLHttpRequest();
         request.onload = request.onerror = request.ontimeout = function() {
           var tmp, done, pattern, match, loading = 0;
-          // `request` might have been changed by line 74ff
+          // `request` might have been changed by line 60ff
           if (request = cached.r) {
             cached.r = null;
             if ((request.status > 99) && ((href = request.responseURL) != cached.u)) {
@@ -113,7 +117,7 @@
 
   function evaluate(cached, parent) {
     var module;
-    if (!(module = cached.m)) {
+    if (!cached.m) {
       module = cached.m = {
         children: new Array(),
         exports: Object.create(null),
@@ -121,13 +125,12 @@
         id: cached.u,
         loaded: false,
         parent: parent,
-        paths: [root],
+        paths: parent.paths.slice(),
         require: undefined,
         uri: cached.u
       },
       module.require = factory(module);
-      if (parent)
-        parent.children.push(module);
+      parent.children.push(module);
       if (cached.t == "application/json")
         module.exports = JSON.parse(cached.s);
       else
@@ -151,13 +154,13 @@
         else if (mode == 1)
           return href;
         else if (mode == 2)
-          return [id[0] == "." ? pwd.match(/.*\//)[0] : root];
+          return [id[0] == "." ? pwd.match(/.*\//)[0] : root.uri];
         else
           return evaluate(cached, parent).exports;
       }
 
       if (!pwd)
-        pwd = parent ? parent.uri : location.href;
+        pwd = parent.uri;
       return asyn ?
         new Promise(function(res, rej) {
           load(id, pwd, asyn).p.then(afterLoad).then(res, rej);
@@ -168,8 +171,9 @@
     var require = requireEngine.bind(undefined, 0);
     require.resolve = requireEngine.bind(require, 1);
     require.resolve.paths = requireEngine.bind(require.resolve, 2);
+    require.root = root;
     return require;
   }
 
-  (self.Tarp = self.Tarp || {}).require = factory(null);
+  (self.Tarp = self.Tarp || {}).require = factory(root);
 })();
