@@ -119,22 +119,12 @@ Tarp.require relies on the server to resolve unknown files instead. The only occ
 request on its own is, when the module-ID points to a path that is redirected to a *package.json* file that contains a
 `main` field.
 
-### The `module.paths` property
-
-Tarp.require always uses the first item of the `module.paths` array to resolve an URL from a global module-ID. Unlike
-Node.js it won't iterate over the whole array. Each module inherits the paths from its parent, but every instance of
-`module.paths` is independent. This means that any change to `module.paths` won't affect any already loaded modules, but
-only modules that will be loaded after the change.
-
-Tarp.require also supports the `require.resolve.paths()` function that returns an array of paths that have been searched
-to resolve the given module-ID.
-
 #### Change the `node_modules` path globally
 
-Add the following line **before** loading Tarp.require:
+Add the following line **before** including Tarp.require into your page:
 
 ```
-TarpConfig.require.paths = ['/path/to/node/modules'];
+<script>var TarpConfig = { require: { paths: ['/path/to/node/modules'] } };</script>
 ```
 
 ### HTTP redirects
@@ -161,6 +151,16 @@ Tarp.require loads module-IDs specified the `main` field of a *package.json* fil
  
 If that is the case a second request will be triggered to load the modules specified in `main` and the exports of
 that module will be returned. Otherwise simply the content of *package.json* is returned.
+
+### The `module.paths` property
+
+Tarp.require always uses the first item of the `module.paths` array to resolve an URL from a global module-ID. Unlike
+Node.js it won't iterate over the whole array. Each module inherits the paths from its parent, but every instance of
+`module.paths` is independent. This means that any change to `module.paths` won't affect any already loaded modules, but
+only modules that will be loaded after the change.
+
+Tarp.require also supports the `require.resolve.paths()` function that returns an array of paths that have been searched
+to resolve the given module-ID.
 
 ----
 
