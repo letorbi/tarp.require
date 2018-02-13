@@ -65,11 +65,11 @@ self.require = Tarp.require;
 ## Synchronous and asynchronous loading
 
 Tarp.require supports synchronous and asynchronous loading of modules. The default mode is synchronous loading to
-ensure compatibility with NodeJS and CommonJS. However, asynchronous loading can be easily activated by adding a second
-parameter that resolves to `true` to the call:
+ensure compatibility with NodeJS and CommonJS. However, asynchronous loading can be easily activated by adding `true` as
+a second parameter:
 
 ```
-// synchronous loading
+// synchronous loading (can be pre-loaded asynchronously)
 var someModule = require("someModule");
 someModule.someFunc();
 
@@ -79,8 +79,8 @@ require("anotherModule", true).then(function(anotherModule) {
 });
 ```
 
-Please note that thanks to the asynchronous pre-loading feature of Tarp.require you will usually need the asynchronous
-loading pattern only once per page.
+Please note that thanks to the asynchronous pre-loading feature of Tarp.require, you will usually need the asynchronous
+loading pattern only once per page to load the main-module.
 
 ### Asynchronous pre-loading
 
