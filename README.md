@@ -26,32 +26,40 @@ NPM and bower packages will be available once the first stable version has been 
 repository directly or add it to your git repository as a submodule:
 
 ```
-$ git submodule add -b tarp https://github.com/letorbi/tarp.require.git tarp-require
+$ git submodule add -b tarp https://github.com/letorbi/tarp.require.git
 ```
 
 ## Usage
 
-Assuming you've installed Tarp.require in the folder */tarp-require* (*/* is the root-folder of your website), you only
+Assuming you've installed Tarp.require in the folder *//example.com/tarp.require*, you only
 have to add the following line to your HTML to load Tarp.require:
 
 ```
-<script src"/tarp-require/require.min.js"></script>
+<script src"/tarp.require/require.min.js"></script>
 ```
 
-It is recommended move the JavaScript of your page into a main-module to have a proper environment. Just move any
-existing scripts into a file */main.js* (or anything else) and load this main-module with:
+Assuming you've loaded Tarp.require in *//example.com/page/index.html* and your main-module is located at
+*//example.com/page/scripts/main.js*, you can use the following line to load the main-module:
 
 ```
-Tarp.require("/main", true); // 'true' tells require to load the module asynchronously
+Tarp.require("./scripts/main", true); // 'true' tells require to load the module asynchronously
 ```
 
-Inside any module you can use `require()` as you know it from NodeJS. Assuming you're in the module
-*/scripts/someModule* the module-IDs will be resolved to the following paths:
+Inside any module you can use `require()` as you know it from CommonJS/NodeJS. Assuming you're in the main-module,
+module-IDs will be resolved to the following paths:
+
+  * `require("someMmodule")` loads *//example.com/page/node_modules/someModule.js*
+  * `require("./someModule")` loads *//example.com/page/scripts/someModule.js*
+  * `require("/someModule")` loads *//example.com/someModule.js*
+  
+#### Using `require()` directly from the HTML document
+
+It is recommended that the only JavaScript in the HTML document is the line to load the main-module - any JavaScript of your page should be moved into the main-module to ensure that is is executed in a proper CommonJS/NodeJS environment.
+
+However, if you really want to use `require()` directly in the HTML-document, you can add `Tarp.require` to the global scope:
 
 ```
-var myModule1 = require("anotherModule1");   // loads /node_modules/anotherModule1.js
-var myModule2 = require("/anotherModule2");  // loads /anotherModule2.js
-var myModule2 = require("./anotherModule3"); // loads /scripts/anotherModule3.js
+self.require = Tarp.require;
 ```
 
 ## Synchronous and asynchronous loading
