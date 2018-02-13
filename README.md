@@ -102,13 +102,40 @@ for *Submodule3* is not one simple string.
 
 ## Path resolving
 
-Unlike the Node.js implementation Tarp.require will not search through a number of paths, if a module-file cannot be
-found, but will simply fail with an error. This is due to the fact that Tarp.require usually tries to load files from a
-remote location and searching through remote paths by requesting each probable location of a file would be very
-time-consuming. Tarp.require relies on the server to resolve unknown files instead.
+Assuming Tarp.require has been loaded from *//example.com/page/index.html* and you are requiring a module directly
+from the index-page, the module-IDs will be resolved to the following URLs:
 
-The only occation when Tarp.require executes a redirect on its own is, when the module-ID points to a path that is
-redirected to a *package.json* file that conatins a `main` field. See the following sections for details.
+ 1. `someModule` resolves to *//example.com/page/node_modules/someModule.js*
+ 2. `./someModule` resolves to *//example.com/page/someModule.js*
+ 3. `/someModule` resolves to *//example.com/someModule.js*
+
+So Tarp.require mainly resolves URLs in the same way as Node.js does resolve paths. The only difference is that
+Tarp.require won't check *//example.com/node_modules/someModule.js*, if the module
+file is not found at *//example.com/page/node_modules/someModule.js*, but will simply throw an error instead.
+
+This decision has been made due to the fact that Tarp.require usually tries to load module files from a remote location
+and searching through remote paths by requesting each probable location of a file would be very time-consuming.
+Tarp.require relies on the server to resolve unknown files instead. The only occation then Tarp.require redirects a
+request on its own is, when the module-ID points to a path that is redirected to a *package.json* file that contains a
+`main` field.
+
+### The `module.paths` property
+
+Tarp.require always uses the first item of the `module.paths` array to resolve an URL from a global module-ID. Unlike
+Node.js it won't iterate over the whole array. Each module inherits the paths from its parent, but every instance of
+`module.paths` is independent. This means that any change to `module.paths` won't affect any already loaded modules, but
+only modules that will be loaded after the change.
+
+Tarp.require also supports the `require.resolve.paths()` function that returns an array of paths that have been searched
+to resolve the given module-ID.
+
+#### Change the `node_modules` path globally
+
+Add the following line **before** loading Tarp.require:
+
+```
+TarpConfig.require.paths = ['/path/to/node/modules'];
+```
 
 ### HTTP redirects
 
@@ -134,15 +161,6 @@ Tarp.require loads module-IDs specified the `main` field of a *package.json* fil
  
 If that is the case a second request will be triggered to load the modules specified in `main` and the exports of
 that module will be returned. Otherwise simply the content of *package.json* is returned.
-
-### The `paths` property
-
-Tarp.require supports the `module.paths` property that contains an editable array of paths and the
-`require.resolve.paths(id)` function that return the `module.paths` property for the given module-ID.
-
-However, adding more items to the `paths` array won't make Tarp.require to request multiple locations. Only `paths[0]`
-will be used to resolve module-IDs. Changing `paths[0]` will change resolving-behaviour for that module, but all other
-modules will not be affected.
 
 ----
 
