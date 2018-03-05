@@ -22,10 +22,12 @@
 (function() {
   "use strict";
 
-  var cache = Object.create(null);
-  var root = {
+  var cache, config, root;
+  cache = Object.create(null);
+  config = (self.TarpConfig && self.TarpConfig.require) || new Object();
+  root = {
     children: new Array(),
-    paths: [(new URL("./node_modules/", location.href)).href],
+    paths: config.paths || [(new URL("./node_modules/", location.href)).href],
     uri: location.href
   };
 
@@ -35,7 +37,7 @@
     matches = id.match(/^((\.)?.*\/|)(.[^.]*|)(\..*|)$/);
     href = (new URL(
       matches[1] + matches[3] + (matches[3] && (matches[4] || ".js")),
-      matches[2] ? pwd : root.paths[0]
+      matches[2] ? pwd : root.paths[0] // TODO Can we get rid of this check with more intelligent pwd setting in the engine?
     )).href;
     // NOTE create cache item if required
     cached = cache[href] = cache[href] || {
@@ -154,7 +156,7 @@
         else if (mode == 1)
           return cached.u;
         else if (mode == 2)
-          return [id[0] == "." ? parent.uri.match(/.*\//)[0] : root.uri];
+          return [id[0] == "." ? parent.uri.match(/.*\//)[0] : root.uri]; // TODO Can this be cleaned up?
         else
           return evaluate(cached, parent).exports;
       }
@@ -169,7 +171,6 @@
     var require = requireEngine.bind(undefined, 0);
     require.resolve = requireEngine.bind(require, 1);
     require.resolve.paths = requireEngine.bind(require.resolve, 2);
-    require.root = root;
     return require;
   }
 
