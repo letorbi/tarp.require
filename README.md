@@ -44,6 +44,7 @@ Assuming you've loaded Tarp.require in *//example.com/page/index.html* and your 
 ```
 Tarp.require("./scripts/main", true); // 'true' tells require to load the module asynchronously
 ```
+It is strongly recommended to load the main module asynchrnously to prevent synchronous requests, which [are obsolete](https://xhr.spec.whatwg.org/#the-open()-method) by now. See the [synchronous and asynchronous loading section](#synchronous-and-asynchronous-loading) below for more details.
 
 Inside any module you can use `require()` as you know it from CommonJS/NodeJS. Assuming you're in the main-module,
 module-IDs will be resolved to the following paths:
