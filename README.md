@@ -131,16 +131,25 @@ Add the following line **before** including Tarp.require into your page:
 ### HTTP redirects
 
 Tarp.require is able to handle temporary (301) and permanent (303) HTTP redirects. A common case where redirects might
-be handy is to use *package.json* as the default file if an ID without a filename is requested. To achieve that you
-could use the following NGINX redirect rule:
+be handy is to return the contents of *index.js* or *package.json* if an ID without a filename is requested. The following NGINX configuration rule will mimic the behavior of NodeJS:
 
 ``
-rewrite /node_modules/.*/$ package.json redirect;
+	location /node_modules {
+		if ( -f $request_filename ) {
+			break;
+		}
+  if ( -f $request_filename/package.json ) {
+			return 301 $request_uri/package.json;
+		}
+		if ( -f $request_filename/index.js ) {
+			return 301 $request_uri/index.js;
+		}
+		rewrite ^(.+).js$ $1 permanent; 
+	}
+
 ``
 
-This will redirect all requests like */node_modules/path/* to */node_modules/path/package.json*. Keep in
-mind that you have to extend the rule, if you also want to redirect requests like */node_modules/path* (no trailing
-slash) to */node_modules/path/package.json*.
+This will redirect all requests like */node_modules/someModule* to */node_modules/someModule/package.json*, if */node_modules/someModule* is a directory and if */node_modules/someModule/package.json* is a file. If that file doesn't exist, the request will be redirected to */node_modules/path/index.js*. If both files don't exist, a "404 Not Found" response will be sent. The rewrite rule in the last line ensures that a request like */node_modules/someModule.js* will be redirected to */node_modules/someModule* if the *.js* file doesn't exist.
 
 ### NPM packages
 
