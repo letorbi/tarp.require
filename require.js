@@ -72,6 +72,7 @@
                 return;
               }
               else {
+                cached.u = href;
                 cache[href] = cached;
               }
             }
