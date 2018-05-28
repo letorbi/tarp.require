@@ -32,13 +32,10 @@
   };
 
   function load(id, pwd, asyn) {
-    var matches, href, cached, request;
+    var href, cached, request;
     // NOTE resolve href from id
-    matches = id.match(/^((\.)?.*\/|)(.[^.]*|)(\..*|)$/);
-    href = (new URL(
-      matches[1] + matches[3] + (matches[3] && (matches[4] || ".js")),
-      matches[2] ? pwd : root.paths[0] // TODO Can we get rid of this check with more intelligent pwd setting in the engine?
-    )).href;
+    // TODO Can we get rid of the `id[0]` check with more intelligent pwd setting in the engine?
+    href = (new URL(id, id[0] == '.' ? pwd : root.paths[0])).href;
     // NOTE create cache item if required
     cached = cache[href] = cache[href] || {
       e: undefined, // error
@@ -57,7 +54,8 @@
           // `request` might have been changed by line 60ff
           if (request = cached.r) {
             cached.r = null;
-            if ((request.status > 99) && ((href = request.responseURL) != cached.u)) {
+            href = request.getResponseHeader("Tarp-Modules-Filename");
+            if ((request.status > 99) && ((href = request.getResponseHeader("Tarp-Modules-Filename")) != cached.u)) {
               if (cache[href]) {
                 cached = cache[cached.u] = cache[href];
                 cached.p.then(res, rej);
