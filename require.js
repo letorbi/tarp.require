@@ -153,7 +153,7 @@
         else if (mode == 1)
           return cached.u;
         else if (mode == 2)
-          return pwd.match(/.*\//)[0];
+          return [pwd.match(/.*\//)[0]];
         else
           return evaluate(cached, parent).exports;
       }
