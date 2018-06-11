@@ -158,7 +158,7 @@
           return evaluate(cached, parent).exports;
       }
 
-      var pwd = id[0] == '.' ? parent.uri : parent.paths[0];
+      var pwd = (new URL(id[0] == '.' ? parent.uri : parent.paths[0], location.href)).href;
       return asyn ?
         new Promise(function(res, rej) {
           // TODO Could we do the preloading here?
@@ -175,7 +175,7 @@
 
   (self.Tarp = self.Tarp || {}).require = factory({
     children: new Array(),
-    paths: config.paths || [(new URL("./node_modules/", location.href)).href],
+    paths: config.paths || ["./node_modules/"],
     uri: location.href
   });
 })();
