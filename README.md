@@ -135,20 +135,21 @@ be handy is to return the contents of *index.js* or *package.json* if an ID with
 
 ```
 location /node_modules {
-	if ( -f $request_filename ) {
-		break;
-	}
-	if ( -f $request_filename/package.json ) {
-		return 301 $request_uri/package.json;
-	}
-	if ( -f $request_filename/index.js ) {
-		return 301 $request_uri/index.js;
-	}
-	rewrite ^(.+).js$ $1 permanent; 
+    if ( -f $request_filename ) {
+        break;
+    }
+    rewrite ^(.+).js$ $1 permanent; 
+    if ( -f $request_filename/package.json ) {
+        return 301 $request_uri/package.json;
+    }
+    if ( -f $request_filename/index.js ) {
+        return 301 $request_uri/index.js;
+    }
+    return 404;
 }
 ```
 
-This will redirect all requests like */node_modules/someModule* to */node_modules/someModule/package.json*, if */node_modules/someModule* is a directory and if */node_modules/someModule/package.json* is a file. If that file doesn't exist, the request will be redirected to */node_modules/path/index.js*. If both files don't exist, a "404 Not Found" response will be sent. The rewrite rule in the last line ensures that a request like */node_modules/someModule.js* will be redirected to */node_modules/someModule* if the *.js* file doesn't exist.
+This will redirect all requests like */node_modules/someModule* to */node_modules/someModule/package.json*, if */node_modules/someModule* is a directory and if */node_modules/someModule/package.json* is a file. If that file doesn't exist, the request will be redirected to */node_modules/path/index.js*. If both files don't exist, a "404 Not Found" response will be sent. The rewrite rule in the fifth line ensures that a request like */node_modules/someModule.js* will be redirected to */node_modules/someModule* if the *.js* file doesn't exist.
 
 ### NPM packages
 

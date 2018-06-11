@@ -22,21 +22,13 @@
 (function() {
   "use strict";
 
-  var cache, config, root;
+  var cache, config;
   cache = Object.create(null);
   config = (self.TarpConfig && self.TarpConfig.require) || new Object();
-  root = {
-    children: new Array(),
-    paths: config.paths || [(new URL("./node_modules/", location.href)).href],
-    uri: location.href
-  };
 
   function load(id, pwd, asyn) {
     var href, cached, request;
-    // NOTE resolve href from id
-    // TODO Can we get rid of the `id[0]` check with more intelligent pwd setting in the engine?
-    href = (new URL(id, id[0] == '.' ? pwd : root.paths[0])).href;
-    // NOTE create cache item if required
+    href = (new URL(id, pwd)).href;
     cached = cache[href] = cache[href] || {
       e: undefined, // error
       m: undefined, // module
@@ -51,7 +43,7 @@
         request = cached.r = new XMLHttpRequest();
         request.onload = request.onerror = request.ontimeout = function() {
           var tmp, done, pattern, match, loading = 0;
-          // `request` might have been changed by line 60ff
+          // `request` might have been changed by line 54ff
           if (request = cached.r) {
             cached.r = null;
             href = request.getResponseHeader("Tarp-Modules-Filename");
@@ -70,6 +62,7 @@
                 return;
               }
               else {
+                cached.u = href;
                 cache[href] = cached;
               }
             }
@@ -83,6 +76,7 @@
                 pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
                 while((match = pattern.exec(cached.s)) !== null) {
                   // NOTE Only add modules to the loading-queue that are still pending
+                  // TODO Find a cleaner way to resolve circular dependencies (move outside?)
                   if ((tmp = load(match[1]||match[2], href, true)).r) {
                     loading++;
                     tmp.p.then(done, done);
@@ -154,16 +148,18 @@
         else if (mode == 1)
           return cached.u;
         else if (mode == 2)
-          return [id[0] == "." ? parent.uri.match(/.*\//)[0] : root.uri]; // TODO Can this be cleaned up?
+          return [pwd.match(/.*\//)[0]];
         else
           return evaluate(cached, parent).exports;
       }
 
+      var pwd = (new URL(id[0] == '.' ? parent.uri : parent.paths[0], location.href)).href;
       return asyn ?
         new Promise(function(res, rej) {
-          load(id, parent.uri, asyn).p.then(afterLoad).then(res, rej);
+          // TODO Could we do the preloading here?
+          load(id, pwd, asyn).p.then(afterLoad).then(res, rej);
         }):
-        afterLoad(load(id, parent.uri, asyn));
+        afterLoad(load(id, pwd, asyn));
     }
 
     var require = requireEngine.bind(undefined, 0);
@@ -172,5 +168,9 @@
     return require;
   }
 
-  (self.Tarp = self.Tarp || {}).require = factory(root);
+  (self.Tarp = self.Tarp || {}).require = factory({
+    children: new Array(),
+    paths: config.paths || ["./node_modules/"],
+    uri: location.href
+  });
 })();
