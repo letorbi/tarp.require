@@ -46,7 +46,6 @@
           // `request` might have been changed by line 54ff
           if (request = cached.r) {
             cached.r = null;
-            href = request.getResponseHeader("Tarp-Modules-Filename");
             if ((request.status > 99) && ((href = request.getResponseHeader("Tarp-Modules-Filename")) != cached.u)) {
               if (cache[href]) {
                 cached = cache[cached.u] = cache[href];
