@@ -53,7 +53,7 @@
             // `request` might have been changed by line 54
           if (request = cached.r) {
             cached.r = null;
-            if ((request.status > 99) && ((href = request.responseURL) != cached.u)) {
+            if ((request.status > 99) && ((href = request.getResponseHeader('tarp-modules-filename') || href) != cached.u)) {
               if (cache[href]) {
                 cached = cache[cached.u] = cache[href];
                 cached.p.then(res, rej);
@@ -130,7 +130,7 @@
         uri: cached.u
       },
       module.require = factory(module);
-      parent.children.push(module);
+      parent && parent.children.push(module);
       if (cached.t == "application/json")
         module.exports = JSON.parse(cached.s);
       else
@@ -159,7 +159,7 @@
           return evaluate(cached, parent).exports;
       }
 
-      var pwd = (new URL(id[0] == '.' ? parent.uri : config.paths[0], location.href)).href;
+      var pwd = (new URL(id[0] == '.' ? (parent ? parent.uri : location.href) : config.paths[0], location.href)).href;
       return asyn ?
         new Promise(function(res, rej) { load(id, pwd, asyn).p.then(afterLoad).then(res, rej); }):
         afterLoad(load(id, pwd, asyn));
@@ -171,9 +171,5 @@
     return require;
   }
 
-  (self.Tarp = self.Tarp || {}).require = factory({
-    children: new Array(),
-    paths: config.paths.slice(),
-    uri: location.href
-  });
+  (self.Tarp = self.Tarp || {}).require = factory(null);
 })();
