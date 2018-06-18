@@ -48,8 +48,8 @@
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
         request.onload = request.onerror = request.ontimeout = function() {
-          var tmp, done, pattern, match, loading = 0;
-          // `request` might have been changed by line 54ff
+          var tmp, done, pattern, match, loading = 0, pwd2;
+            // `request` might have been changed by line 54
           if (request = cached.r) {
             cached.r = null;
             if ((request.status > 99) && ((href = request.responseURL) != cached.u)) {
@@ -81,8 +81,10 @@
                 pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
                 while((match = pattern.exec(cached.s)) !== null) {
                   // NOTE Only add modules to the loading-queue that are still pending
-                  // TODO Find a cleaner way to resolve circular dependencies (move outside?)
-                  if ((tmp = load(match[1]||match[2], href, true)).r) {
+                    // TODO Find a cleaner way to resolve circular dependencies (move outside?)
+                    // TODO Find a way to use the actual paths of the parent module (needs eval)
+                  pwd2 = (new URL((match[1]||match[2])[0] == '.' ? href : './node_modules/', location.href)).href;
+                  if ((tmp = load(match[1]||match[2], pwd2, true)).r) {
                     loading++;
                     tmp.p.then(done, done);
                   }
