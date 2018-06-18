@@ -42,7 +42,7 @@
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
         request.onload = request.onerror = request.ontimeout = function() {
-          var tmp, done, pattern, match, loading = 0;
+          var tmp;
           // `request` might have been changed by line 54ff
           if (request = cached.r) {
             cached.r = null;
@@ -68,21 +68,7 @@
             if ((request.status > 99) && (request.status < 400)) {
               cached.s = request.responseText;
               cached.t = request.getResponseHeader("Content-Type");
-              done = function() { if (--loading < 0) res(cached); };
-              // NOTE Pre-load submodules if the request is asynchronous (timeout > 0).
-              if (request.timeout) {
-                // TODO Write a real parser that returns all modules that are preloadable
-                pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
-                while((match = pattern.exec(cached.s)) !== null) {
-                  // NOTE Only add modules to the loading-queue that are still pending
-                  // TODO Find a cleaner way to resolve circular dependencies (move outside?)
-                  if ((tmp = load(match[1]||match[2], href, true)).r) {
-                    loading++;
-                    tmp.p.then(done, done);
-                  }
-                }
-              }
-              done();
+              res(cached);
             }
             else {
               rej(cached.e = new Error(href + " " + request.status));
@@ -106,6 +92,21 @@
     if (cached.e)
       throw cached.e;
     return cached;
+  }
+
+  function preload(cached) {
+    return new Promise(function(res) {
+      var match, loading = 0, pattern, pwd;
+      function done() { if (--loading < 0) res(cached); };
+      pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
+      while((match = pattern.exec(cached.s)) !== null) {
+        loading++;
+        // TODO Find a way to use the actual paths of the parent module (needs eval)
+        pwd = (new URL((match[1]||match[2])[0] == '.' ? cached.u : './node_modules/', location.href)).href;
+        load(match[1]||match[2], pwd, true).p.then(preload).then(done, done);
+      }
+      done();
+    });
   }
 
   function evaluate(cached, parent) {
@@ -155,8 +156,7 @@
       var pwd = (new URL(id[0] == '.' ? parent.uri : parent.paths[0], location.href)).href;
       return asyn ?
         new Promise(function(res, rej) {
-          // TODO Could we do the preloading here?
-          load(id, pwd, asyn).p.then(afterLoad).then(res, rej);
+          load(id, pwd, asyn).p.then(preload).then(afterLoad).then(res, rej);
         }):
         afterLoad(load(id, pwd, asyn));
     }
