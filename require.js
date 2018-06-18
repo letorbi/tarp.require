@@ -25,6 +25,7 @@
   var cache, config;
   cache = Object.create(null);
   config = (self.TarpConfig && self.TarpConfig.require) || new Object();
+  config.paths = config.paths || ['./node_modules/'];
 
   function load(id, pwd, asyn) {
     var matches, href, cached, request;
@@ -81,9 +82,7 @@
                 pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
                 while((match = pattern.exec(cached.s)) !== null) {
                   // NOTE Only add modules to the loading-queue that are still pending
-                    // TODO Find a cleaner way to resolve circular dependencies (move outside?)
-                    // TODO Find a way to use the actual paths of the parent module (needs eval)
-                  pwd2 = (new URL((match[1]||match[2])[0] == '.' ? href : './node_modules/', location.href)).href;
+                  pwd2 = (new URL((match[1]||match[2])[0] == '.' ? href : config.paths[0], location.href)).href;
                   if ((tmp = load(match[1]||match[2], pwd2, true)).r) {
                     loading++;
                     tmp.p.then(done, done);
@@ -126,7 +125,7 @@
         id: cached.u,
         loaded: false,
         parent: parent,
-        paths: parent.paths.slice(),
+        paths: config.paths.slice(),
         require: undefined,
         uri: cached.u
       },
@@ -160,12 +159,9 @@
           return evaluate(cached, parent).exports;
       }
 
-      var pwd = (new URL(id[0] == '.' ? parent.uri : parent.paths[0], location.href)).href;
+      var pwd = (new URL(id[0] == '.' ? parent.uri : config.paths[0], location.href)).href;
       return asyn ?
-        new Promise(function(res, rej) {
-          // TODO Could we do the preloading here?
-          load(id, pwd, asyn).p.then(afterLoad).then(res, rej);
-        }):
+        new Promise(function(res, rej) { load(id, pwd, asyn).p.then(afterLoad).then(res, rej); }):
         afterLoad(load(id, pwd, asyn));
     }
 
@@ -177,7 +173,7 @@
 
   (self.Tarp = self.Tarp || {}).require = factory({
     children: new Array(),
-    paths: config.paths || ["./node_modules/"],
+    paths: config.paths.slice(),
     uri: location.href
   });
 })();
