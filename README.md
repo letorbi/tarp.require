@@ -164,10 +164,8 @@ that module will be returned. Otherwise simply the content of *package.json* is 
 
 ### The `module.paths` property
 
-Tarp.require always uses the first item of the `module.paths` array to resolve an URL from a global module-ID. Unlike
-Node.js it won't iterate over the whole array. Each module inherits the paths from its parent, but every instance of
-`module.paths` is independent. This means that any change to `module.paths` won't affect any already loaded modules, but
-only modules that will be loaded after the change.
+Tarp.require always uses the first item of the global `TarpConfig.require.paths` array to resolve an URL from a global
+module-ID. Unlike Node.js it won't iterate over the whole array. Since the global config is always used, any change to `module.paths` won't affect the loding of modules.
 
 Tarp.require also supports the `require.resolve.paths()` function that returns an array of paths that have been searched
 to resolve the given module-ID.
