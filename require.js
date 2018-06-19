@@ -25,7 +25,7 @@
   var cache, config;
   cache = Object.create(null);
   config = (self.TarpConfig && self.TarpConfig.require) || new Object();
-  config.paths = config.paths || ['./node_modules/'];
+  config.paths = config.paths || ["./node_modules/"];
 
   function load(id, pwd, asyn) {
     var matches, href, cached, request;
@@ -82,7 +82,7 @@
                 pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
                 while((match = pattern.exec(cached.s)) !== null) {
                   // NOTE Only add modules to the loading-queue that are still pending
-                  pwd2 = (new URL((match[1]||match[2])[0] == '.' ? href : config.paths[0], location.href)).href;
+                  pwd2 = (new URL((match[1]||match[2])[0] == "." ? href : config.paths[0], location.href)).href;
                   if ((tmp = load(match[1]||match[2], pwd2, true)).r) {
                     loading++;
                     tmp.p.then(done, done);
@@ -159,7 +159,7 @@
           return evaluate(cached, parent).exports;
       }
 
-      var pwd = (new URL(id[0] == '.' ? (parent ? parent.uri : location.href) : config.paths[0], location.href)).href;
+      var pwd = (new URL(id[0] == "." ? (parent ? parent.uri : location.href) : config.paths[0], location.href)).href;
       return asyn ?
         new Promise(function(res, rej) { load(id, pwd, asyn).p.then(afterLoad).then(res, rej); }):
         afterLoad(load(id, pwd, asyn));
