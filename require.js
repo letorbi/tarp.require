@@ -53,7 +53,7 @@
             // `request` might have been changed by line 54
           if (request = cached.r) {
             cached.r = null;
-            if ((request.status > 99) && ((href = request.getResponseHeader('tarp-modules-filename') || href) != cached.u)) {
+            if ((request.status > 99) && ((href = request.responseURL) != cached.u)) {
               if (cache[href]) {
                 cached = cache[cached.u] = cache[href];
                 cached.p.then(res, rej);
