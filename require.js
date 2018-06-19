@@ -29,13 +29,13 @@
 
   function load(id, pwd, asyn) {
     var matches, href, cached, request;
-    // NOTE resolve href from id
+    // NOTE resolve href from id.
     matches = id.match(/^((\.)?.*\/|)(.[^.]*|)(\..*|)$/);
     href = (new URL(
       matches[1] + matches[3] + (matches[3] && (matches[4] || ".js")),
       pwd
     )).href;
-    // NOTE create cache item if required
+    // NOTE create cache item if required.
     cached = cache[href] = cache[href] || {
       e: undefined, // error
       m: undefined, // module
@@ -50,7 +50,7 @@
         request = cached.r = new XMLHttpRequest();
         request.onload = request.onerror = request.ontimeout = function() {
           var tmp, done, pattern, match, loading = 0, pwd2;
-            // `request` might have been changed by line 54
+            // `request` might have been changed by line 54.
           if (request = cached.r) {
             cached.r = null;
             if ((request.status > 99) && ((href = request.responseURL) != cached.u)) {
@@ -78,10 +78,10 @@
               done = function() { if (--loading < 0) res(cached); };
               // NOTE Pre-load submodules if the request is asynchronous (timeout > 0).
               if (request.timeout) {
-                // TODO Write a real parser that returns all modules that are preloadable
+                // TODO Write a real parser that returns all modules that are preloadable.
                 pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
                 while((match = pattern.exec(cached.s)) !== null) {
-                  // NOTE Only add modules to the loading-queue that are still pending
+                  // NOTE Only add modules to the loading-queue that are still pending.
                   pwd2 = (new URL((match[1]||match[2])[0] == "." ? href : config.paths[0], location.href)).href;
                   if ((tmp = load(match[1]||match[2], pwd2, true)).r) {
                     loading++;
