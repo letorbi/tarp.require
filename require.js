@@ -79,7 +79,7 @@
               // NOTE Pre-load submodules if the request is asynchronous (timeout > 0).
               if (request.timeout) {
                 // TODO Write a real parser that returns all modules that are preloadable.
-                pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
+                pattern = /require\s*(?:\.\s*resolve\s*)?\(\s*(?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\s*\)/g;
                 while((match = pattern.exec(cached.s)) !== null) {
                   // NOTE Only add modules to the loading-queue that are still pending.
                   pwd2 = (new URL((match[1]||match[2])[0] == "." ? href : config.paths[0], location.href)).href;
