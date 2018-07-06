@@ -1,7 +1,7 @@
 "use strict";
 
 importScripts("../require.js");
-var require = Tarp.require;
+Tarp.require({ expose: true });
 
 var mod = require("module1");
 

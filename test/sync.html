@@ -12,7 +12,7 @@
   <div class="Box Red">
     <h2>Identifier => Module</h2>
     <pre><script type="text/javascript">
-      var require = Tarp.require;
+      Tarp.require({ expose: true });
       mname = "module1";
       document.writeln("require.resolve("+mname+") -> "+JSON.stringify(require.resolve(mname)));
       mname = "./node_modules/module1";

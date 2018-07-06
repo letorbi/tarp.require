@@ -19,13 +19,8 @@
 // NOTE The load parameter points to the function, which prepares the
 //      environment for each module and runs its code. Scroll down to the end of
 //      the file to see the function definition.
-(function() {
+(self.Tarp = self.Tarp || {}).require = function(config) {
   "use strict";
-
-  var cache, config;
-  cache = Object.create(null);
-  config = (self.TarpConfig && self.TarpConfig.require) || new Object();
-  config.paths = config.paths || ["./node_modules/"];
 
   function load(id, pwd, asyn) {
     var matches, href, cached, request;
@@ -171,5 +166,14 @@
     return require;
   }
 
-  (self.Tarp = self.Tarp || {}).require = factory(null);
-})();
+  var cache, config, require;
+
+  cache = Object.create(null);
+  config = config || new Object();
+  config.paths = config.paths || ["./node_modules/"];
+  require = factory(null);
+  if (config.expose)
+    self.require = require;
+  if (config.main)
+    return require(config.main, !config.sync);
+};
