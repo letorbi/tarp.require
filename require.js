@@ -43,7 +43,7 @@
     if (!cached.p) {
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
-        request.onload = request.onerror = request.ontimeout = function() {
+        request.onload = request.onerror = function() {
           var tmp, done, pattern, match, loading = 0, pwd2;
             // `request` might have been changed by line 54.
           if (request = cached.r) {
@@ -71,8 +71,8 @@
               cached.s = request.responseText;
               cached.t = request.getResponseHeader("Content-Type");
               done = function() { if (--loading < 0) res(cached); };
-              // NOTE Pre-load submodules if the request is asynchronous (timeout > 0).
-              if (request.timeout) {
+              // NOTE Pre-load submodules if the request is asynchronous (request.$ is true).
+              if (request.$) {
                 // TODO Write a real parser that returns all modules that are preloadable.
                 pattern = /require\s*(?:\.\s*resolve\s*(?:\.\s*paths\s*)?)?\(\s*(?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\s*\)/g;
                 while((match = pattern.exec(cached.s)) !== null) {
@@ -97,13 +97,9 @@
     if (request = request || (!asyn && cached.r)) {
       try {
         request.abort();
-        // NOTE IE requires a true boolean value as third param and allows the
-        //      setting of timeout only between `open()` and `send()`.
-        if (request.timeout)
-          request.timeout = 0;
+        request.$ = asyn;
+        // NOTE IE requires a true boolean value as third param.
         request.open("GET", href, !!asyn);
-        if (asyn)
-          request.timeout = 10000;
         request.send();
       }
       catch (e) {
