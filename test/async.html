@@ -4,6 +4,8 @@
 
 <head>
   <title>Tarp Require asynchronous test page</title>
+  <script src="./lib/es6-promise.auto.js"></script> 
+  <script src="./lib/url-polyfill.min.js"></script> 
   <script type="text/javascript" src="../require.js"></script>
 </head>
 
@@ -31,12 +33,12 @@
     require.resolve("fake1/", true).then(console.log, console.error);
 
    // Execute a simple module (cached)
-    require("module3", true).then((mod) => {
+    require("module3", true).then(function(mod) {
       console.log(mod.greet());
     }, console.error);
 
     // Execute a complex module with submodules
-    require("relative/main", true).then((mod) => {
+    require("relative/main", true).then(function(mod) {
       console.log(mod.greet());
     }, console.error);
 
