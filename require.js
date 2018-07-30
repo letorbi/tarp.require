@@ -97,8 +97,13 @@
     if (request = request || (!asyn && cached.r)) {
       try {
         request.abort();
-        request.timeout = asyn ? 10000 : 0;
-        request.open("GET", href, asyn);
+        // NOTE IE requires a true boolean value as third param and allows the
+        //      setting of timeout only between `open()` and `send()`.
+        if (request.timeout)
+          request.timeout = 0;
+        request.open("GET", href, !!asyn);
+        if (asyn)
+          request.timeout = 10000;
         request.send();
       }
       catch (e) {
