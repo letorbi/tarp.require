@@ -29,7 +29,7 @@ Please be aware that some issues might slip through, until the test-routines are
 * iOS Safari 8+
 * Android Browser 4.4.4+
 * Opera 20+
-* Internet Explorer 11 (with [URL polyfill](https://github.com/lifaon74/url-polyfill) and [ES6 Promise polyfill](https://github.com/lahmatiy/es6-promise-polyfill))
+* Internet Explorer 10+ (with [URL polyfill](https://github.com/lifaon74/url-polyfill) and [ES6 Promise polyfill](https://github.com/lahmatiy/es6-promise-polyfill))
 
 ## Installation
 
