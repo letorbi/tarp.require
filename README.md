@@ -1,5 +1,5 @@
 **Important notice:** Tarp.require is the replacement of [Smoothie](https://github.com/letorbi/tarp.require/tree/smoothie).
-It introduces a number of new features and improvments, so it is recommended to use Tarp.require from now on. Please
+It introduces a number of new features and improvements, so it is recommended to use Tarp.require from now on. Please
 read [the migration documentation](https://github.com/letorbi/tarp.require/blob/master/doc/migration.md) for further
 information.
 
@@ -43,7 +43,7 @@ $ git submodule add -b tarp https://github.com/letorbi/tarp.require.git
 ## Usage
 
 Assuming you've installed Tarp.require in the folder *//example.com/tarp.require* and your HTML-document is located at
-*//example.com/page/index.html*, you only have to add the following lines to your HTML to load load the script located
+*//example.com/page/index.html*, you only have to add the following lines to your HTML to load the script located
 at *//example.com/page/scripts/main.js* as your main-module:
 
 ```
