@@ -18,7 +18,7 @@ Please be aware that some issues might slip through, until the test-routines are
 * **Plain** No dependencies, no need to compile/bundle/etc the modules
 * **Asynchronous** Non-blocking loading of module files
 * **Modern** Makes use of promises and other features (support for older browsers via polyfills)
-* **Lightweight** Just about 170 lines of code (incl. comments), minified version is about 1.7kB
+* **Lightweight** Just about 180 lines of code (incl. comments), minified version is about 2kB
 
 ### Browser compatibility
 
