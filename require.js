@@ -44,7 +44,7 @@
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
         request.onload = request.onerror = function() {
-          var tmp, done, pattern, match, loading = 0, pwd2;
+          var tmp, done, source, pattern, match, loading = 0, pwd2;
             // `request` might have been changed by line 54.
           if (request = cached.r) {
             cached.r = null;
@@ -68,14 +68,16 @@
               }
             }
             if ((request.status > 99) && (request.status < 400)) {
-              cached.s = request.responseText;
+              cached.s = source = request.responseText;
               cached.t = request.getResponseHeader("Content-Type");
               done = function() { if (--loading < 0) res(cached); };
               // NOTE Pre-load submodules if the request is asynchronous (request.$ is true).
               if (request.$) {
+                // Remove comments from the source
+                source = source.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '');
                 // TODO Write a real parser that returns all modules that are preloadable.
                 pattern = /require\s*(?:\.\s*resolve\s*(?:\.\s*paths\s*)?)?\(\s*(?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\s*\)/g;
-                while((match = pattern.exec(cached.s)) !== null) {
+                while((match = pattern.exec(source)) !== null) {
                   // NOTE Only add modules to the loading-queue that are still pending.
                   pwd2 = (new URL((match[1]||match[2])[0] == "." ? href : config.paths[0], location.href)).href;
                   if ((tmp = load(match[1]||match[2], pwd2, true)).r) {
