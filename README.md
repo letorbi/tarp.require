@@ -32,10 +32,10 @@ now on. An improved version of Tarp.require with new features and breaking chang
 
 ## Installation
 
-The easies way to install Tarp.require is via NPM:
+The easiest way to install Tarp.require is via NPM:
 
 ```
-$ npm install --save $tarp/require
+$ npm install --save @tarp/require
 ```
 
 If you don't want to use NPM you can just clone the repository directly or add it to your git repository as a submodule:
@@ -51,7 +51,7 @@ is located at *//example.com/page/index.html*, you only have to add the followin
 located at *//example.com/page/scripts/main.js* as your main-module:
 
 ```
-<script src"/node_modules/@tarp/require/require.min.js"></script>
+<script src="/node_modules/@tarp/require/require.min.js"></script>
 <script>Tarp.require({main: "./scripts/main"});</script>
 ```
 
