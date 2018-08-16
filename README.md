@@ -8,9 +8,8 @@ information.
 Tarp.require is a CommonJS and Node.js compatible module loader licensed as open source under the LGPL v3. It aims to be
 as lightweight as possible while not missing any features.
 
-*Tarp.require is still work in progress. It is currently in a 'release candidate' state. This means that no
-new features will be added until the release of version 1.0. The main work now is testing, bugfixing & refactoring.
-Please be aware that some issues might slip through, until the test-routines are ready.*
+*Tarp.require has finally reached a stable state. This means that the version 1.x branch will only receive bugfixes from
+now on. An improved version of Tarp.require with new features and breaking changes can be found in the tarp2-branch.*
 
 ## Features
 
@@ -33,30 +32,39 @@ Please be aware that some issues might slip through, until the test-routines are
 
 ## Installation
 
-NPM and bower packages will be available once the first stable version has been released. For now just clone the
-repository directly or add it to your git repository as a submodule:
+The easies way to install Tarp.require is via NPM:
 
 ```
-$ git submodule add -b tarp https://github.com/letorbi/tarp.require.git
+$ npm install --save $tarp/require
+```
+
+If you don't want to use NPM you can just clone the repository directly or add it to your git repository as a submodule:
+
+```
+$ git submodule add https://github.com/letorbi/tarp.require.git
 ```
 
 ## Usage
 
-Assuming you've installed Tarp.require in the folder *//example.com/tarp.require* and your HTML-document is located at
-*//example.com/page/index.html*, you only have to add the following lines to your HTML to load the script located
-at *//example.com/page/scripts/main.js* as your main-module:
+Assuming you've installed Tarp.require in the folder *//example.com/node_modules/@tarp/require* and your HTML-document
+is located at *//example.com/page/index.html*, you only have to add the following lines to your HTML to load the script
+located at *//example.com/page/scripts/main.js* as your main-module:
 
 ```
-<script src"/tarp.require/require.min.js"></script>
+<script src"/node_modules/@tarp/require/require.min.js"></script>
 <script>Tarp.require({main: "./scripts/main"});</script>
 ```
 
 Inside your main-module (and any sub-module, of course) you can use `require()` as you know it from CommonJS/NodeJS.
 Assuming you're in the main-module, module-IDs will be resolved to the following paths:
 
-  * `require("someMmodule")` loads *//example.com/page/node_modules/someModule.js*
+  * `require("someModule")` loads *//example.com/page/node_modules/someModule.js*
   * `require("./someModule")` loads *//example.com/page/scripts/someModule.js*
   * `require("/someModule")` loads *//example.com/someModule.js*
+
+Note that global modules are loaded from *//example.com/page/node_modules* and not from *//example.com/node_modules*.
+This is because the default global module path is set to `['./node_modules']` and is derived from the location of the
+page that initializes Tarp.require.
 
 ## Synchronous and asynchronous loading
 
@@ -129,6 +137,8 @@ This will redirect all requests like */node_modules/someModule* to */node_module
 */node_modules/someModule* is a directory and if */node_modules/someModule/package.json* is a file. If that file doesn't
 exist, the request will be redirected to */node_modules/path/index.js*. If both files don't exist, a "404 Not Found"
 response will be sent.
+
+Note: HTTP redirects won't work in IE11 due to limited support of XMLHttpRequest advanced features.
 
 ### NPM packages
 //
