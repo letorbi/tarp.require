@@ -38,7 +38,7 @@
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
         request.onload = request.onerror = function() {
-          var tmp, done, source, pattern, match, loading = 0, pwd2;
+          var tmp;
             // `request` might have been changed by line 54.
           if (request = cached.r) {
             cached.r = null;
@@ -62,25 +62,9 @@
               }
             }
             if ((request.status > 99) && (request.status < 400)) {
-              cached.s = source = request.responseText;
+              cached.s = request.responseText;
               cached.t = request.getResponseHeader("Content-Type");
-              done = function() { if (--loading < 0) res(cached); };
-              // NOTE Pre-load submodules if the request is asynchronous (request.$ is true).
-              if (request.$) {
-                // Remove comments from the source
-                source = source.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '');
-                // TODO Write a real parser that returns all modules that are preloadable.
-                pattern = /require\s*(?:\.\s*resolve\s*(?:\.\s*paths\s*)?)?\(\s*(?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\s*\)/g;
-                while((match = pattern.exec(source)) !== null) {
-                  // NOTE Only add modules to the loading-queue that are still pending.
-                  pwd2 = (new URL((match[1]||match[2])[0] == "." ? href : config.paths[0], location.href)).href;
-                  if ((tmp = load(match[1]||match[2], pwd2, true)).r) {
-                    loading++;
-                    tmp.p.then(done, done);
-                  }
-                }
-              }
-              done();
+              res(cached);
             }
             else {
               rej(cached.e = new Error(href + " " + request.status));
@@ -105,6 +89,27 @@
     if (cached.e)
       throw cached.e;
     return cached;
+  }
+
+  function preload(cached) {
+    return new Promise(function(res) {
+      var match, loading = 0, pattern, pwd, source, tmp;
+      function done() { if (--loading < 0) res(cached); };
+      pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
+      // NOTE Remove comments from the source
+      source = cached.s.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '');
+      // TODO Write a real parser that returns all modules that are preloadable.
+      pattern = /require\s*(?:\.\s*resolve\s*(?:\.\s*paths\s*)?)?\(\s*(?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\s*\)/g;
+      while((match = pattern.exec(source)) !== null) {
+        pwd = (new URL((match[1]||match[2])[0] == "." ? cached.u : config.paths[0], location.href)).href;
+        // NOTE Only add modules to the loading-queue that are still pending.
+        if ((tmp = load(match[1]||match[2], pwd, true)).r) {
+          loading++;
+          tmp.p.then(done, done);
+        }
+      }
+      done();
+    });
   }
 
   function evaluate(cached, parent) {
@@ -153,7 +158,9 @@
 
       var pwd = (new URL(id[0] == "." ? (parent ? parent.uri : location.href) : config.paths[0], location.href)).href;
       return asyn ?
-        new Promise(function(res, rej) { load(id, pwd, asyn).p.then(afterLoad).then(res, rej); }):
+        new Promise(function(res, rej) {
+          load(id, pwd, asyn).p.then(preload).then(afterLoad).then(res, rej);
+        }):
         afterLoad(load(id, pwd, asyn));
     }
 
