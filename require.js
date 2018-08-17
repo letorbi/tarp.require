@@ -146,7 +146,9 @@
         var regex = /package\.json$/;
         if (regex.test(cached.u) && !regex.test(id)) {
           parent = evaluate(cached, parent);
-          return requireEngine(mode, parent.exports.main, asyn);
+          return typeof parent.exports.main == "string" ?
+            requireEngine(mode, parent.exports.main, asyn):
+            parent.exports;
         }
         else if (mode == 1)
           return cached.u;

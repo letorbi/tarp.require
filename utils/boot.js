@@ -69,4 +69,4 @@ function boot(module) {
   }
 }
 
-Tarp.require(mainModule, true).then(boot);
+Tarp.require({main: mainModule}).then(boot);

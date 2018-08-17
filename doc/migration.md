@@ -78,4 +78,4 @@ to handle asynchronous execution, as you can see from the `.then()` call.
 Tarp.require uses modern features of JavaScript, namely Promises and the [URL interface](https://developer.mozilla.org/en-US/docs/Web/API/URL).
 You have to load some small polyfills to have these features available in older browsers.
 
-Please refer to the *Older browsers* section in the Tarp.require readme for further advice.
+Please refer to the *Browser support* section in the Tarp.require readme for further advice.
