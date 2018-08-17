@@ -42,7 +42,7 @@
             // `request` might have been changed by line 54.
           if (request = cached.r) {
             cached.r = null;
-            if ((request.status > 99) && ((href = request.getResponseHeader("Tarp-Modules-Filename") || href) != cached.u)) {
+            if ((request.status > 99) && ((href = request.getResponseHeader("Content-Location") || href) != cached.u)) {
               if (cache[href]) {
                 cached = cache[cached.u] = cache[href];
                 cached.p.then(res, rej);
@@ -171,7 +171,6 @@
   }
 
   var cache, config, require;
-
   cache = Object.create(null);
   config = config || new Object();
   config.paths = config.paths || ["./node_modules/"];
