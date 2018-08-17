@@ -19,12 +19,8 @@
 // NOTE The load parameter points to the function, which prepares the
 //      environment for each module and runs its code. Scroll down to the end of
 //      the file to see the function definition.
-(function() {
+(self.Tarp = self.Tarp || {}).require = function(config) {
   "use strict";
-
-  var cache, config;
-  cache = Object.create(null);
-  config = (self.TarpConfig && self.TarpConfig.require) || new Object();
 
   function load(id, pwd, asyn) {
     var href, cached, request;
@@ -41,12 +37,12 @@
     if (!cached.p) {
       cached.p = new Promise(function(res, rej) {
         request = cached.r = new XMLHttpRequest();
-        request.onload = request.onerror = request.ontimeout = function() {
-          var tmp, done, pattern, match, loading = 0, pwd2;
-            // `request` might have been changed by line 54
+        request.onload = request.onerror = function() {
+          var tmp, done, source, pattern, match, loading = 0, pwd2;
+            // `request` might have been changed by line 54.
           if (request = cached.r) {
             cached.r = null;
-            if ((request.status > 99) && ((href = request.getResponseHeader("Tarp-Modules-Filename")) != cached.u)) {
+            if ((request.status > 99) && ((href = request.getResponseHeader("Tarp-Modules-Filename") || href) != cached.u)) {
               if (cache[href]) {
                 cached = cache[cached.u] = cache[href];
                 cached.p.then(res, rej);
@@ -66,18 +62,18 @@
               }
             }
             if ((request.status > 99) && (request.status < 400)) {
-              cached.s = request.responseText;
+              cached.s = source = request.responseText;
               cached.t = request.getResponseHeader("Content-Type");
               done = function() { if (--loading < 0) res(cached); };
-              // NOTE Pre-load submodules if the request is asynchronous (timeout > 0).
-              if (request.timeout) {
-                // TODO Write a real parser that returns all modules that are preloadable
-                pattern = /require(?:\.resolve)?\((?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\)/g;
-                while((match = pattern.exec(cached.s)) !== null) {
-                  // NOTE Only add modules to the loading-queue that are still pending
-                    // TODO Find a cleaner way to resolve circular dependencies (move outside?)
-                    // TODO Find a way to use the actual paths of the parent module (needs eval)
-                  pwd2 = (new URL((match[1]||match[2])[0] == '.' ? href : './node_modules/', location.href)).href;
+              // NOTE Pre-load submodules if the request is asynchronous (request.$ is true).
+              if (request.$) {
+                // Remove comments from the source
+                source = source.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '');
+                // TODO Write a real parser that returns all modules that are preloadable.
+                pattern = /require\s*(?:\.\s*resolve\s*(?:\.\s*paths\s*)?)?\(\s*(?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\s*\)/g;
+                while((match = pattern.exec(source)) !== null) {
+                  // NOTE Only add modules to the loading-queue that are still pending.
+                  pwd2 = (new URL((match[1]||match[2])[0] == "." ? href : config.paths[0], location.href)).href;
                   if ((tmp = load(match[1]||match[2], pwd2, true)).r) {
                     loading++;
                     tmp.p.then(done, done);
@@ -97,8 +93,9 @@
     if (request = request || (!asyn && cached.r)) {
       try {
         request.abort();
-        request.timeout = asyn ? 10000 : 0;
-        request.open("GET", href, asyn);
+        request.$ = asyn;
+        // NOTE IE requires a true boolean value as third param.
+        request.open("GET", href, !!asyn);
         request.send();
       }
       catch (e) {
@@ -120,12 +117,12 @@
         id: cached.u,
         loaded: false,
         parent: parent,
-        paths: parent.paths.slice(),
+        paths: config.paths.slice(),
         require: undefined,
         uri: cached.u
       },
       module.require = factory(module);
-      parent.children.push(module);
+      parent && parent.children.push(module);
       if (cached.t == "application/json")
         module.exports = JSON.parse(cached.s);
       else
@@ -154,12 +151,9 @@
           return evaluate(cached, parent).exports;
       }
 
-      var pwd = (new URL(id[0] == '.' ? parent.uri : parent.paths[0], location.href)).href;
+      var pwd = (new URL(id[0] == "." ? (parent ? parent.uri : location.href) : config.paths[0], location.href)).href;
       return asyn ?
-        new Promise(function(res, rej) {
-          // TODO Could we do the preloading here?
-          load(id, pwd, asyn).p.then(afterLoad).then(res, rej);
-        }):
+        new Promise(function(res, rej) { load(id, pwd, asyn).p.then(afterLoad).then(res, rej); }):
         afterLoad(load(id, pwd, asyn));
     }
 
@@ -169,9 +163,14 @@
     return require;
   }
 
-  (self.Tarp = self.Tarp || {}).require = factory({
-    children: new Array(),
-    paths: config.paths || ["./node_modules/"],
-    uri: location.href
-  });
-})();
+  var cache, config, require;
+
+  cache = Object.create(null);
+  config = config || new Object();
+  config.paths = config.paths || ["./node_modules/"];
+  require = factory(null);
+  if (config.expose)
+    self.require = require;
+  if (config.main)
+    return require(config.main, !config.sync);
+};

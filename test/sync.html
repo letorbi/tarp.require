@@ -4,6 +4,8 @@
 
 <head>
   <title>Tarp Require synchronous test page</title>
+  <script src="./lib/es6-promise.auto.js"></script> 
+  <script src="./lib/url-polyfill.min.js"></script> 
   <script type="text/javascript" src="../require.js"></script>
 </head>
 
@@ -12,7 +14,7 @@
   <div class="Box Red">
     <h2>Identifier => Module</h2>
     <pre><script type="text/javascript">
-      var require = Tarp.require;
+      Tarp.require({ expose: true });
       mname = "module1";
       document.writeln("require.resolve("+mname+") -> "+JSON.stringify(require.resolve(mname)));
       mname = "./node_modules/module1";
