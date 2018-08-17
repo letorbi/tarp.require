@@ -1,15 +1,11 @@
-**Important notice:** Tarp.require is the replacement of [Smoothie](https://github.com/letorbi/tarp.require/tree/smoothie).
-It introduces a number of new features and improvements, so it is recommended to use Tarp.require from now on. Please
-read [the migration documentation](https://github.com/letorbi/tarp.require/blob/master/doc/migration.md) for further
-information.
-
 //\ Tarp.require - a lightweight JavaScript module loader
 =========================================================
+
 Tarp.require is a CommonJS and Node.js compatible module loader licensed as open source under the LGPL v3. It aims to be
 as lightweight as possible while not missing any features.
 
-*Tarp.require has finally reached a stable state. This means that the version 1.x branch will only receive bugfixes from
-now on. An improved version of Tarp.require with new features and breaking changes can be found in the tarp2-branch.*
+*This is the unstable version of Tarp.require (aka tarp2). Features and interfaces are subject to change and may break
+during development!*
 
 ## Features
 
@@ -32,39 +28,38 @@ now on. An improved version of Tarp.require with new features and breaking chang
 
 ## Installation
 
-The easiest way to install Tarp.require is via NPM:
+A NPM package only exists for the stable version of Tarp.require, but you can just clone the tarp2-branch of this repository directly or add
+it to your git repository as a submodule:
 
 ```
-$ npm install --save @tarp/require
-```
-
-If you don't want to use NPM you can just clone the repository directly or add it to your git repository as a submodule:
-
-```
-$ git submodule add https://github.com/letorbi/tarp.require.git
+$ git submodule add -b tarp2 https://github.com/letorbi/tarp.require.git
 ```
 
 ## Usage
 
-Assuming you've installed Tarp.require in the folder *//example.com/node_modules/@tarp/require* and your HTML-document
-is located at *//example.com/page/index.html*, you only have to add the following lines to your HTML to load the script
-located at *//example.com/page/scripts/main.js* as your main-module:
+Assuming your domain is *//example.com*, you've installed Tarp.require at */node_modules/@tarp/require* and your
+HTML-document is located at *//page/index.html*, you only have to add the following lines to your HTML to load the
+script located at */page/scripts/main.js* as your main-module:
 
 ```
 <script src="/node_modules/@tarp/require/require.min.js"></script>
-<script>Tarp.require({main: "./scripts/main"});</script>
+<script>Tarp.require({main: "./scripts/main.js"});</script>
 ```
 
-Inside your main-module (and any sub-module, of course) you can use `require()` as you know it from CommonJS/NodeJS.
-Assuming you're in the main-module, module-IDs will be resolved to the following paths:
+### Enable advanced ID resolving
 
-  * `require("someModule")` loads *//example.com/page/node_modules/someModule.js*
-  * `require("./someModule")` loads *//example.com/page/scripts/someModule.js*
-  * `require("/someModule")` loads *//example.com/someModule.js*
+If you want load IDs without an extension or *index.js* or *package.json* files in directories, you have to enhance your
+server configuration a bit. To enable proper ID resolving in the folder */page/node_modules* for nginx, you have to add
+the following lines to your sites configuration:
 
-Note that global modules are loaded from *//example.com/page/node_modules* and not from *//example.com/node_modules*.
-This is because the default global module path is set to `['./node_modules']` and is derived from the location of the
-page that initializes Tarp.require.
+```
+location /page/node_modules {
+    add_header "Content-Location" "$scheme://$host$uri";
+    try_files "$uri" "$uri.js" "${uri}index.js" "${uri}package.json" =404;
+}
+```
+
+The important value is the *Content-Location* header, which holds the canonical URL for the requested module.
 
 ## Synchronous and asynchronous loading
 
@@ -107,50 +102,34 @@ require("anotherModule", true).then(function(anotherModule) {
 
 ## Path resolving
 
-Tarp.require mainly resolves URLs in the same way as Node.js does resolve paths. The only difference is that
-Tarp.require won't look for a file at other locations if it cannot be found at the resolved URL. This decision has been
-made due to the fact that modules are usually loaded from a remote server and sending multiple request for different
-locations would be very time-consuming. Tarp.require relies on the server to resolve unknown files instead.
+Inside your main-module (and any sub-module, of course) you can use `require()` as you know it from CommonJS/NodeJS.
+Assuming the paths from the "Usage" section and that you are in the main-module, module-IDs will be resolved to the
+following paths:
 
-### HTTP redirects
+  * `require("someModule.js")` loads *//example.com/page/node_modules/someModule.js*
+  * `require("./someModule.js")` loads *//example.com/page/scripts/someModule.js*
+  * `require("/someModule.js")` loads *//example.com/someModule.js*
 
-Tarp.require is able to handle temporary (301) and permanent (303) HTTP redirects. A common case where redirects might
-be handy is to return the contents of *index.js* or *package.json* if an ID without a filename is requested. The
-following NGINX configuration rule will mimic the behavior of NodeJS:
+Note that global modules are loaded from */page/node_modules* and not from */node_modules*. This is because the default
+global module path is set to `['./node_modules']` and is derived from the location of the page that initializes
+Tarp.require.
 
-```
-location /node_modules {
-    if ( -f $request_filename ) {
-        break;
-    }
-    if ( -f "${request_filename}package.json" ) {
-        return 301 "${request_uri}package.json";
-    }
-    if ( -f "${request_filename}index.js" ) {
-        return 301 "${request_uri}index.js";
-    }
-    return 404;
-}
-```
-
-This will redirect all requests like */node_modules/someModule* to */node_modules/someModule/package.json*, if
-*/node_modules/someModule* is a directory and if */node_modules/someModule/package.json* is a file. If that file doesn't
-exist, the request will be redirected to */node_modules/path/index.js*. If both files don't exist, a "404 Not Found"
-response will be sent.
-
-Note: HTTP redirects won't work in IE11 due to limited support of XMLHttpRequest advanced features.
+Without any server configuration Tarp.require is only able to load modules IDs, where the ID matches the exact filename
+of the module-script. Tarp.require relies fully on the server to find the correct file for a certain ID. This decision
+has been made due to the fact that modules are usually loaded from a remote server and sending multiple request for
+different locations would be very time-consuming.
 
 ### NPM packages
-//
-The loading of a NPM package is the only occasion when Tarp.require might redirect a request on its own. Tarp.require
-load a module-ID specified the `main` field of a *package.json* file, if the following checks are true:
 
- 1. The *package.json* file is loaded via a redirect (like explained in the section above)
+The loading of a NPM package is the only occasion when Tarp.require might redirect a request on its own. Tarp.require
+loads a module-ID specified the `main` field of a *package.json* file, if the following checks are true:
+
+ 1. The *package.json* file is loaded indirectly (e.g. via */mypkg* instead of */mypkg/package.json*)
  2. The response contains a valid JSON object 
  3. The object has a property called `main`
  
-If that is the case a second request will be triggered to load the modules specified in `main` and the exports of
-that module will be returned. Otherwise simply the content of *package.json* is returned.
+If this is the case a second request will be triggered to load the modules specified in `main` and the exports of that
+module will be returned. Otherwise simply the content of *package.json* is returned.
 
 ### The `module.paths` property
 
@@ -188,7 +167,9 @@ asynchronously by adding `true` as a second parameter.
 If you really need to load the main-module synchronously, you can do it by loading Tarp.require with the
 following options:
 
-``` Tarp.require({main: "./scripts/main", sync: true}); ```
+```
+Tarp.require({main: "./scripts/main", sync: true});
+```
 
 ----
 
