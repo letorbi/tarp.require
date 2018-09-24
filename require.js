@@ -79,7 +79,7 @@
                 pattern = /require\s*(?:\.\s*resolve\s*(?:\.\s*paths\s*)?)?\(\s*(?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\s*\)/g;
                 while((match = pattern.exec(source)) !== null) {
                   // NOTE Only add modules to the loading-queue that are still pending.
-                  pwd2 = (new URL((match[1]||match[2])[0] == "." ? href : config.paths[0], location.href)).href;
+                  pwd2 = (new URL((match[1]||match[2])[0] == "." ? href : config.paths[0], config.root)).href;
                   if ((tmp = load(match[1]||match[2], pwd2, true)).r) {
                     loading++;
                     tmp.p.then(done, done);
@@ -159,7 +159,7 @@
           return evaluate(cached, parent).exports;
       }
 
-      var pwd = (new URL(id[0] == "." ? (parent ? parent.uri : location.href) : config.paths[0], location.href)).href;
+      var pwd = (new URL(id[0] == "." ? (parent ? parent.uri : config.root) : config.paths[0], config.root)).href;
       return asyn ?
         new Promise(function(res, rej) { load(id, pwd, asyn).p.then(afterLoad).then(res, rej); }):
         afterLoad(load(id, pwd, asyn));
@@ -173,9 +173,11 @@
 
   var cache, config, require;
 
+  // NOTE Web-worker will use the origin, since location.href is not available.
   cache = Object.create(null);
   config = config || new Object();
   config.paths = config.paths || ["./node_modules/"];
+  config.root = config.root || location.href;
   require = factory(null);
   if (config.expose)
     self.require = require;
