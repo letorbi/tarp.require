@@ -95,11 +95,32 @@
     </script></pre>
   </div>
   <div class="Box Blue">
-    <h2>Web worker</h2>
-    <pre id="workerModulePre1"><script type="text/javascript">
+    <h2>Web worker (script)</h2>
+    <pre id="workerScriptPre1"><script type="text/javascript">
     var worker = new Worker("worker.js");
     worker.addEventListener("message", function(evt) {
-      var node = document.getElementById("workerModulePre1");
+      var node = document.getElementById("workerScriptPre1");
+      node.innerHTML += evt.data+"\n";
+    }, false);
+    worker.postMessage("hello");
+    </script></pre>
+  </div>
+  <div class="Box Blue">
+    <h2>Web worker (blob)</h2>
+    <pre id="workerBlobPre1"><script type="text/javascript">
+    var response = `
+      "use strict";
+      importScripts("https://nephele.vm/letorbi/Repositories/tarp.require/require.js");
+      Tarp.require({ expose: true, root: "https://nephele.vm/letorbi/Repositories/tarp.require/test/" });
+      var mod = require("module1");
+      self.addEventListener("message", function() {
+        self.postMessage(mod.greet());
+      }, false);
+    `;
+    var blob = new Blob([response], {type: 'application/javascript'});
+    var worker = new Worker(URL.createObjectURL(blob));
+    worker.addEventListener("message", function(evt) {
+      var node = document.getElementById("workerBlobPre1");
       node.innerHTML += evt.data+"\n";
     }, false);
     worker.postMessage("hello");
