@@ -171,6 +171,16 @@ If your modules are not located at *./node_modules/*, you can tell Tarp.require 
 Tarp.require({main: "./scripts/main", paths: ["/path/to/node/modules"]});
 ```
 
+### Change the document root path
+
+The document root path is used to resolve relative paths inside the `paths` array. It points to `location.href` by
+default. You have to set the document root path explicitly, if you want to use Tarp.require inside a web-worker that has
+been loaded from a blob.
+
+```
+Tarp.require({main: "./scripts/main", root: "/path/to/page/"});
+```
+
 ### Using `require()` directly in the HTML-document
 
 It is not recommended to load other modules than the main-module directly from your HTML-document. However, if you
