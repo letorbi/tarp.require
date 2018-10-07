@@ -26,7 +26,7 @@
     var matches, href, cached, request;
     // NOTE resolve href from id.
     matches = id.match(/^((\.)?.*\/|)(.[^.]*|)(\..*|)$/);
-    href = (new URL(
+    href = (!matches[2] && config.resolve && config.resolve(id)) || (new URL(
       matches[1] + matches[3] + (matches[3] && (matches[4] || ".js")),
       pwd
     )).href;

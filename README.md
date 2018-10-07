@@ -171,6 +171,12 @@ If your modules are not located at *./node_modules/*, you can tell Tarp.require 
 Tarp.require({main: "./scripts/main", paths: ["/path/to/node/modules"]});
 ```
 
+or via the `resolve` option for customizing: 
+
+```
+Tarp.require({main: "./scripts/main", resolve: id => `/path/to/node/modules/${id}.js`});
+```
+
 ### Change the document root path
 
 The document root path is used to resolve relative paths inside the `paths` array. It points to `location.href` by
