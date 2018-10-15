@@ -38,6 +38,8 @@
     }, console.error);
 
     // Execute a complex module with submodules
+    // The module "subCached" is loaded synchronously to test preloading with already loaded modules
+    require.resolve("relative/subCached");
     require("relative/main", true).then(function(mod) {
       console.log(mod.greet());
     }, console.error);
