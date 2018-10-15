@@ -97,7 +97,7 @@ parameter to the require-call:
 ```
 // explicit synchronous loading
 var someModule = require("someModule", false);
-someModule.someFunc();////
+someModule.someFunc();
 
  // explicit asynchronous loading
 require("anotherModule", true).then(function(anotherModule) {
@@ -177,11 +177,7 @@ If you need a more sophisticated path resolver, you can override the default fun
 according URL:
 
 ```
-function myResolver(id, pwd) {
-  ...
-}
-
-Tarp.require({main: "./scripts/main", resolver: myResolve});
+Tarp.require({main: "./scripts/main", resolver: function(id, pwd) { ... }});
 ```
 
 The parameter `id` is the module-id of the module that shall be loaded and `pwd` the path of the module `require()` is
