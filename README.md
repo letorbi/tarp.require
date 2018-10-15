@@ -171,11 +171,22 @@ If your modules are not located at *./node_modules/*, you can tell Tarp.require 
 Tarp.require({main: "./scripts/main", paths: ["/path/to/node/modules"]});
 ```
 
-or via the `resolve` option for customizing: 
+### Override path resolver
+
+If you need a more sophisticated path resolver, you can override the default function that resolves a module-id to the
+according URL:
 
 ```
-Tarp.require({main: "./scripts/main", resolve: id => `/path/to/node/modules/${id}.js`});
+function myResolver(id, pwd) {
+  ...
+}
+
+Tarp.require({main: "./scripts/main", resolver: myResolve});
 ```
+
+The parameter `id` is the module-id of the module that shall be loaded and `pwd` the path of the module `require()` is
+called from. Keep in mind that a custom path-resolver may break NodeJS or CommonJS compatibility, if not implemented
+properly.
 
 ### Change the document root path
 
