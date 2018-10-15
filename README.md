@@ -177,11 +177,13 @@ If you need a more sophisticated path resolver, you can override the default fun
 according URL:
 
 ```
-Tarp.require({main: "./scripts/main", resolver: function(id, pwd) { ... }});
+Tarp.require({main: "./scripts/main", resolver: function(id, pwd, resolve) { ... }});
 ```
 
-The parameter `id` is the module-id of the module that shall be loaded and `pwd` the path of the module `require()` is
-called from. Keep in mind that a custom path-resolver may break NodeJS or CommonJS compatibility, if not implemented
+The parameter `id` is the module-id of the module that shall be loaded, `pwd` is the path of the module `require()` is
+called from and `resolve` points to the build-in path-resolver function (you might want to call this).
+
+Keep in mind that a custom path-resolver may break NodeJS or CommonJS compatibility, if not implemented
 properly.
 
 ### Change the document root path

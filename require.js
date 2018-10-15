@@ -33,7 +33,7 @@
   function load(id, pwd, asyn) {
     var matches, href, cached, request;
     // NOTE resolve href from id.
-    href = config.resolve(id, pwd);
+    href = config.resolve(id, pwd, resolve);
     // NOTE create cache item if required.
     cached = cache[href] = cache[href] || {
       e: undefined, // error
