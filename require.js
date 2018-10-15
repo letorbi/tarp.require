@@ -22,14 +22,18 @@
 (self.Tarp = self.Tarp || {}).require = function(config) {
   "use strict";
 
-  function load(id, pwd, asyn) {
-    var matches, href, cached, request;
-    // NOTE resolve href from id.
-    matches = id.match(/^((\.)?.*\/|)(.[^.]*|)(\..*|)$/);
-    href = (new URL(
+  function resolve(id, pwd) {
+    var matches = id.match(/^((\.)?.*\/|)(.[^.]*|)(\..*|)$/);
+    return (new URL(
       matches[1] + matches[3] + (matches[3] && (matches[4] || ".js")),
       pwd
     )).href;
+  }
+
+  function load(id, pwd, asyn) {
+    var matches, href, cached, request;
+    // NOTE resolve href from id.
+    href = config.resolve(id, pwd);
     // NOTE create cache item if required.
     cached = cache[href] = cache[href] || {
       e: undefined, // error
@@ -177,6 +181,7 @@
   cache = Object.create(null);
   config = config || new Object();
   config.paths = config.paths || ["./node_modules/"];
+  config.resolve = config.resolve || resolve;
   config.root = config.root || location.href;
   require = factory(null);
   if (config.expose)
