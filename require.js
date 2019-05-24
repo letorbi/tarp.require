@@ -101,7 +101,7 @@
       // TODO Write a real parser that returns all modules that are preloadable.
       pattern = /require\s*(?:\.\s*resolve\s*(?:\.\s*paths\s*)?)?\(\s*(?:"((?:[^"\\]|\\.)+)"|'((?:[^'\\]|\\.)+)')\s*\)/g;
       while((match = pattern.exec(source)) !== null) {
-        pwd = (new URL((match[1]||match[2])[0] == "." ? cached.u : config.paths[0], location.href)).href;
+        pwd = (new URL((match[1]||match[2])[0] == "." ? cached.u : config.paths[0], root)).href;
         // NOTE Only add modules to the loading-queue that are still pending.
         if ((tmp = load(match[1]||match[2], pwd, true)).r) {
           loading++;
@@ -158,7 +158,7 @@
           return evaluate(cached, parent).exports;
       }
 
-      var pwd = (new URL(id[0] == "." ? (parent ? parent.uri : location.href) : config.paths[0], location.href)).href;
+      var pwd = (new URL(id[0] == "." ? (parent ? parent.uri : root) : config.paths[0], root)).href;
       return asyn ?
         new Promise(function(res, rej) {
           load(id, pwd, asyn).p.then(preload).then(afterLoad).then(res, rej);
@@ -172,13 +172,10 @@
     return require;
   }
 
-  var cache, config, require;
+  var cache, root;
   cache = Object.create(null);
   config = config || new Object();
   config.paths = config.paths || ["./node_modules/"];
-  require = factory(null);
-  if (config.expose)
-    self.require = require;
-  if (config.main)
-    return require(config.main, !config.sync);
+  root = new URL(config.main, location.origin);
+  return (factory(null))(config.main, !config.sync);
 };
