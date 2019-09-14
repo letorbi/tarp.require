@@ -31,7 +31,7 @@
   }
 
   function load(id, pwd, asyn) {
-    var matches, href, cached, request;
+    var href, cached, request;
     // NOTE resolve href from id.
     href = config.resolve(id, pwd, resolve);
     // NOTE create cache item if required.
@@ -175,7 +175,7 @@
     return require;
   }
 
-  var cache, config, require;
+  var cache, require;
 
   // NOTE Web-worker will use the origin, since location.href is not available.
   cache = Object.create(null);
