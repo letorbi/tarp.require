@@ -217,4 +217,4 @@ following options:
 
 ----
 
-Copyright 2013-2018 Torben Haase \<https://pixelsvsbytes.com>
+Copyright 2013-2019 Torben Haase \<[https://pixelsvsbytes.com](https://pixelsvsbytes.com)>
