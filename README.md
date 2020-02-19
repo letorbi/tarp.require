@@ -119,15 +119,15 @@ be handy is to return the contents of *index.js* or *package.json* if an ID with
 following NGINX configuration rule will mimic the behavior of NodeJS:
 
 ```
-location /node_modules {
+location ~ ^(/node_modules/.*)\.(?:js|json)$  {
     if ( -f $request_filename ) {
         break;
     }
-    if ( -f "${request_filename}package.json" ) {
-        return 301 "${request_uri}package.json";
+    if ( -f "${document_root}$1/package.json" ) {
+        return 301 "$1/package.json";
     }
-    if ( -f "${request_filename}index.js" ) {
-        return 301 "${request_uri}index.js";
+    if ( -f "${document_root}$1/index.js" ) {
+        return 301 "$1/index.js";
     }
     return 404;
 }
