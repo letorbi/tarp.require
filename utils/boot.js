@@ -23,7 +23,7 @@
 //
 //      https://pixelsvsbytes.com/2018/01/tarp-require-replaces-smoothie/
 
-var mainModule = "main";
+var mainModule = "/modules/main";
 
 function boot(module) {
   var ieInteractiveWithBody;
