@@ -175,7 +175,7 @@
   var cache, root;
   cache = Object.create(null);
   config = config || new Object();
-  config.paths = config.paths || ["./node_modules/"];
+  config.paths = config.paths || ["/node_modules/"];
   root = new URL(config.main, location.origin);
   return (factory(null))(config.main, !config.sync);
 };
