@@ -77,11 +77,11 @@ but you should try to avoid this, because synchronous requests might block the l
 therefore [marked as obsolete](https://xhr.spec.whatwg.org/#the-open()-method) by now.
 
 Keep also in mind that synchronous loading of a module prevents the pre-loading of its sub-modules. You have to
-explicitly load a sub-module asynchronously to re-start the pre-loading. 
+explicitly load a sub-module asynchronously to re-start the pre-loading.
 
 ### What modules can be pre-loaded?
 
-Right now only plain require-calls are pre-loaded. This means that the ID of the module has to be one simple string. 
+Right now only plain require-calls are pre-loaded. This means that the ID of the module has to be one simple string.
 Also require-calls with more than one parameter are ignored.
 
 **Example:** If a module has been loaded asynchronously and contains the require calls `require("Submodule1")`,
@@ -146,9 +146,9 @@ The loading of a NPM package is the only occasion when Tarp.require might redire
 load a module-ID specified the `main` field of a *package.json* file, if the following checks are true:
 
  1. The *package.json* file is loaded via a redirect (like explained in the section above)
- 2. The response contains a valid JSON object 
+ 2. The response contains a valid JSON object
  3. The object has a property called `main`
- 
+
 If that is the case a second request will be triggered to load the modules specified in `main` and the exports of
 that module will be returned. Otherwise simply the content of *package.json* is returned.
 
@@ -217,4 +217,4 @@ following options:
 
 ----
 
-Copyright 2013-2019 Torben Haase \<[https://pixelsvsbytes.com](https://pixelsvsbytes.com)>
+Copyright 2013-2020 Torben Haase \<[https://pixelsvsbytes.com](https://pixelsvsbytes.com)>
