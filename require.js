@@ -145,10 +145,10 @@
       function afterLoad(cached) {
         var regex = /package\.json$/;
         if (regex.test(cached.u) && !regex.test(id)) {
-          parent = evaluate(cached, parent);
-          return typeof parent.exports.main == "string" ?
-            requireEngine(mode, parent.exports.main, asyn):
-            parent.exports;
+          var pkg = evaluate(cached, parent);
+          return typeof pkg.exports.main == "string" ?
+            (factory(pkg))(pkg.exports.main, asyn):
+            pkg.exports;
         }
         else if (mode == 1)
           return cached.u;
