@@ -1,6 +1,6 @@
 {
   "name": "@tarp/require",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "A lightweight & asynchronous JavaScript loader for CommonJS and NodeJS modules.",
   "main": "require.min.js",
   "directories": {
