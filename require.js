@@ -152,7 +152,7 @@
         if (regex.test(cached.u) && !regex.test(id)) {
           var pkg = evaluate(cached, parent);
           return typeof pkg.exports.main == "string" ?
-            (factory(pkg))(pkg.exports.main, asyn):
+            (factory(pkg))(pkg.exports.main.replace(/^\.*\/*/, "./"), asyn):
             pkg.exports;
         }
         else if (mode == 1)
