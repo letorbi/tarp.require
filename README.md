@@ -123,11 +123,11 @@ location ~ ^(/node_modules/.*)\.(?:js|json)$  {
     if ( -f $request_filename ) {
         break;
     }
-    if ( -f "${document_root}$1/package.json" ) {
-        return 301 "$1/package.json";
-    }
     if ( -f "${document_root}$1/index.js" ) {
         return 301 "$1/index.js";
+    }
+    if ( -f "${document_root}$1/package.json" ) {
+        return 301 "$1/package.json";
     }
     return 404;
 }
