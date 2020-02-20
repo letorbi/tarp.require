@@ -122,7 +122,7 @@
     if (!cached.m) {
       module = cached.m = {
         children: new Array(),
-        exports: Object.create(null),
+        exports: new Object(),
         filename: cached.u,
         id: cached.u,
         loaded: false,
