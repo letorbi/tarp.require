@@ -1,10 +1,9 @@
-**Important notice:** Tarp.require is the replacement of [Smoothie](https://github.com/letorbi/tarp.require/tree/smoothie).
-It introduces a number of new features and improvements, so it is recommended to use Tarp.require from now on. Please
-read [the migration documentation](https://github.com/letorbi/tarp.require/blob/master/doc/migration.md) for further
-information.
+## End-of-Life Notice
 
-//\ Tarp.require - a lightweight JavaScript module loader
-=========================================================
+This project is now deprecated as native JavaScript module support is widely available. Please use the standard [JavaScript modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) `import` syntax for your projects.
+
+# //\ Tarp.require - a lightweight JavaScript module loader
+
 Tarp.require is a CommonJS and Node.js compatible module loader licensed as open source under the LGPL v3. It aims to be
 as lightweight as possible while not missing any features.
 

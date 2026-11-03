@@ -19,6 +19,7 @@
 // NOTE The load parameter points to the function, which prepares the
 //      environment for each module and runs its code. Scroll down to the end of
 //      the file to see the function definition.
+console.log("Trap.require has reached its end-of-life. Don't use it anymore.");
 (self.Tarp = self.Tarp || {}).require = function(config) {
   "use strict";
 
